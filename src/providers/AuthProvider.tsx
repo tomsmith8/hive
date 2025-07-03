@@ -26,6 +26,16 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+// Development test user
+const DEV_TEST_USER: AuthUser = {
+  id: 'dev-user-1',
+  ownerPubKey: 'dev-pubkey-123456789',
+  ownerAlias: 'Dev User',
+  role: 'admin',
+  name: 'Development User',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dev',
+};
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,12 +47,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Verify token and set user
       verifyToken(token);
     } else {
+      // Check if we're in development mode and should auto-login
+      if (process.env.NODE_ENV === 'development') {
+        const devBypass = localStorage.getItem('dev_auth_bypass');
+        if (devBypass === 'true') {
+          // Auto-login with test user in development
+          setUser(DEV_TEST_USER);
+          localStorage.setItem('jwt_token', 'dev-jwt-token');
+          setIsLoading(false);
+          return;
+        }
+      }
       setIsLoading(false);
     }
   }, []);
 
   const verifyToken = async (token: string) => {
     try {
+      // In development, if it's our dev token, just set the user
+      if (token === 'dev-jwt-token' && process.env.NODE_ENV === 'development') {
+        setUser(DEV_TEST_USER);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: {
@@ -74,6 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('jwt_token');
+    localStorage.removeItem('dev_auth_bypass');
   };
 
   const value: AuthContextType = {
