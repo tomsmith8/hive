@@ -1,54 +1,29 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifyJWT } from '@/lib/auth'
-
-// Define protected routes that require authentication
-const protectedRoutes = [
-  '/dashboard',
-  '/tasks',
-  '/kanban',
-  '/codegraph',
-  '/settings',
-]
+import { handleAuthMiddleware } from '@/middleware/auth'
+import { createLoggingMiddleware } from '@/middleware/logging'
+import { createRateLimitMiddleware } from '@/middleware/rateLimit'
+import { composeMiddleware } from '@/middleware/composer'
 
 
+
+// Create middleware chain
+const middlewareChain = composeMiddleware(
+  createLoggingMiddleware(),
+  createRateLimitMiddleware({ maxRequests: 100, windowMs: 15 * 60 * 1000 }), // 100 requests per 15 minutes
+  handleAuthMiddleware
+);
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  )
-
-  // If it's not a protected route, allow access
-  if (!isProtectedRoute) {
-    return NextResponse.next()
+  const result = middlewareChain(request);
+  
+  // If middleware returns a response, return it
+  if (result) {
+    return result;
   }
-
-  // Get the JWT token from cookies or headers
-  const token = request.cookies.get('jwt_token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '')
-
-  // If no token is present, redirect to login
-  if (!token) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Verify the token
-  try {
-    const user = verifyJWT(token)
-    if (!user) {
-      // Invalid token, redirect to login
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    // Token is valid, allow access
-    return NextResponse.next()
-  } catch {
-    // Token verification failed, redirect to login
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+  
+  // Otherwise, continue with the request
+  return NextResponse.next();
 }
 
 export const config = {
