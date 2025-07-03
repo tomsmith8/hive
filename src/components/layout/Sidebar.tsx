@@ -8,20 +8,13 @@ import {
   BarChart3, 
   FolderOpen, 
   CheckSquare, 
-  DollarSign, 
-  Map, 
-  TrendingUp, 
   Settings, 
   Home,
-  Users,
-  Calendar,
-  Bell,
   ChevronLeft,
   ChevronRight,
   Brain,
   Trophy,
-  Workflow,
-  Zap
+  Workflow
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
@@ -30,7 +23,6 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Kanban', href: '/kanban', icon: BarChart3 },
-  { name: 'Roadmap', href: '/roadmap', icon: Map },
   { name: 'Code Graph', href: '/codegraph', icon: FolderOpen },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]

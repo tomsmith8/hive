@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { MultiInput } from "@/components/ui/multi-input"
 import { PasswordInput } from "@/components/ui/password-input"
+import { useAuth } from "@/providers/AuthProvider"
+import { useRouter } from "next/navigation"
 
 const settingsSchema = z.object({
   repositories: z.array(z.string().url("Please enter a valid repository URL")).min(1, "At least one repository is required"),
@@ -25,6 +27,8 @@ const settingsSchema = z.object({
 type SettingsForm = z.infer<typeof settingsSchema>
 
 export default function SettingsPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
@@ -44,6 +48,30 @@ export default function SettingsPage() {
   useEffect(() => {
     setTimeout(() => setIsLoadingSettings(false), 500);
   }, []);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const onSubmit = async (data: SettingsForm) => {
     setIsLoading(true)

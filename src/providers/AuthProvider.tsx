@@ -3,6 +3,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AuthUser } from '@/lib/auth';
 
+// Helper function to set cookie
+const setCookie = (name: string, value: string, days: number = 7) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+};
+
+// Helper function to remove cookie
+const removeCookie = (name: string) => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
@@ -57,6 +69,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Auto-login with test user in development
           setUser(DEV_TEST_USER);
           localStorage.setItem('jwt_token', 'dev-jwt-token');
+          setCookie('jwt_token', 'dev-jwt-token');
           setIsLoading(false);
           return;
         }
@@ -73,6 +86,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (token === 'dev-jwt-token' && isDev) {
         setUser(DEV_TEST_USER);
+        setCookie('jwt_token', 'dev-jwt-token');
         setIsLoading(false);
         return;
       }
@@ -88,13 +102,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData.user);
+        setCookie('jwt_token', token);
       } else {
         // Token is invalid, remove it
         localStorage.removeItem('jwt_token');
+        removeCookie('jwt_token');
       }
     } catch (error) {
       console.error('Error verifying token:', error);
       localStorage.removeItem('jwt_token');
+      removeCookie('jwt_token');
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +126,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('dev_auth_bypass');
+    removeCookie('jwt_token');
   };
 
   const value: AuthContextType = {

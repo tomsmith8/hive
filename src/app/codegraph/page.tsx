@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/providers/AuthProvider"
+import { useRouter } from "next/navigation"
 import { 
   GitBranch, 
   Code2, 
@@ -19,6 +21,8 @@ import {
 } from "lucide-react"
 
 export default function CodeGraphPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const router = useRouter()
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
   const [onboardingData, setOnboardingData] = useState<any>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -40,6 +44,30 @@ export default function CodeGraphPage() {
       setIsAnalyzing(false)
       setAnalysisStatus("completed")
     }, 3000)
+  }
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
   }
 
   const getStatusColor = (status: string) => {

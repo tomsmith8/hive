@@ -73,8 +73,13 @@ export function SphinxLogin({ onSuccess, onError }: SphinxLoginProps) {
           // Authentication successful
           clearInterval(interval);
           
-          // Store JWT token
+          // Store JWT token in localStorage and cookie
           localStorage.setItem('jwt_token', data.jwt);
+          
+          // Set cookie for middleware access
+          const expires = new Date();
+          expires.setTime(expires.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days
+          document.cookie = `jwt_token=${data.jwt};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
           
           // Update user state
           setUser({
