@@ -1,16 +1,37 @@
+'use client';
+
 import { StatsCard } from "@/components/dashboard/StatsCard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useAuth } from "@/providers/AuthProvider"
+import { redirect } from "next/navigation"
 
 export default function DashboardPage() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    redirect('/login');
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back! Here's what's happening with your projects.
+            Welcome back, {user?.ownerAlias || user?.ownerPubKey.slice(0, 10) + '...'}! Here's what's happening with your projects.
           </p>
         </div>
         <Button asChild>
