@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: hive-postgres-dev
+    environment:
+      POSTGRES_DB: hive_db
+      POSTGRES_USER: hive_user
+      POSTGRES_PASSWORD: hive_password
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive_user -d hive_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Hive Application (Development)
+  hive-app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: hive-app-dev
+    environment:
+      - DATABASE_URL=postgresql://hive_user:hive_password@postgres:5432/hive_db
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=your-secret-key-here
+      - JWT_SECRET=your-64-character-hex-secret-here
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run dev
+
+volumes:
+  postgres_data_dev: 
