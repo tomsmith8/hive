@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJWT } from '@/lib/auth';
 
 /**
  * ROUTE PROTECTION CONFIGURATION
@@ -55,18 +54,10 @@ export function getAuthToken(request: NextRequest): string | null {
          null;
 }
 
+// Only check for presence of token, do not verify in middleware
 export function verifyAuthToken(token: string): boolean {
-  try {
-    // Handle development token
-    if (token === 'dev-jwt-token') {
-      return true; // Allow development token
-    }
-    
-    const user = verifyJWT(token);
-    return !!user;
-  } catch {
-    return false;
-  }
+  // In middleware, just check if token exists
+  return !!token;
 }
 
 export function createLoginRedirect(request: NextRequest): NextResponse {
@@ -95,13 +86,7 @@ export function handleAuthMiddleware(request: NextRequest): NextResponse | null 
     return createLoginRedirect(request);
   }
 
-  // Verify the token
-  if (!verifyAuthToken(token)) {
-    console.log('Invalid token, redirecting to login for path:', pathname);
-    return createLoginRedirect(request);
-  }
-
-  // Token is valid, allow access
-  console.log('Token valid, allowing access to:', pathname);
+  // Do not verify token in middleware (Edge Runtime restriction)
+  // Token is present, allow access
   return null; // Allow access
 } 
