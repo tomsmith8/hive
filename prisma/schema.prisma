@@ -15,21 +15,41 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      UserRole @default(PM)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Primary key - auto-generated for internal use
+  id             String   @id @default(cuid())
+  
+  // User identification
+  ownerPubKey    String   @unique @map("owner_pubkey")
+  ownerAlias     String?  @map("owner_alias")
+
+  // Authorization
+  role           UserRole @default(USER)
+  
+  // Profile information
+  name           String?
+  description    String?
+  avatar         String?
+  
+  // Timestamps
+  createdAt      DateTime @default(now()) @map("created")
+  updatedAt      DateTime @updatedAt @map("updated")
+  
+  // Soft delete
+  deleted        Boolean  @default(false)
+  
+  // Activity tracking
+  lastLoginAt    DateTime? @map("last_login")
+  
+  // Lightning Network specific
+  ownerRouteHint String?   @map("owner_route_hint")
 
   @@map("users")
 }
 
-// Enums
+// Role Enums
 enum UserRole {
-  ADMIN
-  PM
-  DEVELOPER
-  DESIGNER
-  QA
+  USER          // Regular user
+  ADMIN         // System administrator
+  MODERATOR     // Content moderator
+  SUPER_ADMIN   // Super admin with all permissions
 }
