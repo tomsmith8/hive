@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/providers/AuthProvider'
 import { useState } from 'react'
 import { SphinxLogin } from '@/components/auth/SphinxLogin'
+import { usePathname } from 'next/navigation'
 
 export function Header() {
   const { user, logout, isAuthenticated } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
@@ -19,32 +21,28 @@ export function Header() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
           <div className="mr-4 flex">
-            <Link href="/" className="mr-6 flex items-center space-x-2">
-              <div className="h-6 w-6 rounded-full bg-primary"></div>
-              <span className="hidden font-bold sm:inline-block">
-                Hive Platform
-              </span>
-            </Link>
+            {pathname === '/' && (
+              <Link href="/" className="mr-6 flex items-center space-x-2">
+                <div className="h-6 w-6 rounded-full bg-primary"></div>
+                <span className="hidden font-bold sm:inline-block">
+                  Hive Platform
+                </span>
+              </Link>
+            )}
           </div>
           <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
             <nav className="flex items-center space-x-6 text-sm font-medium">
               <Link
-                href="/projects"
+                href="/dashboard"
                 className="transition-colors hover:text-foreground/80 text-foreground/60"
               >
-                Projects
+                Dashboard
               </Link>
               <Link
                 href="/tasks"
                 className="transition-colors hover:text-foreground/80 text-foreground/60"
               >
                 Tasks
-              </Link>
-              <Link
-                href="/bounties"
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
-              >
-                Bounties
               </Link>
               <Link
                 href="/roadmap"

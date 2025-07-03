@@ -54,10 +54,10 @@ export function Sidebar({ className }: SidebarProps) {
       isCollapsed ? "w-16" : "w-64",
       className
     )}>
-      {/* Team Switcher */}
-      <div className="relative border-b px-4 py-3">
+      {/* Team Switcher with Collapse Button */}
+      <div className="relative border-b px-4 py-3 flex items-center justify-between">
         <button
-          className="flex items-center w-full space-x-3 focus:outline-none"
+          className="flex items-center space-x-3 focus:outline-none"
           onClick={() => setShowTeams(!showTeams)}
         >
           <span className="flex items-center">
@@ -66,8 +66,16 @@ export function Sidebar({ className }: SidebarProps) {
               <span className="font-semibold text-foreground">{selectedTeam.name}</span>
             )}
           </span>
-          {!isCollapsed && <ChevronRight className={cn("h-4 w-4 ml-auto transition-transform", showTeams && "rotate-90")} />}
+          {!isCollapsed && <ChevronRight className={cn("h-4 w-4 ml-2 transition-transform", showTeams && "rotate-90")} />}
         </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="h-8 w-8 p-0 ml-2"
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
         {showTeams && !isCollapsed && (
           <div className="absolute left-0 top-full mt-2 w-full bg-background border rounded-lg shadow-lg z-50">
             <div className="p-2">
@@ -98,27 +106,11 @@ export function Sidebar({ className }: SidebarProps) {
         )}
       </div>
 
-      {/* Header */}
-      <div className="flex h-16 items-center justify-between px-4 border-b">
-        {!isCollapsed && (
-          <h2 className="text-lg font-semibold text-foreground">Hive</h2>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-8 w-8 p-0"
-        >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
-
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-2">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
-          const Icon = item.icon
-          
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
           return (
             <Link
               key={item.name}
@@ -138,7 +130,7 @@ export function Sidebar({ className }: SidebarProps) {
                 <span className="ml-3">{item.name}</span>
               )}
             </Link>
-          )
+          );
         })}
       </nav>
 
