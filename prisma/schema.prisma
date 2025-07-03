@@ -23,6 +23,12 @@ model User {
   deleted        Boolean   @default(false)
   lastLoginAt    DateTime? @map("last_login")
   ownerRouteHint String?   @map("owner_route_hint")
+  
+  // GitHub OAuth fields
+  githubToken    String?   @map("github_token")
+  githubUsername String?   @map("github_username")
+  githubUserId   String?   @map("github_user_id")
+  githubOrganizations Json? @map("github_organizations")
 
   @@map("users")
 }

@@ -79,6 +79,10 @@ Hive Platform is an AI-first product development platform that helps teams solve
    NEXTAUTH_URL="http://localhost:3000"
    NEXTAUTH_SECRET="your-secret-key-here"
    JWT_SECRET="your-64-character-hex-secret-here"
+   
+   # GitHub OAuth (for Code Graph feature)
+   GITHUB_CLIENT_ID="your-github-client-id"
+   GITHUB_CLIENT_SECRET="your-github-client-secret"
    ```
 
 4. **Generate JWT secret (optional)**
@@ -116,6 +120,38 @@ Hive uses Sphinx Chat for secure Lightning Network-based authentication:
 
 ### Development Authentication
 In development mode, you can use a quick test login bypass for faster development cycles.
+
+## 🔗 GitHub OAuth Setup
+
+The Code Graph feature requires GitHub OAuth integration for repository access:
+
+### 1. Create GitHub OAuth App
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Click "New OAuth App"
+3. Fill in the application details:
+   - **Application name**: Hive Platform
+   - **Homepage URL**: `http://localhost:3000` (development) or your production URL
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/github/callback` (development) or `https://yourdomain.com/api/auth/github/callback` (production)
+4. Click "Register application"
+5. Copy the **Client ID** and **Client Secret**
+
+### 2. Configure Environment Variables
+Add your GitHub OAuth credentials to `.env.local`:
+```env
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
+```
+
+### 3. Permissions
+The OAuth app requests the following scopes:
+- `repo` - Access to public and private repositories
+- `read:org` - Read organization information
+
+### 4. Testing the Integration
+1. Navigate to the Code Graph page (`/codegraph`)
+2. Click "Connect with GitHub"
+3. Authorize the application in GitHub
+4. Select organizations and repositories to analyze
 
 ## 🐳 Docker Setup
 
