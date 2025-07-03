@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 
-export default function Home() {
+export default function HomePage() {
+
   return (
     <div className="space-y-12">
       {/* Hero Section */}
@@ -17,7 +18,7 @@ export default function Home() {
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Button asChild size="lg">
-            <Link href="/dashboard">Get Started</Link>
+            <Link href="/login">Get Started</Link>
           </Button>
           <Button variant="outline" size="lg" asChild>
             <Link href="/projects">View Projects</Link>
@@ -157,9 +158,14 @@ export default function Home() {
             Join thousands of PMs who are already shipping faster with Hive.
           </p>
         </div>
-        <Button size="lg" asChild>
-          <Link href="/dashboard">Start Your Free Trial</Link>
-        </Button>
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+          <Button asChild size="lg">
+            <Link href="/login">Start Building Today</Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild>
+            <Link href="/demo">Watch Demo</Link>
+          </Button>
+        </div>
       </section>
     </div>
   )

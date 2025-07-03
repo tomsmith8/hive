@@ -54,19 +54,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Check for existing JWT token on mount
   useEffect(() => {
+    console.log('AuthProvider: Checking authentication state...');
     const token = localStorage.getItem('jwt_token');
+    console.log('AuthProvider: Token from localStorage:', token);
+    
     if (token) {
       // Verify token and set user
+      console.log('AuthProvider: Verifying existing token...');
       verifyToken(token);
     } else {
       // Check if we're in development mode and should auto-login
       const isDev = process.env.NODE_ENV === 'development' || 
                    (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
       
+      console.log('AuthProvider: Is development mode:', isDev);
+      
       if (isDev) {
         const devBypass = localStorage.getItem('dev_auth_bypass');
+        console.log('AuthProvider: Dev bypass setting:', devBypass);
+        
         if (devBypass === 'true') {
           // Auto-login with test user in development
+          console.log('AuthProvider: Enabling dev bypass...');
           setUser(DEV_TEST_USER);
           localStorage.setItem('jwt_token', 'dev-jwt-token');
           setCookie('jwt_token', 'dev-jwt-token');
@@ -80,17 +89,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const verifyToken = async (token: string) => {
     try {
+      console.log('AuthProvider: Verifying token:', token);
+      
       // In development, if it's our dev token, just set the user
       const isDev = process.env.NODE_ENV === 'development' || 
                    (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
       
+      console.log('AuthProvider: Is development mode in verifyToken:', isDev);
+      
       if (token === 'dev-jwt-token' && isDev) {
+        console.log('AuthProvider: Using dev token, setting user...');
         setUser(DEV_TEST_USER);
         setCookie('jwt_token', 'dev-jwt-token');
         setIsLoading(false);
         return;
       }
 
+      console.log('AuthProvider: Making API call to verify token...');
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: {
@@ -101,15 +116,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (response.ok) {
         const userData = await response.json();
+        console.log('AuthProvider: Token verified successfully:', userData);
         setUser(userData.user);
         setCookie('jwt_token', token);
       } else {
+        console.log('AuthProvider: Token verification failed, removing token...');
         // Token is invalid, remove it
         localStorage.removeItem('jwt_token');
         removeCookie('jwt_token');
       }
     } catch (error) {
-      console.error('Error verifying token:', error);
+      console.error('AuthProvider: Error verifying token:', error);
       localStorage.removeItem('jwt_token');
       removeCookie('jwt_token');
     } finally {
