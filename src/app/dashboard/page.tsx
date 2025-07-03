@@ -26,7 +26,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex-1 overflow-auto p-6">
+    <div className="w-full max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>

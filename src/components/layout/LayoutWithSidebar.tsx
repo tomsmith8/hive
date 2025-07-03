@@ -18,7 +18,7 @@ export default function LayoutWithSidebar({ children }: { children: React.ReactN
       )}
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
-        <main className="container mx-auto py-6">
+        <main className="py-8 px-8 space-y-6 w-full">
           {children}
         </main>
       </div>
