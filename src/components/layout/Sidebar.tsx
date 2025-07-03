@@ -129,7 +129,13 @@ export function Sidebar({ className }: SidebarProps) {
           <SidebarFooter className="border-t p-4">
             <div className="flex items-center space-x-3">
               <Image
-                src={user.avatar || '/default-avatar.png'}
+                src={
+                  user.avatar
+                    ? user.avatar.includes('api.dicebear.com')
+                      ? user.avatar.replace(/\/svg/g, '/png').replace(/\.svg/g, '.png')
+                      : user.avatar
+                    : '/default-avatar.png'
+                }
                 alt="avatar"
                 width={40}
                 height={40}
