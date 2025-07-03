@@ -5,11 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [isDev, setIsDev] = useState(false);
+
+  useEffect(() => {
+    // Check if we're in development mode
+    setIsDev(process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
@@ -58,24 +64,32 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <SphinxLogin />
             
-            {/* Development Bypass - Only show in development */}
-            {process.env.NODE_ENV === 'development' && (
+            {/* Test User Login - Show in development or localhost */}
+            {isDev && (
               <div className="pt-4 border-t">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-3">
-                    Development Mode
+                    🧪 Test User Login
                   </p>
                   <Button 
                     variant="outline" 
                     onClick={enableDevBypass}
-                    className="w-full"
+                    className="w-full bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
                   >
-                    🚀 Quick Dev Login
+                    🚀 Quick Test Login
                   </Button>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Bypass authentication for development
+                    Login as test user for development
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Debug info in development */}
+            {isDev && (
+              <div className="pt-2 text-xs text-gray-400">
+                <p>Debug: NODE_ENV = {process.env.NODE_ENV || 'undefined'}</p>
+                <p>Debug: Hostname = {typeof window !== 'undefined' ? window.location.hostname : 'server'}</p>
               </div>
             )}
           </CardContent>

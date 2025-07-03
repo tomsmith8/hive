@@ -48,7 +48,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       verifyToken(token);
     } else {
       // Check if we're in development mode and should auto-login
-      if (process.env.NODE_ENV === 'development') {
+      const isDev = process.env.NODE_ENV === 'development' || 
+                   (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+      
+      if (isDev) {
         const devBypass = localStorage.getItem('dev_auth_bypass');
         if (devBypass === 'true') {
           // Auto-login with test user in development
@@ -65,7 +68,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const verifyToken = async (token: string) => {
     try {
       // In development, if it's our dev token, just set the user
-      if (token === 'dev-jwt-token' && process.env.NODE_ENV === 'development') {
+      const isDev = process.env.NODE_ENV === 'development' || 
+                   (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+      
+      if (token === 'dev-jwt-token' && isDev) {
         setUser(DEV_TEST_USER);
         setIsLoading(false);
         return;
