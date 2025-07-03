@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hive Platform - AI-first Product Management",
+  title: "Hive Platform - AI Native Product Development",
   description: "AI-first product management assistant that helps PMs plan backlogs, structure roadmaps, and accelerate delivery through an integrated bounty system.",
 };
 

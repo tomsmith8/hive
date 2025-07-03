@@ -50,7 +50,7 @@ export default function LoginPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold">Welcome to Hive</h1>
           <p className="text-muted-foreground mt-2">
-            AI-first product management platform
+            AI Native Product Development
           </p>
         </div>
 

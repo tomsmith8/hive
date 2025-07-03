@@ -9,10 +9,10 @@ export default function Home() {
       <section className="text-center space-y-6 py-12">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-            AI-First Product Management
+            AI-First Product Development
           </h1>
           <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-            Plan backlogs, structure roadmaps, and accelerate delivery through an integrated bounty system.
+            Harness AI to solve enterprise codebase challenges, visualize complex systems, and accelerate development through intelligent automation.
           </p>
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">

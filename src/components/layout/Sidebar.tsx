@@ -17,7 +17,11 @@ import {
   Calendar,
   Bell,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Brain,
+  Trophy,
+  Workflow,
+  Zap
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/providers/AuthProvider'
@@ -32,9 +36,9 @@ const navigation = [
 ]
 
 const teams = [
-  { name: 'Acme Inc', icon: Home },
-  { name: 'Acme Corp.', icon: BarChart3 },
-  { name: 'Evil Corp.', icon: Settings },
+  { name: 'Stakwork', icon: Workflow },
+  { name: 'Secondbrain', icon: Brain },
+  { name: 'Bounty Platform', icon: Trophy },
 ]
 
 interface SidebarProps {
