@@ -4,6 +4,7 @@
 
 import crypto from 'crypto';
 import * as bitcoin from 'bitcoinjs-lib';
+import * as bitcoinMessage from 'bitcoinjs-message';
 import { ECPairFactory } from 'ecpair';
 import * as ecc from 'tiny-secp256k1';
 
@@ -30,55 +31,23 @@ export function verifyBitcoinSignature(message: Buffer, pubKey: string, signatur
       return false;
     }
     
-    // Create the message to verify (prefix + message)
-    const messageToVerify = Buffer.concat([SIGNED_MSG_PREFIX, message]);
+    // Convert public key to Bitcoin address for verification
+    const pubKeyBuffer = Buffer.from(pubKey, 'hex');
+    const { address } = bitcoin.payments.p2pkh({ pubkey: pubKeyBuffer });
     
-    // Double SHA256 hash the message (Bitcoin standard)
-    const messageHash = crypto.createHash('sha256').update(messageToVerify).digest();
-    const doubleHash = crypto.createHash('sha256').update(messageHash).digest();
-    
-    // Extract recovery ID and signature components
-    const recoveryId = signature[0] - 27;
-    const r = signature.slice(1, 33);
-    const s = signature.slice(33, 65);
-    
-    // Verify recovery ID is valid (0-3)
-    if (recoveryId < 0 || recoveryId > 3) {
+    if (!address) {
+      console.error('Failed to generate Bitcoin address from public key');
       return false;
     }
     
-    // Recover public key from signature using tiny-secp256k1
-    const recoveredPubKey = recoverPublicKey(doubleHash, r, s, recoveryId);
+    // Use bitcoinjs-message for verification (more reliable and secure)
+    const isValid = bitcoinMessage.verify(message, address, signature);
     
-    if (!recoveredPubKey) {
-      return false;
-    }
-    
-    // Compare recovered public key with provided public key
-    return recoveredPubKey.toLowerCase() === pubKey.toLowerCase();
+    return isValid;
     
   } catch (error) {
     console.error('Bitcoin signature verification error:', error);
     return false;
-  }
-}
-
-function recoverPublicKey(hash: Buffer, r: Buffer, s: Buffer, recoveryId: number): string | null {
-  try {
-    // Use tiny-secp256k1 for ECDSA recovery
-    const signature = Buffer.concat([r, s]);
-    const recoveredPubKey = ecc.recover(hash, signature, recoveryId as 0 | 1 | 2 | 3, true);
-    
-    if (!recoveredPubKey) {
-      return null;
-    }
-    
-    // Return the public key in hex format
-    return Buffer.from(recoveredPubKey).toString('hex');
-    
-  } catch (error) {
-    console.error('Public key recovery error:', error);
-    return null;
   }
 }
 
