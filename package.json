@@ -13,8 +13,14 @@
     "test:coverage": "vitest --coverage",
     "test:unit": "vitest run src/__tests__/unit",
     "test:unit:watch": "vitest --watch src/__tests__/unit",
-    "test:integration": "vitest run src/__tests__/integration",
-    "test:integration:watch": "vitest --watch src/__tests__/integration"
+    "test:integration": "TEST_SUITE=integration vitest run src/__tests__/integration",
+    "test:integration:watch": "TEST_SUITE=integration vitest --watch src/__tests__/integration",
+    "test:db:start": "docker-compose -f docker-compose.test.yml up -d",
+    "test:db:stop": "docker-compose -f docker-compose.test.yml down",
+    "test:db:setup": "node scripts/setup-test-db.js",
+    "test:db:cleanup": "node scripts/cleanup-test-db.js",
+    "test:db:reset": "npm run test:db:cleanup && npm run test:db:setup",
+    "test:integration:full": "npm run test:db:start && sleep 5 && npm run test:db:setup && npm run test:integration && npm run test:db:stop"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

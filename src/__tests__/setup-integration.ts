@@ -11,7 +11,10 @@ declare global {
 
 // For integration tests, we need a real database
 // You can set this to your test database URL
-const DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5432/hive_test'
+const DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5433/hive_test'
+
+// Debug: Print the database URL being used
+console.log('🧪 Test setup - Database URL:', DATABASE_URL)
 
 // Create a test Prisma client
 const prisma = new PrismaClient({
