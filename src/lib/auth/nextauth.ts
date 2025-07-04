@@ -40,7 +40,51 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // No upsert here! Only allow sign in.
+      // If this is a GitHub sign-in, we need to handle re-authentication
+      if (account?.provider === "github") {
+        try {
+          // Check if there's an existing user with the same email
+          const existingUser = await db.user.findUnique({
+            where: {
+              email: user.email,
+            },
+          });
+
+          if (existingUser) {
+            // Check if there's already a GitHub account for this user
+            const existingAccount = await db.account.findFirst({
+              where: {
+                userId: existingUser.id,
+                provider: "github",
+              },
+            });
+
+            if (!existingAccount) {
+              // Create a new account record linking GitHub to the existing user
+              await db.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  refresh_token: account.refresh_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                },
+              });
+
+              // Update the user object to use the existing user's ID
+              user.id = existingUser.id;
+            }
+          }
+        } catch (error) {
+          console.error("Error handling GitHub re-authentication:", error);
+        }
+      }
       return true;
     },
     async session({ session, user }) {
@@ -118,7 +162,11 @@ export const authOptions: NextAuthOptions = {
               });
             } catch (err) {
               // If GitHub API fails, just skip
+              console.error("Failed to fetch GitHub profile:", err);
             }
+          } else if (account && !account.access_token) {
+            // Account exists but token is revoked - this is expected after disconnection
+            console.log("GitHub account exists but token is revoked - user needs to re-authenticate");
           }
         }
 
