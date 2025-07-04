@@ -1,13 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Sparkles, Users, Zap, Shield, ChevronDown, Search, Bell, User, Settings, LogOut, Plus, CheckCircle, Clock, TrendingUp, LogIn } from "lucide-react";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
@@ -54,10 +52,12 @@ export default function HomePage() {
                 <Bell className="w-4 h-4" />
               </Button>
               
-              <Button variant="outline" className="flex items-center space-x-2">
-                <LogIn className="w-4 h-4" />
-                <span>Sign In</span>
-              </Button>
+              <Link href="/auth/signin">
+                <Button variant="outline" className="flex items-center space-x-2">
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In</span>
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -80,33 +80,12 @@ export default function HomePage() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="lg" className="text-lg px-8 py-6">
-                  Get Started
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Create Your Account</DialogTitle>
-                  <DialogDescription>
-                    Join visionary PMs and teams who just get things done with Hive.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="Enter your email" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" placeholder="Create a password" />
-                  </div>
-                  <Button className="w-full">Create Account</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Link href="/auth/signin">
+              <Button size="lg" className="text-lg px-8 py-6">
+                Get Started
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

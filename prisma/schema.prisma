@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -8,24 +7,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// NextAuth.js Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
 model User {
-  id             String    @id @default(cuid())
-  name           String?
-  description    String?
-  avatar         String?
-  email          String?   @unique // Primary email
-  emailVerified  DateTime? @map("email_verified")
-  role           UserRole  @default(USER)
-  timezone       String?   @default("UTC")
-  locale         String?   @default("en")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  deleted        Boolean   @default(false)
-  lastLoginAt    DateTime? @map("last_login_at")
-  
-  // Relations
-  authMethods    UserAuth[]
-  sessions       Session[]
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  role          UserRole  @default(USER)
+  timezone      String?   @default("UTC")
+  locale        String?   @default("en")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deleted       Boolean   @default(false)
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  accounts Account[]
+  sessions Session[]
+  githubAuth GitHubAuth?
 
   @@index([createdAt])
   @@index([deleted])
@@ -33,49 +62,19 @@ model User {
   @@map("users")
 }
 
-model UserAuth {
-  id            String           @id @default(cuid())
-  userId        String           @map("user_id")
-  provider      AuthProvider
-  providerId    String           @map("provider_id") // External ID from the provider
-  email         String?          @db.VarChar(255)
-  username      String?
-  displayName   String?          @map("display_name")
-  avatar        String?
-  
-  // Encrypted/hashed tokens - never store plain text
-  accessTokenHash   String?      @map("access_token_hash")
-  refreshTokenHash  String?      @map("refresh_token_hash")
-  tokenExpiresAt    DateTime?    @map("token_expires_at")
-  tokenCreatedAt    DateTime?    @map("token_created_at")
-  
-  // Security tracking
-  isActive          Boolean      @default(true) @map("is_active")
-  lastUsedAt        DateTime?    @map("last_used_at")
-  loginAttempts     Int          @default(0) @map("login_attempts")
-  lockedUntil       DateTime?    @map("locked_until")
-  
-  createdAt         DateTime     @default(now()) @map("created_at")
-  updatedAt         DateTime     @updatedAt @map("updated_at")
-  
-  // Provider-specific data (encrypted)
-  providerDataHash  String?      @map("provider_data_hash")
-  
-  // Relations
-  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  githubAuth        GitHubAuth?
-  
-  @@unique([provider, providerId])
-  @@index([userId])
-  @@index([provider])
-  @@index([email])
-  @@index([isActive])
-  @@map("user_auth")
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
+// Custom GitHub Auth Model
 model GitHubAuth {
   id                    String   @id @default(cuid())
-  userAuthId            String   @unique @map("user_auth_id")
+  userId                String   @unique @map("user_id")
   
   // Core GitHub data
   githubUserId          String   @map("github_user_id") // GitHub's numeric ID
@@ -112,36 +111,11 @@ model GitHubAuth {
   updatedAt            DateTime  @updatedAt @map("updated_at")
   
   // Relations
-  userAuth             UserAuth  @relation(fields: [userAuthId], references: [id], onDelete: Cascade)
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([githubUserId])
   @@index([githubUsername])
   @@map("github_auth")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  sessionToken String   @unique @map("session_token") // This should be hashed
-  expiresAt    DateTime @map("expires_at")
-  userAgent    String?  @map("user_agent")
-  ipAddress    String?  @map("ip_address")
-  createdAt    DateTime @default(now()) @map("created_at")
-  lastUsedAt   DateTime @default(now()) @map("last_used_at")
-  
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([expiresAt])
-  @@map("sessions")
-}
-
-enum AuthProvider {
-  GITHUB
-  GOOGLE
-  SPHINX
-  EMAIL
-  WALLET
 }
 
 enum UserRole {
