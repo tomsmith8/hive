@@ -9,13 +9,21 @@ import {
 import { PrismaClient } from '@/generated/prisma'
 import * as bitcoin from 'bitcoinjs-lib'
 import * as bitcoinMessage from 'bitcoinjs-message'
+import { ECPairFactory } from 'ecpair'
+import * as ecc from 'tiny-secp256k1'
+
+// Testnet keypair generated for integration tests
+const testWIF = 'cMipSYAAPqfq2jur45tNab4pdbbv6KEJhoQUJiKbPMTnnJHJagux'
+const pubKey1 = '032f648c133686cdb2e2862da8cb0518c92f701c500ceded92267d539a1828244b'
+const address1 = 'mwiCYJERo5tGHW64cF6zUaTZ7UyFxWYsAx'
+
+const ECPair = ECPairFactory(ecc)
 
 // Valid test data matching setup-test-db.js
-const pubKey1 = '02ef82655be122df173e66ffce5ef845ed2defe04489eed3ba8f20afa2df4c0ab7';
-const pubKey2 = '02be0f7b80cfd2b3d89012c19e286437d90c192bd26e814fd5c90d6090c0a9bff2';
-const challenge1 = 'b7ee6b7d497cb21df2101e1a3f3b85322ab8c4d5a496b05de9dcb50995f04ae1';
-const challenge2 = '344308201b1c8a7af19f36bcddcb011921b8d6c7ec189b0427823a0872aef535';
-const validSignature = '1f368eeeec0640708f4a2c37fd403b98e52321c99cdc886a8d487651620250ba3311115d6dea5ebee090403a2721addbc2c4a523e9e351d8f076466f15ae80ede8';
+const pubKey2 = '02be0f7b80cfd2b3d89012c19e286437d90c192bd26e814fd5c90d6090c0a9bff2'
+const challenge1 = 'b7ee6b7d497cb21df2101e1a3f3b85322ab8c4d5a496b05de9dcb50995f04ae1'
+const challenge2 = '344308201b1c8a7af19f36bcddcb011921b8d6c7ec189b0427823a0872aef535'
+const validSignature = '1f368eeeec0640708f4a2c37fd403b98e52321c99cdc886a8d487651620250ba3311115d6dea5ebee090403a2721addbc2c4a523e9e351d8f076466f15ae80ede8'
 
 describe('Auth Module Integration Tests', () => {
   let prisma: PrismaClient
@@ -108,12 +116,59 @@ describe('Auth Module Integration Tests', () => {
       }
     })
 
-    it.skip('should handle complete authentication flow from challenge to JWT', async () => {
-      // Skipped - needs real signature generation for specific challenge
+    it('should handle complete authentication flow from challenge to JWT', async () => {
+      // Generate a challenge
+      const challenge = await generateAuthChallenge()
+      // Sign the challenge with the test private key
+      const keyPair = ECPair.fromWIF(testWIF, bitcoin.networks.testnet)
+      if (!keyPair.privateKey) throw new Error('Test keyPair has no privateKey!');
+      const signature = bitcoinMessage.sign(
+        Buffer.from(challenge.challenge, 'hex'),
+        toBufferMaybe(keyPair.privateKey),
+        keyPair.compressed
+      )
+      // Verify the challenge with the signature
+      const isValid = await verifyAuthChallenge(challenge.challenge, pubKey1, signature.toString('hex'))
+      expect(isValid).toBe(true)
+      // Get or create user
+      const user = await getOrCreateUser(pubKey1, 'Test User')
+      expect(user.ownerPubKey).toBe(pubKey1)
+      expect(user.ownerAlias).toBe('Test User')
+      expect(user.role).toBe('USER')
+      // Check auth status (should now return JWT)
+      const authResponse = await checkAuthStatus(challenge.challenge)
+      expect(authResponse).toBeDefined()
+      expect(authResponse?.pubkey).toBe(pubKey1)
+      expect(authResponse?.jwt).toBeDefined()
     })
 
-    it.skip('should handle multiple authentication flows for different users', async () => {
-      // Skipped - needs real signature generation for specific challenge
+    it('should handle multiple authentication flows for different users', async () => {
+      // Generate two challenges
+      const challenge1 = await generateAuthChallenge()
+      const challenge2 = await generateAuthChallenge()
+      // Sign both challenges with the test private key
+      const keyPair = ECPair.fromWIF(testWIF, bitcoin.networks.testnet)
+      if (!keyPair.privateKey) throw new Error('Test keyPair has no privateKey!');
+      const signature1 = bitcoinMessage.sign(
+        Buffer.from(challenge1.challenge, 'hex'),
+        toBufferMaybe(keyPair.privateKey),
+        keyPair.compressed
+      )
+      const signature2 = bitcoinMessage.sign(
+        Buffer.from(challenge2.challenge, 'hex'),
+        toBufferMaybe(keyPair.privateKey),
+        keyPair.compressed
+      )
+      // Verify both challenges
+      const isValid1 = await verifyAuthChallenge(challenge1.challenge, pubKey1, signature1.toString('hex'))
+      const isValid2 = await verifyAuthChallenge(challenge2.challenge, pubKey1, signature2.toString('hex'))
+      expect(isValid1).toBe(true)
+      expect(isValid2).toBe(true)
+      // Check auth status for both
+      const authResponse1 = await checkAuthStatus(challenge1.challenge)
+      const authResponse2 = await checkAuthStatus(challenge2.challenge)
+      expect(authResponse1?.pubkey).toBe(pubKey1)
+      expect(authResponse2?.pubkey).toBe(pubKey1)
     })
 
     it('should handle concurrent authentication requests', async () => {
@@ -360,4 +415,8 @@ describe('Auth Module Integration Tests', () => {
 
     expect(deletedUser).toBeNull()
   })
-}) 
+})
+
+function toBufferMaybe(val: any) {
+  return Buffer.isBuffer(val) ? val : Buffer.from(val);
+} 
