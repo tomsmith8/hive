@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/providers/AuthProvider'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -24,7 +25,8 @@ export function Header() {
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none">
           </div>
-          <nav className="flex items-center">
+          <nav className="flex items-center space-x-2">
+            <ThemeToggle />
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-muted-foreground">

@@ -1,100 +1,95 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { ProtectedPageTemplate } from "@/components/templates/ProtectedPageTemplate"
+import { useTheme } from "@/providers/ThemeProvider"
+import { useState } from "react"
+import { Palette, Bell, Globe } from "lucide-react"
 
 export default function SettingsPage() {
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleDisconnectGitHub = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/user/github/disconnect', {
-        method: 'POST',
-      });
-      
-      if (response.ok) {
-        // Refresh the page to update the UI
-        window.location.reload();
-      } else {
-        console.error('Failed to disconnect GitHub');
-      }
-    } catch (error) {
-      console.error('Error disconnecting GitHub:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { theme, resolvedTheme } = useTheme()
+  const [notifications, setNotifications] = useState(true)
+  const [language, setLanguage] = useState("English")
 
   return (
     <ProtectedPageTemplate pageName="Settings">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">
-            Configure your account and development environment settings.
-          </p>
-        </div>
-
-        {/* GitHub Integration */}
+        {/* Appearance Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>GitHub Integration</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              Appearance
+            </CardTitle>
             <CardDescription>
-              Manage your GitHub connection and repository access.
+              Customize the look and feel of the application.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">GitHub Connected</p>
+              <div className="space-y-0.5">
+                <Label htmlFor="theme">Theme</Label>
                 <p className="text-sm text-muted-foreground">
-                  Your GitHub account is connected and ready for code analysis.
+                  Choose your preferred color scheme.
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={handleDisconnectGitHub}
-                disabled={isLoading}
-              >
-                {isLoading ? "Disconnecting..." : "Disconnect GitHub"}
-              </Button>
+              <ThemeToggle />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Current theme: {theme === 'system' ? `System (${resolvedTheme})` : theme}
             </div>
           </CardContent>
         </Card>
 
-        {/* Account Settings */}
+        {/* Notifications */}
         <Card>
           <CardHeader>
-            <CardTitle>Account Settings</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notifications
+            </CardTitle>
             <CardDescription>
-              Manage your account preferences and profile information.
+              Manage your notification preferences.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Account settings will be available in a future update.
-            </p>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notifications">Push Notifications</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive notifications for important updates.
+                </p>
+              </div>
+              <Switch
+                id="notifications"
+                checked={notifications}
+                onCheckedChange={setNotifications}
+              />
+            </div>
           </CardContent>
         </Card>
 
-        {/* Development Settings */}
+        {/* Language & Region */}
         <Card>
           <CardHeader>
-            <CardTitle>Development Settings</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Language & Region
+            </CardTitle>
             <CardDescription>
-              Configure your development environment and preferences.
+              Set your preferred language and regional settings.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Development settings will be available in a future update.
+              Language settings will be available in a future update.
             </p>
           </CardContent>
         </Card>
       </div>
     </ProtectedPageTemplate>
-  );
+  )
 } 
