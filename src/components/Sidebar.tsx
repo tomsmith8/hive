@@ -12,7 +12,8 @@ import {
   LogOut, 
   Github,
   Menu,
-  X
+  X,
+  CheckSquare
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -31,7 +32,8 @@ interface SidebarProps {
 
 const navigationItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard" },
-  { icon: User, label: "Profile", href: "/dashboard/profile" },
+  { icon: CheckSquare, label: "Tasks", href: "/dashboard/tasks" },
+  { icon: Github, label: "Code Graph", href: "/dashboard/code-graph" },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 

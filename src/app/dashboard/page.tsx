@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { User, Github, Calendar, Activity } from "lucide-react";
+import { User, Github, Calendar, Activity, Code, BarChart3, Settings } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -29,12 +29,12 @@ export default async function DashboardPage() {
             Welcome back, {session.user?.name || "User"}!
           </h1>
           <p className="text-gray-600 mt-2">
-            Here's what's happening with your account.
+            Here's an overview of your development activity.
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">GitHub Repos</CardTitle>
@@ -44,42 +44,24 @@ export default async function DashboardPage() {
               <div className="text-2xl font-bold">
                 {(session.user as any)?.github?.publicRepos || 0}
               </div>
+              <p className="text-xs text-muted-foreground">
+                Public repositories
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Followers</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {(session.user as any)?.github?.followers || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Account Type</CardTitle>
+              <CardTitle className="text-sm font-medium">Account Status</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {session.user?.email ? "Verified" : "Unverified"}
+                Active
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">User ID</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm font-mono text-muted-foreground">
-                {(session.user as any)?.id?.slice(0, 8) || "N/A"}
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Connected via GitHub
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -89,46 +71,30 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Profile Information
+                <Code className="w-5 h-5" />
+                Quick Actions
               </CardTitle>
               <CardDescription>
-                Your account details from GitHub
+                Common tasks and shortcuts
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                {session.user?.image && (
-                  <img 
-                    src={session.user.image} 
-                    alt="Avatar" 
-                    className="w-12 h-12 rounded-full"
-                  />
-                )}
-                <div>
-                  <div className="font-semibold">{session.user?.name}</div>
-                  <div className="text-sm text-gray-500">{session.user?.email}</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium">View Code Graph</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Analyze your repositories</p>
+                </div>
+                <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">Settings</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Manage your preferences</p>
                 </div>
               </div>
-              
-              {(session.user as any)?.github && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Github className="w-4 h-4" />
-                    <span className="text-sm">
-                      @{(session.user as any).github.username}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">
-                      {(session.user as any).github.publicRepos} repos
-                    </Badge>
-                    <Badge variant="secondary">
-                      {(session.user as any).github.followers} followers
-                    </Badge>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -136,33 +102,33 @@ export default async function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Session Details
+                Recent Activity
               </CardTitle>
               <CardDescription>
-                Authentication information
+                Your latest development activity
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="text-sm font-medium">User ID</div>
-                <div className="text-sm text-gray-500 font-mono">
-                  {(session.user as any)?.id || "N/A"}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Connected to GitHub</div>
+                    <div className="text-xs text-gray-500">Account successfully linked</div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Provider</div>
-                <div className="flex items-center gap-2">
-                  <Github className="w-4 h-4" />
-                  <span className="text-sm">GitHub OAuth</span>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Email Verified</div>
-                <div className="text-sm text-gray-500">
-                  {session.user?.email ? "Yes" : "No"}
-                </div>
+                
+                {(session.user as any)?.github && (
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">Profile Synced</div>
+                      <div className="text-xs text-gray-500">
+                        {(session.user as any).github.publicRepos} repositories available
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
