@@ -3,23 +3,14 @@
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/providers/ThemeProvider';
 
 export function ThemeSettings() {
-  const { theme, setTheme } = useTheme();
-
   const themes = [
     {
       id: 'light' as const,
       name: 'Light',
       description: 'Light theme for bright environments',
       icon: Sun,
-    },
-    {
-      id: 'dark' as const,
-      name: 'Dark',
-      description: 'Dark theme for low-light environments',
-      icon: Moon,
     },
     {
       id: 'system' as const,
@@ -44,14 +35,12 @@ export function ThemeSettings() {
         <div className="grid gap-4">
           {themes.map((themeOption) => {
             const Icon = themeOption.icon;
-            const isActive = theme === themeOption.id;
             
             return (
               <Button
                 key={themeOption.id}
-                variant={isActive ? 'default' : 'outline'}
+                variant="outline"
                 className="justify-start h-auto p-4"
-                onClick={() => setTheme(themeOption.id)}
               >
                 <Icon className="w-5 h-5 mr-3" />
                 <div className="text-left">

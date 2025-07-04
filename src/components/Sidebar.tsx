@@ -14,7 +14,6 @@ import {
   Menu,
   CheckSquare
 } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface SidebarProps {
@@ -106,16 +105,6 @@ export function Sidebar({ user }: SidebarProps) {
           ))}
         </ul>
       </nav>
-
-      <Separator />
-
-      {/* Theme Toggle */}
-      <div className="p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Theme</span>
-          <ThemeToggle />
-        </div>
-      </div>
 
       <Separator />
 

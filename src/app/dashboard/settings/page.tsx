@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { DisconnectAccount } from "@/components/DisconnectAccount";
-import { ThemeSettings } from "@/components/ThemeSettings";
 import { Github } from "lucide-react";
 
 export default async function SettingsPage() {
@@ -32,8 +31,6 @@ export default async function SettingsPage() {
         </div>
 
         <div className="max-w-2xl space-y-6">
-          <ThemeSettings />
-          
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
