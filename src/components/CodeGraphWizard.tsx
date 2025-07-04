@@ -53,6 +53,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [parsedRepoName, setParsedRepoName] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("");
 
   // Fetch repositories when component mounts
   useEffect(() => {
@@ -67,6 +68,13 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       parseRepositoryName(selectedRepo.name);
     }
   }, [selectedRepo]);
+
+  // Update workspaceName when parsedRepoName changes (after repo selection)
+  useEffect(() => {
+    if (parsedRepoName) {
+      setWorkspaceName(parsedRepoName);
+    }
+  }, [parsedRepoName]);
 
   const fetchRepositories = async () => {
     setLoading(true);
@@ -402,114 +410,46 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   );
 
   const renderStep3 = () => (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-green-600" />
         </div>
-        <CardTitle className="text-2xl">Repository Selected!</CardTitle>
+        <CardTitle className="text-2xl">Create Workspace</CardTitle>
         <CardDescription>
-          Here&apos;s what we found about your repository
+          Set up your workspace for code graph analysis
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {selectedRepo && (
-          <div className="space-y-6">
-            {/* Repository Info */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
-              <div className="flex items-center gap-3 mb-4">
-                <Github className="w-6 h-6 text-blue-600" />
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {selectedRepo.full_name}
-                </h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Repository Name</Label>
-                  <p className="text-lg font-mono bg-white px-3 py-2 rounded border">
-                    {selectedRepo.name}
-                  </p>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Parsed Name</Label>
-                  <p className="text-lg font-semibold text-blue-600 bg-white px-3 py-2 rounded border">
-                    {parsedRepoName}
-                  </p>
-                </div>
-              </div>
-
-              {selectedRepo.description && (
-                <div className="mt-4">
-                  <Label className="text-sm font-medium text-gray-700">Description</Label>
-                  <p className="text-gray-600 bg-white px-3 py-2 rounded border">
-                    {selectedRepo.description}
-                  </p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{selectedRepo.stargazers_count}</div>
-                  <div className="text-sm text-gray-600">Stars</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{selectedRepo.watchers_count}</div>
-                  <div className="text-sm text-gray-600">Watchers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {selectedRepo.language || "N/A"}
-                  </div>
-                  <div className="text-sm text-gray-600">Language</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {selectedRepo.private ? "Private" : "Public"}
-                  </div>
-                  <div className="text-sm text-gray-600">Visibility</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Next Steps */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg">
-              <h4 className="text-lg font-semibold mb-3">What&apos;s Next?</h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-bold">1</span>
-                  </div>
-                  <span>Analyze repository structure and dependencies</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-bold">2</span>
-                  </div>
-                  <span>Generate interactive code graph visualization</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-bold">3</span>
-                  </div>
-                  <span>Identify collaboration patterns and insights</span>
-                </div>
-              </div>
-            </div>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            handleNext();
+          }}
+          className="space-y-4"
+        >
+          <div>
+            <Label htmlFor="workspaceName" className="text-sm font-medium text-gray-700">
+              Workspace Name
+            </Label>
+            <Input
+              id="workspaceName"
+              value={workspaceName}
+              onChange={e => setWorkspaceName(e.target.value)}
+              className="mt-2"
+              required
+            />
           </div>
-        )}
-
-        {/* Navigation */}
-        <div className="flex justify-between pt-4">
-          <Button variant="outline" onClick={handleBack}>
-            Back
-          </Button>
-          <Button className="px-8 bg-green-600 hover:bg-green-700">
-            Start Analysis
-            <Code className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+          <div className="flex justify-between pt-4">
+            <Button variant="outline" type="button" onClick={handleBack}>
+              Back
+            </Button>
+            <Button className="px-8 bg-green-600 hover:bg-green-700" type="submit">
+              Next
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );
