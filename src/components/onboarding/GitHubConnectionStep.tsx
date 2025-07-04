@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Github, CheckCircle, AlertCircle } from 'lucide-react';
@@ -13,6 +13,24 @@ export function GitHubConnectionStep({ onConnected, onError }: GitHubConnectionS
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [user, setUser] = useState<any>(null);
+
+  // Check if user already has GitHub connected
+  useEffect(() => {
+    checkGitHubConnection();
+  }, []);
+
+  const checkGitHubConnection = async () => {
+    try {
+      const response = await fetch('/api/user/github');
+      if (response.ok) {
+        const data = await response.json();
+        setIsConnected(true);
+        setUser({ login: data.githubUsername });
+      }
+    } catch (error) {
+      // User not connected, that's fine
+    }
+  };
 
   const handleGitHubConnect = async () => {
     setIsConnecting(true);

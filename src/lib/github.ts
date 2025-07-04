@@ -71,9 +71,12 @@ export class GitHubService {
   }
 
   static async getUser(token: string): Promise<GitHubUser> {
+    // Handle encrypted tokens (basic check for now)
+    const actualToken = token.startsWith('encrypted:') ? token.substring(10) : token;
+    
     const response = await fetch(`${this.GITHUB_API_BASE}/user`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${actualToken}`,
         'Accept': 'application/vnd.github.v3+json',
       },
     });
@@ -86,9 +89,12 @@ export class GitHubService {
   }
 
   static async getUserOrganizations(token: string): Promise<GitHubOrganization[]> {
+    // Handle encrypted tokens (basic check for now)
+    const actualToken = token.startsWith('encrypted:') ? token.substring(10) : token;
+    
     const response = await fetch(`${this.GITHUB_API_BASE}/user/orgs`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${actualToken}`,
         'Accept': 'application/vnd.github.v3+json',
       },
     });
@@ -104,9 +110,12 @@ export class GitHubService {
     token: string,
     org: string
   ): Promise<GitHubRepository[]> {
+    // Handle encrypted tokens (basic check for now)
+    const actualToken = token.startsWith('encrypted:') ? token.substring(10) : token;
+    
     const response = await fetch(`${this.GITHUB_API_BASE}/orgs/${org}/repos`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${actualToken}`,
         'Accept': 'application/vnd.github.v3+json',
       },
     });
@@ -119,9 +128,12 @@ export class GitHubService {
   }
 
   static async getUserRepositories(token: string): Promise<GitHubRepository[]> {
+    // Handle encrypted tokens (basic check for now)
+    const actualToken = token.startsWith('encrypted:') ? token.substring(10) : token;
+    
     const response = await fetch(`${this.GITHUB_API_BASE}/user/repos`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${actualToken}`,
         'Accept': 'application/vnd.github.v3+json',
       },
     });

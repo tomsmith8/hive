@@ -7,6 +7,7 @@ import { GitHubConnectionStep } from './GitHubConnectionStep';
 import { OrganizationSelectionStep } from './OrganizationSelectionStep';
 import { RepositorySelectionStep } from './RepositorySelectionStep';
 import { GitHubService, GitHubOrganization, GitHubRepository } from '@/lib/github';
+import { getGitHubOAuthError, handleGitHubAPIError, GitHubOAuthError } from '@/lib/github/errors';
 
 type WizardStepType = 'github' | 'organizations' | 'repositories' | 'complete';
 
@@ -28,31 +29,62 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepositories, setSelectedRepositories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<GitHubOAuthError | null>(null);
 
   // Check for OAuth callback
   useEffect(() => {
     const step = searchParams.get('step');
-    const error = searchParams.get('error');
+    const errorCode = searchParams.get('error');
     
-    if (error) {
-      setError(error);
+    if (errorCode) {
+      const errorInfo = getGitHubOAuthError(errorCode);
+      setError(errorInfo);
       return;
     }
 
     if (step === 'organizations') {
-      // This would typically come from the OAuth callback
-      // For now, we'll simulate it
-      setCurrentStep('organizations');
-      handleGitHubConnected('mock-token', { login: 'testuser' });
+      // OAuth callback completed, fetch the actual GitHub data
+      fetchGitHubData();
     }
   }, [searchParams]);
+
+  const fetchGitHubData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // First, get the GitHub token
+      const tokenResponse = await fetch('/api/user/github/token');
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to fetch GitHub token');
+      }
+      const { token } = await tokenResponse.json();
+
+      // Get GitHub user data
+      const userData = await GitHubService.getUser(token);
+      
+      // Set the token and user data
+      setGitHubToken(token);
+      setGitHubUser(userData);
+
+      // Fetch organizations
+      const orgs = await GitHubService.getUserOrganizations(token);
+      setOrganizations(orgs);
+      setCurrentStep('organizations');
+    } catch (error) {
+      console.error('Failed to fetch GitHub data:', error);
+      const errorInfo = handleGitHubAPIError(error);
+      setError(errorInfo);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGitHubConnected = async (token: string, user: any) => {
     setGitHubToken(token);
     setGitHubUser(user);
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
       // Fetch organizations
@@ -61,7 +93,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
       setCurrentStep('organizations');
     } catch (error) {
       console.error('Failed to fetch organizations:', error);
-      setError('Failed to fetch organizations. Please try again.');
+      const errorInfo = handleGitHubAPIError(error);
+      setError(errorInfo);
     } finally {
       setLoading(false);
     }
@@ -70,7 +103,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const handleOrganizationsSelected = async (orgs: string[]) => {
     setSelectedOrganizations(orgs);
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
       // Fetch repositories for selected organizations
@@ -97,7 +130,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
       setCurrentStep('repositories');
     } catch (error) {
       console.error('Failed to fetch repositories:', error);
-      setError('Failed to fetch repositories. Please try again.');
+      const errorInfo = handleGitHubAPIError(error);
+      setError(errorInfo);
     } finally {
       setLoading(false);
     }
@@ -127,7 +161,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const handleError = (errorMessage: string) => {
-    setError(errorMessage);
+    const errorInfo = handleGitHubAPIError({ message: errorMessage });
+    setError(errorInfo);
   };
 
   const renderCurrentStep = () => {
@@ -213,15 +248,15 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
       <div className="w-full max-w-2xl mx-auto">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <div className="text-red-600 font-medium mb-2">Error</div>
-          <div className="text-red-700 mb-4">{error}</div>
+          <div className="text-red-700 mb-4">{error.userMessage}</div>
           <button
             onClick={() => {
-              setError('');
+              setError(null);
               setCurrentStep('github');
             }}
             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
           >
-            Try Again
+            {error.action === 'login' ? 'Go to Login' : 'Try Again'}
           </button>
         </div>
       </div>

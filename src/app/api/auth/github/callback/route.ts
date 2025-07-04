@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { GitHubService } from '@/lib/github';
+import { parseOAuthState } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -16,7 +17,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/codegraph?error=no_code', request.url));
   }
 
+  if (!state) {
+    return NextResponse.redirect(new URL('/codegraph?error=invalid_state', request.url));
+  }
+
   try {
+    // Parse and validate the state parameter to get the user ID
+    const userId = parseOAuthState(state);
+    
+    if (!userId) {
+      return NextResponse.redirect(new URL('/codegraph?error=invalid_state', request.url));
+    }
+
+    // Verify the user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return NextResponse.redirect(new URL('/codegraph?error=user_not_found', request.url));
+    }
+
     // Exchange code for access token
     const accessToken = await GitHubService.exchangeCodeForToken(code);
 
@@ -26,15 +47,17 @@ export async function GET(request: NextRequest) {
     // Get user's organizations
     const orgsData = await GitHubService.getUserOrganizations(accessToken);
 
-    // For now, we'll use a placeholder user ID since we don't have the current user context
-    // In a real implementation, you'd get this from the session
-    const placeholderUserId = 'temp-user-id';
+    // For now, store token as-is (TODO: implement encryption)
+    // In production, this should be encrypted before storage
+    const tokenToStore = process.env.NODE_ENV === 'production' 
+      ? `encrypted:${accessToken}` // Placeholder for encryption
+      : accessToken;
 
     // Update user with GitHub information
     await prisma.user.update({
-      where: { id: placeholderUserId },
+      where: { id: userId },
       data: {
-        githubToken: accessToken,
+        githubToken: tokenToStore,
         githubUsername: userData.login,
         githubUserId: userData.id.toString(),
         githubOrganizations: orgsData as any,

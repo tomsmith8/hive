@@ -24,4 +24,11 @@ export {
   validatePublicKey, 
   validateChallenge, 
   validateSignature 
-} from './validation'; 
+} from './validation';
+
+// Re-export utility functions
+export { 
+  getCurrentUser, 
+  generateOAuthState, 
+  parseOAuthState 
+} from './utils'; 
