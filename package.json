@@ -7,7 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup": "node scripts/setup-env.js"
+    "setup": "node scripts/setup-env.js",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:unit": "vitest run src/__tests__/unit",
+    "test:unit:watch": "vitest --watch src/__tests__/unit",
+    "test:integration": "vitest run src/__tests__/integration",
+    "test:integration:watch": "vitest --watch src/__tests__/integration"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

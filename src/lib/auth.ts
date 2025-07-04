@@ -99,7 +99,7 @@ export async function verifyAuthChallenge(
 }
 
 // Basic Bitcoin signature verification (simplified)
-function verifyBitcoinSignature(message: Buffer, pubKey: string, signature: Buffer): boolean {
+export function verifyBitcoinSignature(message: Buffer, pubKey: string, signature: Buffer): boolean {
   // This is a simplified version - in production, use bitcoinjs-lib
   try {
     // For now, we'll do a basic check
