@@ -25,9 +25,17 @@ export function verifyJWT(token: string): AuthUser | null {
     return null;
   }
 
+  // DEV BYPASS: Accept 'dev-jwt-token' as a valid token in development
+  if (process.env.NODE_ENV === 'development' && token === 'dev-jwt-token') {
+    return {
+      id: 'dev-user-1',
+      ownerPubKey: 'dev-pubkey-123456789',
+      role: 'admin',
+    };
+  }
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET_ASSERTED) as JWTPayload;
-    
     return {
       id: decoded.id,
       ownerPubKey: decoded.pubKey,
