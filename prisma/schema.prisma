@@ -10,45 +10,142 @@ datasource db {
 
 model User {
   id             String    @id @default(cuid())
-  ownerPubKey    String    @unique @map("owner_pubkey")
-  ownerAlias     String?   @map("owner_alias")
-  role           UserRole  @default(USER)
   name           String?
   description    String?
   avatar         String?
-  jwtToken       String?   @map("jwt_token")
-  jwtExpiresAt   DateTime? @map("jwt_expires_at")
-  createdAt      DateTime  @default(now()) @map("created")
-  updatedAt      DateTime  @updatedAt @map("updated")
+  email          String?   @unique // Primary email
+  emailVerified  DateTime? @map("email_verified")
+  role           UserRole  @default(USER)
+  timezone       String?   @default("UTC")
+  locale         String?   @default("en")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
   deleted        Boolean   @default(false)
-  lastLoginAt    DateTime? @map("last_login")
-  ownerRouteHint String?   @map("owner_route_hint")
+  lastLoginAt    DateTime? @map("last_login_at")
   
-  // GitHub OAuth fields
-  githubToken    String?   @map("github_token")
-  githubUsername String?   @map("github_username")
-  githubUserId   String?   @map("github_user_id")
-  githubOrganizations Json? @map("github_organizations")
-  githubTokenExpiresAt DateTime? @map("github_token_expires_at")
-  githubTokenCreatedAt DateTime? @map("github_token_created_at")
+  // Relations
+  authMethods    UserAuth[]
+  sessions       Session[]
 
+  @@index([createdAt])
+  @@index([deleted])
+  @@index([email])
   @@map("users")
 }
 
-model AuthChallenge {
-  id        String   @id @default(cuid())
-  challenge String   @unique
-  pubKey    String?  @map("pub_key")
-  status    Boolean  @default(false)
-  createdAt DateTime @default(now()) @map("created_at")
-  expiresAt DateTime @map("expires_at")
+model UserAuth {
+  id            String           @id @default(cuid())
+  userId        String           @map("user_id")
+  provider      AuthProvider
+  providerId    String           @map("provider_id") // External ID from the provider
+  email         String?          @db.VarChar(255)
+  username      String?
+  displayName   String?          @map("display_name")
+  avatar        String?
+  
+  // Encrypted/hashed tokens - never store plain text
+  accessTokenHash   String?      @map("access_token_hash")
+  refreshTokenHash  String?      @map("refresh_token_hash")
+  tokenExpiresAt    DateTime?    @map("token_expires_at")
+  tokenCreatedAt    DateTime?    @map("token_created_at")
+  
+  // Security tracking
+  isActive          Boolean      @default(true) @map("is_active")
+  lastUsedAt        DateTime?    @map("last_used_at")
+  loginAttempts     Int          @default(0) @map("login_attempts")
+  lockedUntil       DateTime?    @map("locked_until")
+  
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  
+  // Provider-specific data (encrypted)
+  providerDataHash  String?      @map("provider_data_hash")
+  
+  // Relations
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  githubAuth        GitHubAuth?
+  
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@index([provider])
+  @@index([email])
+  @@index([isActive])
+  @@map("user_auth")
+}
 
-  @@map("auth_challenges")
+model GitHubAuth {
+  id                    String   @id @default(cuid())
+  userAuthId            String   @unique @map("user_auth_id")
+  
+  // Core GitHub data
+  githubUserId          String   @map("github_user_id") // GitHub's numeric ID
+  githubUsername        String   @map("github_username") // GitHub login/username
+  githubNodeId          String?  @map("github_node_id") // GitHub's global node ID
+  
+  // Profile information
+  name                  String?
+  bio                   String?
+  company               String?
+  location              String?
+  blog                  String?
+  twitterUsername       String?  @map("twitter_username")
+  
+  // GitHub-specific metrics
+  publicRepos           Int?     @map("public_repos")
+  publicGists           Int?     @map("public_gists")
+  followers             Int?
+  following             Int?
+  
+  // Account details
+  githubCreatedAt       DateTime? @map("github_created_at")
+  githubUpdatedAt       DateTime? @map("github_updated_at")
+  accountType           String?   @map("account_type") // User, Organization
+  
+  // OAuth scopes granted
+  scopes                String[]  @default([])
+  
+  // Organizations (encrypted if sensitive)
+  organizationsHash     String?   @map("organizations_hash")
+  
+  // Timestamps
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  userAuth             UserAuth  @relation(fields: [userAuthId], references: [id], onDelete: Cascade)
+  
+  @@index([githubUserId])
+  @@index([githubUsername])
+  @@map("github_auth")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  sessionToken String   @unique @map("session_token") // This should be hashed
+  expiresAt    DateTime @map("expires_at")
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address")
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastUsedAt   DateTime @default(now()) @map("last_used_at")
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+enum AuthProvider {
+  GITHUB
+  GOOGLE
+  SPHINX
+  EMAIL
+  WALLET
 }
 
 enum UserRole {
   USER
   ADMIN
   MODERATOR
-  SUPER_ADMIN
 }
