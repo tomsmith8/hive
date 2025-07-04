@@ -1,4 +1,5 @@
 import { ValidationError } from './types';
+import { validateBitcoinPublicKey } from './signature';
 
 // ============================================================================
 // VALIDATION UTILITIES
@@ -19,8 +20,9 @@ export function validatePublicKey(pubKey: string): void {
     throw new ValidationError('Public key must be a non-empty string');
   }
   
-  if (pubKey.length < 10) {
-    throw new ValidationError('Public key must be at least 10 characters long');
+  // Use Bitcoin-specific validation for better security
+  if (!validateBitcoinPublicKey(pubKey)) {
+    throw new ValidationError('Public key must be a valid Bitcoin public key');
   }
 }
 
@@ -35,7 +37,8 @@ export function validateChallenge(challenge: string): void {
 export function validateSignature(signature: string): void {
   validateHexString(signature, 'Signature');
   
-  if (signature.length < 10) {
-    throw new ValidationError('Signature must be at least 10 characters long');
+  // Bitcoin compact signatures are 65 bytes (130 hex characters)
+  if (signature.length !== 130) {
+    throw new ValidationError('Signature must be exactly 130 characters (65 bytes) for Bitcoin compact signature');
   }
 } 

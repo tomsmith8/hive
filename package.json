@@ -29,11 +29,15 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@sentry/nextjs": "^9.34.0",
     "@tanstack/react-query": "^5.81.5",
+    "@types/bitcoinjs-lib": "^4.0.1",
     "@types/crypto-js": "^4.2.2",
     "@types/jsonwebtoken": "^9.0.10",
+    "bitcoinjs-lib": "^6.1.7",
+    "bitcoinjs-message": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
+    "ecpair": "^3.0.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.525.0",
     "next": "15.3.4",
@@ -43,6 +47,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.59.0",
     "tailwind-merge": "^3.3.1",
+    "tiny-secp256k1": "^2.2.4",
     "zod": "^3.25.69"
   },
   "devDependencies": {
