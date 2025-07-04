@@ -44,11 +44,11 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "github") {
         try {
           // Check if there's an existing user with the same email
-          const existingUser = await db.user.findUnique({
+          const existingUser = user.email ? await db.user.findUnique({
             where: {
               email: user.email,
             },
-          });
+          }) : null;
 
           if (existingUser) {
             // Check if there's already a GitHub account for this user

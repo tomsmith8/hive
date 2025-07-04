@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-const { PrismaClient } = require('../src/generated/prisma');
+const { PrismaClient } = require('@prisma/client');
 
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5433/hive_test';
 
 async function cleanupTestDatabase() {
   console.log('🧹 Cleaning up test database...');
+  console.log('⚠️  Note: You may also need to clear your browser cookies for localhost to fully reset the session state');
   
   try {
     // Create test Prisma client
@@ -21,13 +22,44 @@ async function cleanupTestDatabase() {
     await prisma.$connect();
     console.log('✅ Connected to test database');
 
-    // Clean up all test data
+    // Clean up all test data (order matters due to foreign key constraints)
     console.log('🗑️  Removing all test data...');
-    await prisma.authChallenge.deleteMany();
-    await prisma.user.deleteMany();
+    
+    // Clean up tables if they exist (handle gracefully if they don't)
+    try {
+      await prisma.verificationToken.deleteMany();
+    } catch (error) {
+      console.log('⚠️  VerificationToken table does not exist, skipping...');
+    }
+    
+    try {
+      await prisma.session.deleteMany();
+      console.log('✅ Cleared all sessions');
+    } catch (error) {
+      console.log('⚠️  Session table does not exist, skipping...');
+    }
+    
+    try {
+      await prisma.account.deleteMany();
+    } catch (error) {
+      console.log('⚠️  Account table does not exist, skipping...');
+    }
+    
+    try {
+      await prisma.gitHubAuth.deleteMany();
+    } catch (error) {
+      console.log('⚠️  GitHubAuth table does not exist, skipping...');
+    }
+    
+    try {
+      await prisma.user.deleteMany();
+    } catch (error) {
+      console.log('⚠️  User table does not exist, skipping...');
+    }
 
     await prisma.$disconnect();
     console.log('✅ Test database cleanup complete!');
+    console.log('🔐 To fully reset authentication, also clear your browser cookies for localhost');
 
   } catch (error) {
     console.error('❌ Error cleaning up test database:', error);
