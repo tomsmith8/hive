@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +14,7 @@ import {
   Menu,
   CheckSquare
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface SidebarProps {
@@ -58,9 +60,11 @@ export function Sidebar({ user }: SidebarProps) {
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-3">
               {user.image && (
-                <img 
+                <Image 
                   src={user.image} 
                   alt="Avatar" 
+                  width={40}
+                  height={40}
                   className="w-10 h-10 rounded-full"
                 />
               )}
@@ -105,11 +109,21 @@ export function Sidebar({ user }: SidebarProps) {
 
       <Separator />
 
+      {/* Theme Toggle */}
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Theme</span>
+          <ThemeToggle />
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Logout */}
       <div className="p-4">
         <Button
           variant="outline"
-          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+          className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4 mr-2" />
@@ -135,7 +149,7 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-80 md:flex-col md:fixed md:inset-y-0 md:z-50">
-        <div className="flex flex-col flex-grow bg-white border-r">
+        <div className="flex flex-col flex-grow bg-sidebar border-sidebar-border border-r">
           <SidebarContent />
         </div>
       </div>

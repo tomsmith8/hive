@@ -68,19 +68,19 @@ export function DisconnectAccount({ user }: DisconnectAccountProps) {
   if (!user.github) {
     return (
       <div className="text-center py-8">
-        <Github className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-        <p className="text-gray-600">No GitHub account connected</p>
+        <Github className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">No GitHub account connected</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-        <Github className="w-8 h-8 text-gray-700" />
+      <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+        <Github className="w-8 h-8 text-foreground" />
         <div className="flex-1">
           <div className="font-medium">@{user.github.username}</div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {user.github.publicRepos} public repos • {user.github.followers} followers
           </div>
         </div>
@@ -98,7 +98,7 @@ export function DisconnectAccount({ user }: DisconnectAccountProps) {
           {isDisconnecting ? "Disconnecting..." : "Disconnect GitHub Account"}
         </Button>
         
-        <p className="text-xs text-gray-500 mt-2 text-center">
+        <p className="text-xs text-muted-foreground mt-2 text-center">
           This will revoke access to your GitHub data and sign you out of the application.
         </p>
       </div>
