@@ -54,7 +54,11 @@ describe('Auth Module', () => {
       mockPrisma.authChallenge.findUnique.mockResolvedValue(null)
 
       const { verifyAuthChallenge } = await import('@/lib/auth')
-      const result = await verifyAuthChallenge('nonexistent', 'pubkey', 'sig')
+      const result = await verifyAuthChallenge(
+        '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Valid hex challenge
+        'test-pubkey-long-enough', 
+        '1234567890abcdef'
+      )
 
       expect(result).toBe(false)
     })
@@ -65,7 +69,11 @@ describe('Auth Module', () => {
       })
 
       const { verifyAuthChallenge } = await import('@/lib/auth')
-      const result = await verifyAuthChallenge('expired', 'pubkey', 'sig')
+      const result = await verifyAuthChallenge(
+        '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Valid hex challenge
+        'test-pubkey-long-enough', 
+        '1234567890abcdef'
+      )
 
       expect(result).toBe(false)
     })
@@ -76,7 +84,11 @@ describe('Auth Module', () => {
       })
 
       const { verifyAuthChallenge } = await import('@/lib/auth')
-      const result = await verifyAuthChallenge('challenge', 'pubkey', '') // Empty signature
+      const result = await verifyAuthChallenge(
+        '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Valid hex challenge
+        'test-pubkey-long-enough', 
+        '' // Empty signature
+      )
 
       expect(result).toBe(false)
     })
@@ -93,11 +105,15 @@ describe('Auth Module', () => {
       // Mock the verifyBitcoinSignature function
       const mockVerify = vi.spyOn(authModule, 'verifyBitcoinSignature').mockReturnValue(true)
       
-      const result = await authModule.verifyAuthChallenge('challenge', 'pubkey', '1234567890abcdef')
+      const result = await authModule.verifyAuthChallenge(
+        '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Valid hex challenge
+        'test-pubkey-long-enough', 
+        '1234567890abcdef'
+      )
       expect(result).toBe(true)
       expect(mockPrisma.authChallenge.update).toHaveBeenCalledWith({
-        where: { challenge: 'challenge' },
-        data: { status: true, pubKey: 'pubkey' },
+        where: { challenge: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' },
+        data: { status: true, pubKey: 'test-pubkey-long-enough' },
       })
       
       mockVerify.mockRestore()
@@ -108,7 +124,7 @@ describe('Auth Module', () => {
     it('should generate a valid JWT token', async () => {
       const mockUser = {
         id: 'user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         role: 'user',
       }
 
@@ -122,7 +138,7 @@ describe('Auth Module', () => {
     it('should include correct payload in JWT', async () => {
       const mockUser = {
         id: 'user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         role: 'user',
       }
 
@@ -154,7 +170,7 @@ describe('Auth Module', () => {
     it('should return user data for valid token', async () => {
       const mockUser = {
         id: 'user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         role: 'user',
       }
 
@@ -171,24 +187,24 @@ describe('Auth Module', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
       mockPrisma.user.create.mockResolvedValue({
         id: 'new-user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         ownerAlias: 'test-alias',
         role: 'user',
         lastLoginAt: new Date(),
       })
 
       const { getOrCreateUser } = await import('@/lib/auth')
-      const result = await getOrCreateUser('pubkey', 'test-alias')
+      const result = await getOrCreateUser('test-pubkey-long-enough', 'test-alias')
 
       expect(mockPrisma.user.create).toHaveBeenCalled()
-      expect(result.ownerPubKey).toBe('pubkey')
+      expect(result.ownerPubKey).toBe('test-pubkey-long-enough')
       expect(result.ownerAlias).toBe('test-alias')
     })
 
     it('should return existing user if it exists', async () => {
       const existingUser = {
         id: 'existing-user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         ownerAlias: 'existing-alias',
         role: 'user',
         lastLoginAt: new Date(),
@@ -197,10 +213,10 @@ describe('Auth Module', () => {
       mockPrisma.user.update.mockResolvedValue(existingUser)
 
       const { getOrCreateUser } = await import('@/lib/auth')
-      const result = await getOrCreateUser('pubkey')
+      const result = await getOrCreateUser('test-pubkey-long-enough')
 
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-        where: { ownerPubKey: 'pubkey' },
+        where: { ownerPubKey: 'test-pubkey-long-enough' },
       })
       expect(result).toEqual({
         id: existingUser.id,
@@ -215,7 +231,7 @@ describe('Auth Module', () => {
     it('should update last login time for existing user', async () => {
       const existingUser = {
         id: 'existing-user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         ownerAlias: 'existing-alias',
         role: 'user',
         lastLoginAt: new Date(),
@@ -224,7 +240,7 @@ describe('Auth Module', () => {
       mockPrisma.user.update.mockResolvedValue(existingUser)
 
       const { getOrCreateUser } = await import('@/lib/auth')
-      await getOrCreateUser('pubkey')
+      await getOrCreateUser('test-pubkey-long-enough')
 
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: existingUser.id },
@@ -240,7 +256,7 @@ describe('Auth Module', () => {
       mockPrisma.authChallenge.findUnique.mockResolvedValue(null)
 
       const { checkAuthStatus } = await import('@/lib/auth')
-      const result = await checkAuthStatus('nonexistent')
+      const result = await checkAuthStatus('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
 
       expect(result).toBeNull()
     })
@@ -253,7 +269,7 @@ describe('Auth Module', () => {
       })
 
       const { checkAuthStatus } = await import('@/lib/auth')
-      const result = await checkAuthStatus('unverified')
+      const result = await checkAuthStatus('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
 
       expect(result).toBeNull()
     })
@@ -261,12 +277,12 @@ describe('Auth Module', () => {
     it('should return null for expired challenge', async () => {
       mockPrisma.authChallenge.findUnique.mockResolvedValue({
         status: true,
-        pubKey: 'pubkey',
+        pubKey: 'test-pubkey-long-enough',
         expiresAt: new Date(Date.now() - 10000), // Expired
       })
 
       const { checkAuthStatus } = await import('@/lib/auth')
-      const result = await checkAuthStatus('expired')
+      const result = await checkAuthStatus('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
 
       expect(result).toBeNull()
     })
@@ -274,7 +290,7 @@ describe('Auth Module', () => {
     it('should return auth response for valid challenge', async () => {
       const mockUser = {
         id: 'user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         ownerAlias: 'test-alias',
         role: 'user',
         name: 'Test User',
@@ -283,17 +299,17 @@ describe('Auth Module', () => {
 
       mockPrisma.authChallenge.findUnique.mockResolvedValue({
         status: true,
-        pubKey: 'pubkey',
+        pubKey: 'test-pubkey-long-enough',
         expiresAt: new Date(Date.now() + 10000),
       })
       mockPrisma.user.findUnique.mockResolvedValue(mockUser)
       mockPrisma.user.update.mockResolvedValue(mockUser)
 
       const { checkAuthStatus } = await import('@/lib/auth')
-      const result = await checkAuthStatus('valid-challenge')
+      const result = await checkAuthStatus('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
 
       expect(result).toMatchObject({
-        pubkey: 'pubkey',
+        pubkey: 'test-pubkey-long-enough',
         owner_alias: 'test-alias',
         img: 'avatar-url',
         jwt: expect.any(String),
@@ -303,29 +319,29 @@ describe('Auth Module', () => {
     it('should create user if it does not exist', async () => {
       mockPrisma.authChallenge.findUnique.mockResolvedValue({
         status: true,
-        pubKey: 'pubkey',
+        pubKey: 'test-pubkey-long-enough',
         expiresAt: new Date(Date.now() + 10000),
       })
       mockPrisma.user.findUnique.mockResolvedValue(null)
       mockPrisma.user.create.mockResolvedValue({
         id: 'new-user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         role: 'user',
         lastLoginAt: new Date(),
       })
       mockPrisma.user.update.mockResolvedValue({
         id: 'new-user-id',
-        ownerPubKey: 'pubkey',
+        ownerPubKey: 'test-pubkey-long-enough',
         role: 'user',
         lastLoginAt: new Date(),
       })
 
       const { checkAuthStatus } = await import('@/lib/auth')
-      const result = await checkAuthStatus('valid-challenge')
+      const result = await checkAuthStatus('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
 
       expect(mockPrisma.user.create).toHaveBeenCalled()
       expect(result).toMatchObject({
-        pubkey: 'pubkey',
+        pubkey: 'test-pubkey-long-enough',
         jwt: expect.any(String),
       })
     })
