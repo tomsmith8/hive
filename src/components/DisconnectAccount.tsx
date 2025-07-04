@@ -11,9 +11,9 @@ interface DisconnectAccountProps {
     email?: string | null;
     image?: string | null;
     github?: {
-      username: string;
-      publicRepos: number;
-      followers: number;
+      username?: string;
+      publicRepos?: number;
+      followers?: number;
     };
   };
 }

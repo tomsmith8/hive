@@ -241,13 +241,13 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         </div>
         <CardTitle className="text-2xl">Welcome to Code Graph</CardTitle>
         <CardDescription className="text-lg">
-          Let's start by selecting a repository to analyze
+          Let&apos;s start by selecting a repository to analyze
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="text-center">
           <p className="text-gray-600 mb-6">
-            We'll help you visualize dependencies, relationships, and collaboration patterns in your codebase.
+            We&apos;ll help you visualize dependencies, relationships, and collaboration patterns in your codebase.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
@@ -409,7 +409,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         </div>
         <CardTitle className="text-2xl">Repository Selected!</CardTitle>
         <CardDescription>
-          Here's what we found about your repository
+          Here&apos;s what we found about your repository
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -475,7 +475,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
 
             {/* Next Steps */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg">
-              <h4 className="text-lg font-semibold mb-3">What's Next?</h4>
+              <h4 className="text-lg font-semibold mb-3">What&apos;s Next?</h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">

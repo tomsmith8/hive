@@ -17,7 +17,7 @@ export default async function SettingsPage() {
     name: session.user?.name,
     email: session.user?.email,
     image: session.user?.image,
-    github: (session.user as any)?.github,
+    github: (session.user as { github?: { username?: string; publicRepos?: number; followers?: number } })?.github,
   };
 
   return (

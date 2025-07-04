@@ -7,12 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { 
   Home, 
-  User, 
   Settings, 
   LogOut, 
   Github,
   Menu,
-  X,
   CheckSquare
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -23,9 +21,9 @@ interface SidebarProps {
     email?: string | null;
     image?: string | null;
     github?: {
-      username: string;
-      publicRepos: number;
-      followers: number;
+      username?: string;
+      publicRepos?: number;
+      followers?: number;
     };
   };
 }

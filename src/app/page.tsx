@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Sparkles, Users, Zap, Shield, ChevronDown, Search, Bell, User, Settings, LogOut, Plus, CheckCircle, Clock, TrendingUp, LogIn } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Zap, Shield, Bell, TrendingUp, LogIn } from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
@@ -72,7 +70,7 @@ export default function HomePage() {
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-            "You can just do things"
+            &ldquo;You can just do things&rdquo;
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
@@ -122,7 +120,7 @@ export default function HomePage() {
                   <Shield className="w-8 h-8 text-purple-600" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Agency & Empowerment</h3>
-                <p className="text-muted-foreground">"You can just do things"—empower your team to move without friction.</p>
+                <p className="text-muted-foreground">&ldquo;You can just do things&rdquo;—empower your team to move without friction.</p>
               </CardContent>
             </Card>
           </div>

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { db } from "@/lib/db";
 import axios from "axios";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Get the user's GitHub account
     const account = await db.account.findFirst({
       where: {
-        userId: (session.user as any).id,
+        userId: (session.user as { id: string }).id,
         provider: "github",
       },
     });
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const repositories = response.data.map((repo: any) => ({
+    const repositories = response.data.map((repo: Record<string, unknown>) => ({
       id: repo.id,
       name: repo.name,
       full_name: repo.full_name,
@@ -63,10 +63,12 @@ export async function GET(request: NextRequest) {
       repositories,
       total_count: repositories.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching repositories:", error);
     
-    if (error.response?.status === 401) {
+    if (error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'status' in error.response && 
+        error.response.status === 401) {
       return NextResponse.json(
         { error: "GitHub token expired or invalid" },
         { status: 401 }

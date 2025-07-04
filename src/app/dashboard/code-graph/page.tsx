@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { CodeGraphWizard } from "@/components/CodeGraphWizard";
 
@@ -16,7 +15,7 @@ export default async function CodeGraphPage() {
     name: session.user?.name,
     email: session.user?.email,
     image: session.user?.image,
-    github: (session.user as any)?.github,
+    github: (session.user as { github?: { username?: string; publicRepos?: number; followers?: number } })?.github,
   };
 
   return (

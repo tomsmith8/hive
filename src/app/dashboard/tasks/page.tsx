@@ -16,7 +16,7 @@ export default async function TasksPage() {
     name: session.user?.name,
     email: session.user?.email,
     image: session.user?.image,
-    github: (session.user as any)?.github,
+    github: (session.user as { github?: { username?: string; publicRepos?: number; followers?: number } })?.github,
   };
 
   return (
@@ -87,7 +87,7 @@ export default async function TasksPage() {
                 In Progress
               </CardTitle>
               <CardDescription>
-                Tasks you're currently working on
+                Tasks you&apos;re currently working on
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

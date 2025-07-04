@@ -2,9 +2,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { User, Github, Calendar, Activity, Code, BarChart3, Settings } from "lucide-react";
+import { Github, Calendar, Activity, Code, BarChart3, Settings } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -17,7 +16,7 @@ export default async function DashboardPage() {
     name: session.user?.name,
     email: session.user?.email,
     image: session.user?.image,
-    github: (session.user as any)?.github,
+    github: (session.user as { github?: { publicRepos?: number } })?.github,
   };
 
   return (
@@ -29,7 +28,7 @@ export default async function DashboardPage() {
             Welcome back, {session.user?.name || "User"}!
           </h1>
           <p className="text-gray-600 mt-2">
-            Here's an overview of your development activity.
+            Here&apos;s an overview of your development activity.
           </p>
         </div>
 
@@ -42,7 +41,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {(session.user as any)?.github?.publicRepos || 0}
+                {(session.user as { github?: { publicRepos?: number } })?.github?.publicRepos || 0}
               </div>
               <p className="text-xs text-muted-foreground">
                 Public repositories
@@ -118,13 +117,13 @@ export default async function DashboardPage() {
                   </div>
                 </div>
                 
-                {(session.user as any)?.github && (
+                {(session.user as { github?: { publicRepos?: number } })?.github && (
                   <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <div className="flex-1">
                       <div className="text-sm font-medium">Profile Synced</div>
                       <div className="text-xs text-gray-500">
-                        {(session.user as any).github.publicRepos} repositories available
+                        {(session.user as { github?: { publicRepos?: number } }).github?.publicRepos} repositories available
                       </div>
                     </div>
                   </div>

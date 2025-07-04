@@ -7,22 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// NextAuth.js Models
 model Account {
   id                String  @id @default(cuid())
   userId            String  @map("user_id")
   type              String
   provider          String
   providerAccountId String  @map("provider_account_id")
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -39,22 +37,21 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String      @id @default(cuid())
   name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
+  email         String?     @unique
+  emailVerified DateTime?   @map("email_verified")
   image         String?
-  role          UserRole  @default(USER)
-  timezone      String?   @default("UTC")
-  locale        String?   @default("en")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  deleted       Boolean   @default(false)
-  lastLoginAt   DateTime? @map("last_login_at")
-
-  accounts Account[]
-  sessions Session[]
-  githubAuth GitHubAuth?
+  role          UserRole    @default(USER)
+  timezone      String?     @default("UTC")
+  locale        String?     @default("en")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deleted       Boolean     @default(false)
+  lastLoginAt   DateTime?   @map("last_login_at")
+  accounts      Account[]
+  githubAuth    GitHubAuth?
+  sessions      Session[]
 
   @@index([createdAt])
   @@index([deleted])
@@ -71,48 +68,31 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// Custom GitHub Auth Model
 model GitHubAuth {
-  id                    String   @id @default(cuid())
-  userId                String   @unique @map("user_id")
-  
-  // Core GitHub data
-  githubUserId          String   @map("github_user_id") // GitHub's numeric ID
-  githubUsername        String   @map("github_username") // GitHub login/username
-  githubNodeId          String?  @map("github_node_id") // GitHub's global node ID
-  
-  // Profile information
-  name                  String?
-  bio                   String?
-  company               String?
-  location              String?
-  blog                  String?
-  twitterUsername       String?  @map("twitter_username")
-  
-  // GitHub-specific metrics
-  publicRepos           Int?     @map("public_repos")
-  publicGists           Int?     @map("public_gists")
-  followers             Int?
-  following             Int?
-  
-  // Account details
-  githubCreatedAt       DateTime? @map("github_created_at")
-  githubUpdatedAt       DateTime? @map("github_updated_at")
-  accountType           String?   @map("account_type") // User, Organization
-  
-  // OAuth scopes granted
-  scopes                String[]  @default([])
-  
-  // Organizations (encrypted if sensitive)
-  organizationsHash     String?   @map("organizations_hash")
-  
-  // Timestamps
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
-  
-  // Relations
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id                String    @id @default(cuid())
+  userId            String    @unique @map("user_id")
+  githubUserId      String    @map("github_user_id")
+  githubUsername    String    @map("github_username")
+  githubNodeId      String?   @map("github_node_id")
+  name              String?
+  bio               String?
+  company           String?
+  location          String?
+  blog              String?
+  twitterUsername   String?   @map("twitter_username")
+  publicRepos       Int?      @map("public_repos")
+  publicGists       Int?      @map("public_gists")
+  followers         Int?
+  following         Int?
+  githubCreatedAt   DateTime? @map("github_created_at")
+  githubUpdatedAt   DateTime? @map("github_updated_at")
+  accountType       String?   @map("account_type")
+  scopes            String[]  @default([])
+  organizationsHash String?   @map("organizations_hash")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([githubUserId])
   @@index([githubUsername])
   @@map("github_auth")

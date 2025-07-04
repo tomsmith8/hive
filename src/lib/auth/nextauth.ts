@@ -39,7 +39,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // If this is a GitHub sign-in, we need to handle re-authentication
       if (account?.provider === "github") {
         try {
@@ -89,7 +89,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, user }) {
       if (session.user) {
-        (session.user as any).id = user.id;
+        (session.user as { id: string }).id = user.id;
 
         // Check if we already have GitHub data
         let githubAuth = await db.gitHubAuth.findUnique({
@@ -171,10 +171,10 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (githubAuth) {
-          (session.user as any).github = {
+          (session.user as { github?: { username?: string; publicRepos?: number; followers?: number } }).github = {
             username: githubAuth.githubUsername,
-            publicRepos: githubAuth.publicRepos,
-            followers: githubAuth.followers,
+            publicRepos: githubAuth.publicRepos ?? undefined,
+            followers: githubAuth.followers ?? undefined,
           };
         }
       }
