@@ -29,6 +29,8 @@ model User {
   githubUsername String?   @map("github_username")
   githubUserId   String?   @map("github_user_id")
   githubOrganizations Json? @map("github_organizations")
+  githubTokenExpiresAt DateTime? @map("github_token_expires_at")
+  githubTokenCreatedAt DateTime? @map("github_token_created_at")
 
   @@map("users")
 }

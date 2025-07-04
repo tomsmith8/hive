@@ -1,3 +1,5 @@
+import { githubRateLimiter, withRateLimiting } from './rate-limiter';
+
 export interface GitHubUser {
   id: number;
   login: string;
@@ -70,23 +72,33 @@ export class GitHubService {
     return data.access_token;
   }
 
-  static async getUser(token: string): Promise<GitHubUser> {
-    // Handle encrypted tokens (basic check for now)
-    const actualToken = token.startsWith('encrypted:') ? token.substring(10) : token;
-    
-    const response = await fetch(`${this.GITHUB_API_BASE}/user`, {
-      headers: {
-        'Authorization': `Bearer ${actualToken}`,
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
+  static getUser = withRateLimiting(
+    async (token: string): Promise<GitHubUser> => {
+      // Handle encrypted tokens (basic check for now)
+      const actualToken = token.startsWith('encrypted:') ? token.substring(10) : token;
+      
+      const response = await fetch(`${this.GITHUB_API_BASE}/user`, {
+        headers: {
+          'Authorization': `Bearer ${actualToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch GitHub user: ${response.statusText}`);
-    }
+      // Update rate limit info
+      githubRateLimiter.updateRateLimitInfo(response.headers);
 
-    return response.json();
-  }
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('GitHub token is invalid or expired. Please reconnect your GitHub account.');
+        }
+        throw new Error(`Failed to fetch GitHub user: ${response.statusText}`);
+      }
+
+      return response.json();
+    },
+    (token: string) => `user:${token}`,
+    10 * 60 * 1000 // Cache for 10 minutes
+  );
 
   static async getUserOrganizations(token: string): Promise<GitHubOrganization[]> {
     // Handle encrypted tokens (basic check for now)
@@ -100,6 +112,9 @@ export class GitHubService {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('GitHub token is invalid or expired. Please reconnect your GitHub account.');
+      }
       throw new Error(`Failed to fetch GitHub organizations: ${response.statusText}`);
     }
 
@@ -121,6 +136,9 @@ export class GitHubService {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('GitHub token is invalid or expired. Please reconnect your GitHub account.');
+      }
       throw new Error(`Failed to fetch repositories for ${org}: ${response.statusText}`);
     }
 
@@ -139,6 +157,9 @@ export class GitHubService {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('GitHub token is invalid or expired. Please reconnect your GitHub account.');
+      }
       throw new Error(`Failed to fetch user repositories: ${response.statusText}`);
     }
 

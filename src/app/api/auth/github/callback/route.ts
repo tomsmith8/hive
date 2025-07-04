@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { GitHubService } from '@/lib/github';
 import { parseOAuthState } from '@/lib/auth';
+import { storeGitHubToken } from '@/lib/github/token-manager';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -47,17 +48,13 @@ export async function GET(request: NextRequest) {
     // Get user's organizations
     const orgsData = await GitHubService.getUserOrganizations(accessToken);
 
-    // For now, store token as-is (TODO: implement encryption)
-    // In production, this should be encrypted before storage
-    const tokenToStore = process.env.NODE_ENV === 'production' 
-      ? `encrypted:${accessToken}` // Placeholder for encryption
-      : accessToken;
+    // Store token with expiry information
+    await storeGitHubToken(userId, accessToken);
 
-    // Update user with GitHub information
+    // Update user with additional GitHub information
     await prisma.user.update({
       where: { id: userId },
       data: {
-        githubToken: tokenToStore,
         githubUsername: userData.login,
         githubUserId: userData.id.toString(),
         githubOrganizations: orgsData as any,
