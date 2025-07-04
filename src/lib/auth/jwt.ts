@@ -33,7 +33,7 @@ export function verifyJWT(token: string): AuthUser | null {
       ownerPubKey: decoded.pubKey,
       role: decoded.role,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 } 

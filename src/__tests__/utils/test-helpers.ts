@@ -1,4 +1,3 @@
-import { PrismaClient } from '@/generated/prisma'
 import { AuthUser } from '@/lib/auth'
 import { UserRole } from '@/generated/prisma'
 
@@ -145,5 +144,35 @@ export class TestHelper {
       name: testUser.name,
       avatar: testUser.avatar
     }
+  }
+}
+
+// Test helper utilities
+export function createMockUser(overrides = {}) {
+  return {
+    id: 'test-user-id',
+    ownerPubKey: '02be0f7b80cfd2b3d89012c19e286437d90c192bd26e814fd5c90d6090c0a9bff2',
+    ownerAlias: 'test-user',
+    role: 'USER',
+    name: 'Test User',
+    description: 'Test user for unit tests',
+    avatar: 'https://example.com/avatar.jpg',
+    lastLoginAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  }
+}
+
+export function createMockAuthChallenge(overrides = {}) {
+  return {
+    id: 'test-challenge-id',
+    challenge: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    pubKey: '02be0f7b80cfd2b3d89012c19e286437d90c192bd26e814fd5c90d6090c0a9bff2',
+    status: false,
+    expiresAt: new Date(Date.now() + 300000), // 5 minutes from now
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
   }
 } 

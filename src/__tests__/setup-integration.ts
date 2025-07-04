@@ -34,7 +34,7 @@ beforeAll(async () => {
     // Clean up database before all tests
     await prisma.authChallenge.deleteMany()
     await prisma.user.deleteMany()
-  } catch (error) {
+  } catch {
     console.warn('⚠️  Integration tests require a test database.')
     console.warn('Set TEST_DATABASE_URL environment variable or create a test database.')
     console.warn('Skipping integration tests...')
@@ -47,7 +47,7 @@ afterEach(async () => {
   try {
     await prisma.authChallenge.deleteMany()
     await prisma.user.deleteMany()
-  } catch (error) {
+  } catch {
     // Ignore cleanup errors
   }
 })
@@ -56,7 +56,7 @@ afterEach(async () => {
 afterAll(async () => {
   try {
     await prisma.$disconnect()
-  } catch (error) {
+  } catch {
     // Ignore disconnect errors
   }
 })

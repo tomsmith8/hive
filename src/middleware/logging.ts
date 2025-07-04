@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export function createLoggingMiddleware() {
   return function loggingMiddleware(request: NextRequest): NextResponse | null {
-    const startTime = Date.now();
     const { pathname, search } = request.nextUrl;
     const method = request.method;
     const userAgent = request.headers.get('user-agent') || 'unknown';
@@ -24,4 +23,27 @@ export function logResponse(request: NextRequest, response: NextResponse, startT
   const status = response.status;
   
   console.log(`[${new Date().toISOString()}] ${request.method} ${pathname} - ${status} - ${duration}ms`);
+}
+
+export function logRequest(request: NextRequest, status: number, duration: number) {
+  const pathname = request.nextUrl.pathname;
+  console.log(`[${new Date().toISOString()}] ${request.method} ${pathname} - ${status} - ${duration}ms`);
+}
+
+export function withLogging<T extends unknown[], R>(
+  fn: (...args: T) => Promise<R>,
+  operationName: string
+): (...args: T) => Promise<R> {
+  return async (...args: T): Promise<R> => {
+    console.log(`[${operationName}] Starting...`);
+    
+    try {
+      const result = await fn(...args);
+      console.log(`[${operationName}] Completed successfully`);
+      return result;
+    } catch (error) {
+      console.error(`[${operationName}] Failed:`, error);
+      throw error;
+    }
+  };
 } 

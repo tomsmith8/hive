@@ -2,172 +2,139 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { WizardStep } from './WizardStep';
 import { GitHubConnectionStep } from './GitHubConnectionStep';
 import { OrganizationSelectionStep } from './OrganizationSelectionStep';
 import { RepositorySelectionStep } from './RepositorySelectionStep';
-import { GitHubService, GitHubOrganization, GitHubRepository } from '@/lib/github';
-import { getGitHubOAuthError, handleGitHubAPIError, GitHubOAuthError } from '@/lib/github/errors';
+import { WizardStep } from './WizardStep';
+import { GitHubOrganization, GitHubRepository } from '@/lib/github';
+import { getGitHubOAuthError } from '@/lib/github/errors';
 
-type WizardStepType = 'github' | 'organizations' | 'repositories' | 'complete';
+interface OnboardingData {
+  githubToken: string;
+  selectedOrganizations: string[];
+  selectedRepositories: string[];
+}
 
 interface OnboardingWizardProps {
-  onComplete: (data: {
-    githubToken: string;
-    selectedOrganizations: string[];
-    selectedRepositories: string[];
-  }) => void;
+  onComplete: (data: OnboardingData) => void;
 }
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const searchParams = useSearchParams();
-  const [currentStep, setCurrentStep] = useState<WizardStepType>('github');
-  const [githubToken, setGitHubToken] = useState<string>('');
-  const [githubUser, setGitHubUser] = useState<any>(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [githubToken, setGitHubToken] = useState<string | null>(null);
   const [organizations, setOrganizations] = useState<GitHubOrganization[]>([]);
-  const [selectedOrganizations, setSelectedOrganizations] = useState<string[]>([]);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
-  const [selectedRepositories, setSelectedRepositories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<GitHubOAuthError | null>(null);
 
   // Check for OAuth callback
   useEffect(() => {
-    const step = searchParams.get('step');
     const errorCode = searchParams.get('error');
-    
     if (errorCode) {
       const errorInfo = getGitHubOAuthError(errorCode);
-      setError(errorInfo);
+      setError(errorInfo.userMessage);
       return;
     }
 
-    if (step === 'organizations') {
-      // OAuth callback completed, fetch the actual GitHub data
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    
+    if (code && state) {
       fetchGitHubData();
     }
   }, [searchParams]);
 
   const fetchGitHubData = async () => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
 
     try {
-      // First, get the GitHub token
+      // Get token and user data from the callback
       const tokenResponse = await fetch('/api/user/github/token');
       if (!tokenResponse.ok) {
-        throw new Error('Failed to fetch GitHub token');
+        throw new Error('Failed to get GitHub token');
       }
+      
       const { token } = await tokenResponse.json();
-
-      // Get GitHub user data
-      const userData = await GitHubService.getUser(token);
-      
-      // Set the token and user data
       setGitHubToken(token);
-      setGitHubUser(userData);
 
       // Fetch organizations
-      const orgs = await GitHubService.getUserOrganizations(token);
-      setOrganizations(orgs);
-      setCurrentStep('organizations');
-    } catch (error) {
-      console.error('Failed to fetch GitHub data:', error);
-      const errorInfo = handleGitHubAPIError(error);
-      setError(errorInfo);
+      const orgsResponse = await fetch('/api/user/github/organizations');
+      if (orgsResponse.ok) {
+        const orgsData = await orgsResponse.json();
+        setOrganizations(orgsData.organizations || []);
+      }
+
+      // Fetch repositories
+      const reposResponse = await fetch('/api/user/github/repositories');
+      if (reposResponse.ok) {
+        const reposData = await reposResponse.json();
+        setRepositories(reposData.repositories || []);
+      }
+
+      setCurrentStep(1);
+    } catch {
+      setError('Failed to fetch GitHub data');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleGitHubConnected = async (token: string, user: any) => {
+  const handleGitHubConnected = async (token: string) => {
     setGitHubToken(token);
-    setGitHubUser(user);
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
 
     try {
       // Fetch organizations
-      const orgs = await GitHubService.getUserOrganizations(token);
-      setOrganizations(orgs);
-      setCurrentStep('organizations');
-    } catch (error) {
-      console.error('Failed to fetch organizations:', error);
-      const errorInfo = handleGitHubAPIError(error);
-      setError(errorInfo);
+      const orgsResponse = await fetch('/api/user/github/organizations');
+      if (orgsResponse.ok) {
+        const orgsData = await orgsResponse.json();
+        setOrganizations(orgsData.organizations || []);
+      }
+
+      // Fetch repositories
+      const reposResponse = await fetch('/api/user/github/repositories');
+      if (reposResponse.ok) {
+        const reposData = await reposResponse.json();
+        setRepositories(reposData.repositories || []);
+      }
+
+      setCurrentStep(1);
+    } catch {
+      setError('Failed to fetch GitHub data');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleOrganizationsSelected = async (orgs: string[]) => {
-    setSelectedOrganizations(orgs);
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Fetch repositories for selected organizations
-      const allRepos: GitHubRepository[] = [];
-      
-      for (const org of orgs) {
-        try {
-          const orgRepos = await GitHubService.getOrganizationRepositories(githubToken, org);
-          allRepos.push(...orgRepos);
-        } catch (error) {
-          console.error(`Failed to fetch repos for ${org}:`, error);
-        }
-      }
-
-      // Also fetch user's personal repositories
-      try {
-        const userRepos = await GitHubService.getUserRepositories(githubToken);
-        allRepos.push(...userRepos);
-      } catch (error) {
-        console.error('Failed to fetch user repositories:', error);
-      }
-
-      setRepositories(allRepos);
-      setCurrentStep('repositories');
-    } catch (error) {
-      console.error('Failed to fetch repositories:', error);
-      const errorInfo = handleGitHubAPIError(error);
-      setError(errorInfo);
-    } finally {
-      setLoading(false);
-    }
+  const handleOrganizationsSelected = async () => {
+    setCurrentStep(2);
   };
 
   const handleRepositoriesSelected = (repos: string[]) => {
-    setSelectedRepositories(repos);
-    setCurrentStep('complete');
+    setCurrentStep(3);
     
     // Complete the onboarding
     onComplete({
-      githubToken,
-      selectedOrganizations,
+      githubToken: githubToken as string,
+      selectedOrganizations: organizations.map(org => org.login),
       selectedRepositories: repos,
     });
   };
 
   const handleBack = () => {
-    switch (currentStep) {
-      case 'organizations':
-        setCurrentStep('github');
-        break;
-      case 'repositories':
-        setCurrentStep('organizations');
-        break;
-    }
+    setCurrentStep(Math.max(currentStep - 1, 0));
   };
 
   const handleError = (errorMessage: string) => {
-    const errorInfo = handleGitHubAPIError({ message: errorMessage });
-    setError(errorInfo);
+    setError(errorMessage);
   };
 
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 'github':
+      case 0:
         return (
           <GitHubConnectionStep
             onConnected={handleGitHubConnected}
@@ -175,7 +142,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           />
         );
 
-      case 'organizations':
+      case 1:
         return (
           <OrganizationSelectionStep
             organizations={organizations}
@@ -184,7 +151,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           />
         );
 
-      case 'repositories':
+      case 2:
         return (
           <RepositorySelectionStep
             repositories={repositories}
@@ -193,7 +160,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           />
         );
 
-      case 'complete':
+      case 3:
         return (
           <div className="text-center space-y-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -203,7 +170,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             </div>
             <h3 className="text-lg font-semibold">Setup Complete!</h3>
             <p className="text-muted-foreground">
-              Your GitHub integration is ready. We'll start analyzing your selected repositories.
+              Let&apos;s get you set up with Hive. We&apos;ll help you connect your GitHub account and configure your workspace.
             </p>
           </div>
         );
@@ -215,50 +182,48 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
   const getStepTitle = () => {
     switch (currentStep) {
-      case 'github':
+      case 0:
         return 'Connect to GitHub';
-      case 'organizations':
+      case 1:
         return 'Select Organizations';
-      case 'repositories':
+      case 2:
         return 'Select Repositories';
-      case 'complete':
+      case 3:
         return 'Setup Complete';
       default:
-        return '';
+        return 'Onboarding';
     }
   };
 
   const getStepDescription = () => {
     switch (currentStep) {
-      case 'github':
+      case 0:
         return 'Connect your GitHub account to get started with code analysis.';
-      case 'organizations':
+      case 1:
         return 'Choose which organizations you want to analyze.';
-      case 'repositories':
+      case 2:
         return 'Select the repositories you want to include in your analysis.';
-      case 'complete':
+      case 3:
         return 'Your setup is complete and analysis is starting.';
       default:
-        return '';
+        return 'Welcome to Hive!';
     }
   };
 
   if (error) {
     return (
-      <div className="w-full max-w-2xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <div className="text-red-600 font-medium mb-2">Error</div>
-          <div className="text-red-700 mb-4">{error.userMessage}</div>
-          <button
-            onClick={() => {
-              setError(null);
-              setCurrentStep('github');
-            }}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
-            {error.action === 'login' ? 'Go to Login' : 'Try Again'}
-          </button>
-        </div>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <div className="text-red-600 font-medium mb-2">Error</div>
+        <div className="text-red-700 mb-4">{error}</div>
+        <button
+          onClick={() => {
+            setError(null);
+            setCurrentStep(0);
+          }}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -267,9 +232,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     <WizardStep
       title={getStepTitle()}
       description={getStepDescription()}
-      loading={loading}
-      showBack={currentStep !== 'github'}
-      showNext={false}
+      loading={isLoading}
+      showBack={currentStep > 0}
+      showNext={currentStep < 3}
       onBack={handleBack}
     >
       {renderCurrentStep()}

@@ -174,7 +174,7 @@ export function SphinxLogin({ onSuccess, onError }: SphinxLoginProps) {
             </Button>
             
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">Don't have Sphinx?</p>
+              <p className="text-sm text-gray-600 mb-2">Don&apos;t have Sphinx?</p>
               <Button 
                 variant="outline" 
                 onClick={handleGetSphinx}
@@ -193,7 +193,7 @@ export function SphinxLogin({ onSuccess, onError }: SphinxLoginProps) {
               
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-sm text-blue-800 mb-2">
-                  If Sphinx didn't open automatically, click the button below:
+                  If Sphinx didn&apos;t open automatically, click the button below:
                 </p>
                 <Button 
                   onClick={handleRetryDeeplink}

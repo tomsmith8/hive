@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyJWT } from './jwt';
 import { getAuthToken } from '@/middleware/auth';
+import crypto from 'crypto';
 
 // ============================================================================
 // AUTH UTILITY FUNCTIONS
@@ -50,7 +51,7 @@ export function parseOAuthState(state: string): string | null {
       return null;
     }
     
-    const [userId, timestamp, random] = parts;
+    const [userId, timestamp] = parts;
     const stateTime = parseInt(timestamp, 10);
     const currentTime = Date.now();
     
@@ -60,7 +61,31 @@ export function parseOAuthState(state: string): string | null {
     }
     
     return userId;
-  } catch (error) {
+  } catch {
+    return null;
+  }
+}
+
+export function generateSecureState(): string {
+  const timestamp = Date.now().toString();
+  const random = crypto.randomBytes(16).toString('hex');
+  return `${timestamp}.${random}`;
+}
+
+export function parseState(state: string): { timestamp: number; random: string } | null {
+  try {
+    const [timestamp, random] = state.split('.');
+    if (!timestamp || !random) {
+      return null;
+    }
+    
+    const timestampNum = parseInt(timestamp, 10);
+    if (isNaN(timestampNum)) {
+      return null;
+    }
+    
+    return { timestamp: timestampNum, random };
+  } catch {
     return null;
   }
 } 

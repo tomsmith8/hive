@@ -7,6 +7,7 @@ export interface GitHubOAuthError {
   message: string;
   userMessage: string;
   action?: string;
+  retryAfter?: number;
 }
 
 export const GITHUB_OAUTH_ERRORS: Record<string, GitHubOAuthError> = {
@@ -85,23 +86,56 @@ export function getGitHubOAuthError(errorCode: string): GitHubOAuthError {
  * @param error - The error from GitHub API
  * @returns Error information with user-friendly message
  */
-export function handleGitHubAPIError(error: any): GitHubOAuthError {
-  if (error.message?.includes('rate limit')) {
-    return GITHUB_OAUTH_ERRORS.rate_limit_exceeded;
+export function handleGitHubAPIError(error: unknown): GitHubOAuthError {
+  console.error('GitHub API Error:', error);
+  
+  // Handle different types of errors
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('rate limit')) {
+      return {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'GitHub API rate limit exceeded',
+        userMessage: 'GitHub API rate limit exceeded. Please try again later.',
+        action: 'retry',
+        retryAfter: 60,
+      };
+    }
+    
+    if (message.includes('unauthorized') || message.includes('401')) {
+      return {
+        code: 'UNAUTHORIZED',
+        message: 'GitHub authorization expired',
+        userMessage: 'GitHub authorization expired. Please reconnect your account.',
+        action: 'login',
+      };
+    }
+    
+    if (message.includes('forbidden') || message.includes('403')) {
+      return {
+        code: 'INSUFFICIENT_PERMISSIONS',
+        message: 'Insufficient GitHub permissions',
+        userMessage: 'Insufficient permissions. Please check your GitHub account settings.',
+        action: 'login',
+      };
+    }
+    
+    if (message.includes('not found') || message.includes('404')) {
+      return {
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'GitHub resource not found',
+        userMessage: 'The requested resource was not found.',
+        action: 'retry',
+      };
+    }
   }
   
-  if (error.message?.includes('network') || error.message?.includes('fetch')) {
-    return GITHUB_OAUTH_ERRORS.network_error;
-  }
-  
-  if (error.message?.includes('401') || error.message?.includes('unauthorized')) {
-    return GITHUB_OAUTH_ERRORS.invalid_token;
-  }
-  
+  // Default error
   return {
-    code: 'api_error',
-    message: error.message || 'Unknown GitHub API error',
-    userMessage: 'Failed to communicate with GitHub. Please try again.',
-    action: 'retry'
+    code: 'UNKNOWN_ERROR',
+    message: 'Unknown GitHub API error',
+    userMessage: 'An unexpected error occurred. Please try again.',
+    action: 'retry',
   };
 } 

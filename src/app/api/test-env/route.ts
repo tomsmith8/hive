@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
-    jwtSecret: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
-    databaseUrl: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
     nodeEnv: process.env.NODE_ENV,
-    hasJwtSecret: !!process.env.JWT_SECRET,
-    jwtSecretLength: process.env.JWT_SECRET?.length || 0,
+    jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Not set',
+    databaseUrl: process.env.DATABASE_URL ? 'Set' : 'Not set',
+    githubClientId: process.env.GITHUB_CLIENT_ID ? 'Set' : 'Not set',
+    githubClientSecret: process.env.GITHUB_CLIENT_SECRET ? 'Set' : 'Not set',
   });
 } 

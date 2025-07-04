@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Users, GitBranch } from 'lucide-react';
+import { Building2, Users } from 'lucide-react';
 import { GitHubOrganization } from '@/lib/github';
+import Image from 'next/image';
 
 interface OrganizationSelectionStepProps {
   organizations: GitHubOrganization[];
@@ -51,7 +51,7 @@ export function OrganizationSelectionStep({
         <div>
           <h3 className="text-lg font-semibold">Select Organizations</h3>
           <p className="text-muted-foreground">
-            Choose which GitHub organizations you'd like to analyze with Hive.
+            Choose which GitHub organizations you&apos;d like to analyze with Hive.
           </p>
         </div>
       </div>
@@ -99,9 +99,11 @@ export function OrganizationSelectionStep({
                   
                   <div className="flex items-center space-x-3 flex-1">
                     {org.avatar_url && (
-                      <img
+                      <Image
                         src={org.avatar_url}
                         alt={org.login}
+                        width={32}
+                        height={32}
                         className="w-8 h-8 rounded-full"
                       />
                     )}

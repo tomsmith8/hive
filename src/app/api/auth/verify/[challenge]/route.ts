@@ -3,10 +3,10 @@ import { verifyAuthChallenge } from '@/lib/auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { challenge: string } }
+  { params }: { params: Promise<{ challenge: string }> }
 ) {
   try {
-    const { challenge } = params;
+    const { challenge } = await params;
     const body = await request.json();
     const { key: pubKey, sig: signature } = body;
 

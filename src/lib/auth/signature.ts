@@ -5,11 +5,7 @@
 import crypto from 'crypto';
 import * as bitcoin from 'bitcoinjs-lib';
 import * as bitcoinMessage from 'bitcoinjs-message';
-import { ECPairFactory } from 'ecpair';
 import * as ecc from 'tiny-secp256k1';
-
-// Initialize ECPair with secp256k1
-const ECPair = ECPairFactory(ecc);
 
 // Bitcoin message prefix for signed messages (matches Bitcoin Core)
 const SIGNED_MSG_PREFIX = Buffer.from('Bitcoin Signed Message:\n');
@@ -45,8 +41,25 @@ export function verifyBitcoinSignature(message: Buffer, pubKey: string, signatur
     
     return isValid;
     
-  } catch (error) {
-    console.error('Bitcoin signature verification error:', error);
+  } catch {
+    console.error('Bitcoin signature verification error');
+    return false;
+  }
+}
+
+export function verifyBitcoinMessage(message: string, pubKey: string, signature: string): boolean {
+  try {
+    // Convert message to buffer
+    const messageBuffer = Buffer.from(message, 'utf8');
+    
+    // Convert signature from hex string to buffer
+    const signatureBuffer = Buffer.from(signature, 'hex');
+    
+    // Verify the signature
+    return verifyBitcoinSignature(messageBuffer, pubKey, signatureBuffer);
+    
+  } catch {
+    console.error('Bitcoin message verification error');
     return false;
   }
 }
@@ -72,8 +85,8 @@ export function verifyBitcoinSignatureDER(message: Buffer, pubKey: string, signa
     
     return verify.verify(pubKeyBuffer, signature);
     
-  } catch (error) {
-    console.error('DER Bitcoin signature verification error:', error);
+  } catch {
+    console.error('DER Bitcoin signature verification error');
     return false;
   }
 }
@@ -84,7 +97,7 @@ export function validateBitcoinAddress(address: string): boolean {
     // Try to decode the address using bitcoinjs-lib
     bitcoin.address.toOutputScript(address);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -106,7 +119,7 @@ export function validateBitcoinPublicKey(pubKey: string): boolean {
     const pubKeyBuffer = Buffer.from(pubKey, 'hex');
     return ecc.isPoint(pubKeyBuffer);
     
-  } catch (error) {
+  } catch {
     return false;
   }
 } 

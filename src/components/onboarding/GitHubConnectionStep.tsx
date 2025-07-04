@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Github, CheckCircle, AlertCircle } from 'lucide-react';
-import { GitHubService } from '@/lib/github';
+
+interface GitHubUser {
+  login: string;
+}
 
 interface GitHubConnectionStepProps {
-  onConnected: (token: string, user: any) => void;
+  onConnected: (token: string, user: GitHubUser) => void;
   onError: (error: string) => void;
 }
 
 export function GitHubConnectionStep({ onConnected, onError }: GitHubConnectionStepProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<GitHubUser | null>(null);
 
   // Check if user already has GitHub connected
   useEffect(() => {
@@ -27,7 +29,7 @@ export function GitHubConnectionStep({ onConnected, onError }: GitHubConnectionS
         setIsConnected(true);
         setUser({ login: data.githubUsername });
       }
-    } catch (error) {
+    } catch {
       // User not connected, that's fine
     }
   };
@@ -73,7 +75,7 @@ export function GitHubConnectionStep({ onConnected, onError }: GitHubConnectionS
             <div className="flex items-start space-x-3">
               <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
               <div className="text-sm text-blue-800">
-                <p className="font-medium">What we'll access:</p>
+                <p className="font-medium">What we&apos;ll access:</p>
                 <ul className="mt-2 space-y-1">
                   <li>• Your public and private repositories</li>
                   <li>• Organizations you have access to</li>
@@ -118,7 +120,7 @@ export function GitHubConnectionStep({ onConnected, onError }: GitHubConnectionS
               Disconnect
             </Button>
             <Button
-              onClick={() => onConnected('token', user)}
+              onClick={() => onConnected('token', user!)}
               className="flex-1"
             >
               Continue

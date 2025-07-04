@@ -32,7 +32,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back, {user?.ownerAlias || user?.ownerPubKey.slice(0, 10) + '...'}! Here's what's happening with your projects.
+              Welcome back, {user?.ownerAlias || user?.ownerPubKey.slice(0, 10) + '...'}! Here&apos;s what&apos;s happening with your projects.
             </p>
           </div>
           <Button asChild>
@@ -88,7 +88,7 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Task completed</p>
                     <p className="text-xs text-muted-foreground">
-                      "Implement user authentication" was marked as done
+                      &quot;Implement user authentication&quot; was marked as done
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground">2h ago</span>
@@ -98,7 +98,7 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <p className="text-sm font-medium">New bounty created</p>
                     <p className="text-xs text-muted-foreground">
-                      "$500 bounty for API optimization"
+                      &quot;$500 bounty for API optimization&quot;
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground">4h ago</span>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Project milestone</p>
                     <p className="text-xs text-muted-foreground">
-                      "Q1 Release" milestone reached
+                      &quot;Q1 Release&quot; milestone reached
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground">1d ago</span>

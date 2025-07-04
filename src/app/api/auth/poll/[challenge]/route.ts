@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAuthStatus } from '@/lib/auth';
 
-export async function GET(request: NextRequest, context: { params: { challenge: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ challenge: string }> }
+) {
   try {
-    const params = await context.params;
-    const challenge = params.challenge;
+    const { challenge } = await params;
     
     if (!challenge) {
       return NextResponse.json(

@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       data: {
         githubUsername: userData.login,
         githubUserId: userData.id.toString(),
-        githubOrganizations: orgsData as any,
+        githubOrganizations: JSON.parse(JSON.stringify(orgsData)),
       },
     });
 

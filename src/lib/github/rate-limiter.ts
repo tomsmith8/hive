@@ -10,9 +10,14 @@ interface RateLimitInfo {
 }
 
 interface CacheEntry {
-  data: any;
-  timestamp: number;
-  ttl: number;
+  data: unknown;
+  expiresAt: number;
+}
+
+interface RateLimitConfig {
+  maxRequests: number;
+  windowMs: number;
+  cacheKey?: (...args: unknown[]) => string;
 }
 
 class GitHubRateLimiter {
@@ -116,31 +121,25 @@ class GitHubRateLimiter {
    * @param data - Data to cache
    * @param ttl - Time to live in milliseconds
    */
-  setCache(key: string, data: any, ttl: number = 5 * 60 * 1000): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl,
-    });
+  setCache(key: string, data: unknown, ttl: number = 5 * 60 * 1000): void {
+    const expiresAt = Date.now() + ttl;
+    this.cache.set(key, { data, expiresAt });
   }
 
   /**
-   * Get cached data
+   * Get data from cache
    * @param key - Cache key
-   * @returns any | null
+   * @returns Cached data or null if not found/expired
    */
-  getCache(key: string): any | null {
+  getCache(key: string): unknown | null {
     const entry = this.cache.get(key);
-    if (!entry) {
-      return null;
-    }
-
-    const now = Date.now();
-    if (now - entry.timestamp > entry.ttl) {
+    if (!entry) return null;
+    
+    if (Date.now() > entry.expiresAt) {
       this.cache.delete(key);
       return null;
     }
-
+    
     return entry.data;
   }
 
@@ -169,22 +168,20 @@ export const githubRateLimiter = new GitHubRateLimiter();
 /**
  * Decorator function to add rate limiting to GitHub API calls
  * @param fn - The function to wrap
- * @param cacheKey - Optional cache key for caching
- * @param cacheTtl - Cache TTL in milliseconds
+ * @param config - Rate limit configuration
  * @returns Wrapped function
  */
-export function withRateLimiting<T extends any[], R>(
+export function withRateLimiting<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
-  cacheKey?: (...args: T) => string,
-  cacheTtl: number = 5 * 60 * 1000
+  config: RateLimitConfig
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     // Check cache first
-    if (cacheKey) {
-      const key = cacheKey(...args);
+    if (config.cacheKey) {
+      const key = config.cacheKey(...args);
       const cached = githubRateLimiter.getCache(key);
       if (cached) {
-        return cached;
+        return cached as R;
       }
     }
 
@@ -196,9 +193,9 @@ export function withRateLimiting<T extends any[], R>(
     const result = await fn(...args);
 
     // Cache the result
-    if (cacheKey) {
-      const key = cacheKey(...args);
-      githubRateLimiter.setCache(key, result, cacheTtl);
+    if (config.cacheKey) {
+      const key = config.cacheKey(...args);
+      githubRateLimiter.setCache(key, result, config.windowMs);
     }
 
     return result;

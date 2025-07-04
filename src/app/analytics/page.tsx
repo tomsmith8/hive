@@ -75,10 +75,24 @@ export default function AnalyticsPage() {
               To add this page to the navigation, you would:
             </p>
             <ol className="list-decimal list-inside mt-2 space-y-1 text-sm text-muted-foreground">
-              <li>Add '/analytics' to the protectedRoutePatterns in middleware.ts</li>
+              <li>Add &apos;/analytics&apos; to the protectedRoutePatterns in middleware.ts</li>
               <li>Add the navigation item to Sidebar.tsx</li>
-              <li>That's it! The template handles all the authentication logic.</li>
+              <li>That&apos;s it! The template handles all the authentication logic.</li>
             </ol>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Analytics Description</CardTitle>
+            <CardDescription>
+              Track your team&apos;s productivity and project&apos;s progress with detailed analytics.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Monitor key metrics and identify areas for improvement.
+            </p>
           </CardContent>
         </Card>
       </div>

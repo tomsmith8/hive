@@ -3,95 +3,45 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/providers/AuthProvider'
-import { useState } from 'react'
-import { SphinxLogin } from '@/components/auth/SphinxLogin'
-import { usePathname } from 'next/navigation'
 
 export function Header() {
-  const { user, logout, isAuthenticated } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
-  const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
   };
 
   return (
-    <>
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center px-6">
-          <div className="mr-4 flex pl-4">
-            <Link href="/" className="mr-6 flex items-center space-x-2">
-              <div className="h-6 w-6 rounded-full bg-primary"></div>
-              <span className="hidden font-bold sm:inline-block">
-                Hive Platform
-              </span>
-            </Link>
+    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link className="mr-6 flex items-center space-x-2" href="/">
+            <span className="hidden font-bold sm:inline-block">
+              Hive
+            </span>
+          </Link>
+        </div>
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
           </div>
-          <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-            {isAuthenticated ? (
-              <>
-                <nav className="flex items-center space-x-6 text-sm font-medium">
-                  <Link
-                    href="/dashboard"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/tasks"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                  >
-                    Tasks
-                  </Link>
-                  <Link
-                    href="/roadmap"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                  >
-                    Roadmap
-                  </Link>
-                </nav>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">
-                    {user?.ownerAlias || user?.ownerPubKey.slice(0, 10) + '...'}
-                  </span>
-                  <Button variant="outline" size="sm" onClick={handleLogout}>
-                    Sign Out
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center space-x-2 ml-auto">
-                <Button variant="outline" size="sm" onClick={() => setShowLogin(true)}>
-                  Sign In
+          <nav className="flex items-center">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-muted-foreground">
+                  {user.ownerAlias || user.ownerPubKey.slice(0, 10) + '...'}
+                </span>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
                 </Button>
               </div>
-            )}
-          </div>
-        </div>
-      </header>
-      
-      {/* Login Modal */}
-      {showLogin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Login</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowLogin(false)}
-              >
-                ✕
+            ) : (
+              <Button asChild>
+                <Link href="/login">Login</Link>
               </Button>
-            </div>
-            <SphinxLogin 
-              onSuccess={() => setShowLogin(false)}
-              onError={(error) => console.error('Login error:', error)}
-            />
-          </div>
+            )}
+          </nav>
         </div>
-      )}
-    </>
-  )
+      </div>
+    </header>
+  );
 } 

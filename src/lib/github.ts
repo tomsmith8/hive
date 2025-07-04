@@ -1,4 +1,4 @@
-import { githubRateLimiter, withRateLimiting } from './rate-limiter';
+import { githubRateLimiter, withRateLimiting } from './github/rate-limiter';
 
 export interface GitHubUser {
   id: number;
@@ -96,8 +96,11 @@ export class GitHubService {
 
       return response.json();
     },
-    (token: string) => `user:${token}`,
-    10 * 60 * 1000 // Cache for 10 minutes
+    {
+      maxRequests: 5000,
+      windowMs: 10 * 60 * 1000, // 10 minutes
+      cacheKey: (...args: unknown[]) => `user:${args[0] as string}`,
+    }
   );
 
   static async getUserOrganizations(token: string): Promise<GitHubOrganization[]> {

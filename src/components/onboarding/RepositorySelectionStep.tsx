@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { GitBranch, Search, Lock, Globe } from 'lucide-react';
@@ -72,7 +71,7 @@ export function RepositorySelectionStep({
         <div>
           <h3 className="text-lg font-semibold">Select Repositories</h3>
           <p className="text-muted-foreground">
-            Choose which repositories you'd like to analyze for code insights.
+            Choose which repositories you&apos;d like to analyze for code insights.
           </p>
         </div>
       </div>

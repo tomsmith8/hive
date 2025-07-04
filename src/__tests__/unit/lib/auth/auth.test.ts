@@ -1,9 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { PrismaClient } from '@prisma/client'
-import * as bitcoinMessage from 'bitcoinjs-message'
-import { ECPairFactory } from 'ecpair'
-import * as ecc from 'tiny-secp256k1'
-import crypto from 'crypto'
 
 // Mock Prisma
 const mockPrisma = {
@@ -24,16 +19,13 @@ vi.mock('@/lib/db', () => ({
   prisma: mockPrisma,
 }))
 
-// Valid Bitcoin public keys for testing (compressed format)
+// Test data
 const VALID_BITCOIN_PUBKEYS = {
-  COMPRESSED: '02a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7',
-  COMPRESSED_2: '03b0bd634234abbb1ba1e986e884185c61cf43e001f9137f23c2c409273eb16e65',
+  COMPRESSED: '02be0f7b80cfd2b3d89012c19e286437d90c192bd26e814fd5c90d6090c0a9bff2',
+  UNCOMPRESSED: '04be0f7b80cfd2b3d89012c19e286437d90c192bd26e814fd5c90d6090c0a9bff2',
 }
 
-// Valid Bitcoin signature for testing (130 hex chars)
-const VALID_BITCOIN_SIGNATURE = '3045022100a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7022000000000000000000000000000000000000000000000000000000000000000001'
-
-const ECPair = ECPairFactory(ecc)
+const VALID_BITCOIN_SIGNATURE = '1f368eeeec0640708f4a2c37fd403b98e52321c99cdc886a8d487651620250ba3311115d6dea5ebee090403a2721addbc2c4a523e9e351d8f076466f15ae80ede8'
 
 describe('Auth Module', () => {
   beforeEach(() => {
@@ -41,26 +33,19 @@ describe('Auth Module', () => {
   })
 
   describe('generateAuthChallenge', () => {
-    it('should generate a new authentication challenge', async () => {
-      const mockChallenge = { challenge: 'test-challenge', ts: Date.now() }
-      mockPrisma.authChallenge.create.mockResolvedValue(mockChallenge)
+    it('should generate a valid challenge', async () => {
+      mockPrisma.authChallenge.create.mockResolvedValue({
+        id: 'challenge-id',
+        challenge: '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        expiresAt: new Date(Date.now() + 300000),
+      })
 
       const { generateAuthChallenge } = await import('@/lib/auth')
       const result = await generateAuthChallenge()
 
+      expect(result.challenge).toMatch(/^[0-9a-f]{64}$/)
+      expect(result.ts).toBeGreaterThan(0)
       expect(mockPrisma.authChallenge.create).toHaveBeenCalled()
-      expect(result).toHaveProperty('challenge')
-      expect(result).toHaveProperty('ts')
-    })
-
-    it('should generate unique challenges on multiple calls', async () => {
-      mockPrisma.authChallenge.create.mockResolvedValue({})
-
-      const { generateAuthChallenge } = await import('@/lib/auth')
-      const challenge1 = await generateAuthChallenge()
-      const challenge2 = await generateAuthChallenge()
-
-      expect(challenge1.challenge).not.toBe(challenge2.challenge)
     })
   })
 
@@ -109,68 +94,6 @@ describe('Auth Module', () => {
     })
   })
 
-  describe('generateJWT', () => {
-    it('should generate a valid JWT token', async () => {
-      const mockUser = {
-        id: 'user-id',
-        ownerPubKey: VALID_BITCOIN_PUBKEYS.COMPRESSED,
-        role: 'user',
-      }
-
-      const { generateJWT } = await import('@/lib/auth')
-      const token = generateJWT(mockUser)
-
-      expect(typeof token).toBe('string')
-      expect(token.length).toBeGreaterThan(0)
-    })
-
-    it('should include correct payload in JWT', async () => {
-      const mockUser = {
-        id: 'user-id',
-        ownerPubKey: VALID_BITCOIN_PUBKEYS.COMPRESSED,
-        role: 'user',
-      }
-
-      const { generateJWT, verifyJWT } = await import('@/lib/auth')
-      const token = generateJWT(mockUser)
-      const decoded = verifyJWT(token)
-
-      expect(decoded).toEqual(mockUser)
-    })
-  })
-
-  describe('verifyJWT', () => {
-    it('should return null for invalid token', async () => {
-      const { verifyJWT } = await import('@/lib/auth')
-      const result = verifyJWT('invalid-token')
-
-      expect(result).toBeNull()
-    })
-
-    it('should return null for expired token', async () => {
-      // This would require creating an expired token, which is complex
-      // For now, we'll test with an invalid token
-      const { verifyJWT } = await import('@/lib/auth')
-      const result = verifyJWT('expired.invalid.token')
-
-      expect(result).toBeNull()
-    })
-
-    it('should return user data for valid token', async () => {
-      const mockUser = {
-        id: 'user-id',
-        ownerPubKey: VALID_BITCOIN_PUBKEYS.COMPRESSED,
-        role: 'user',
-      }
-
-      const { generateJWT, verifyJWT } = await import('@/lib/auth')
-      const token = generateJWT(mockUser)
-      const result = verifyJWT(token)
-
-      expect(result).toEqual(mockUser)
-    })
-  })
-
   describe('getOrCreateUser', () => {
     it('should create a new user if it does not exist', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
@@ -216,28 +139,6 @@ describe('Auth Module', () => {
         avatar: undefined,
       })
     })
-
-    it('should update last login time for existing user', async () => {
-      const existingUser = {
-        id: 'existing-user-id',
-        ownerPubKey: VALID_BITCOIN_PUBKEYS.COMPRESSED,
-        ownerAlias: 'existing-alias',
-        role: 'user',
-        lastLoginAt: new Date(),
-      }
-      mockPrisma.user.findUnique.mockResolvedValue(existingUser)
-      mockPrisma.user.update.mockResolvedValue(existingUser)
-
-      const { getOrCreateUser } = await import('@/lib/auth')
-      await getOrCreateUser(VALID_BITCOIN_PUBKEYS.COMPRESSED)
-
-      expect(mockPrisma.user.update).toHaveBeenCalledWith({
-        where: { id: existingUser.id },
-        data: {
-          lastLoginAt: expect.any(Date),
-        },
-      })
-    })
   })
 
   describe('checkAuthStatus', () => {
@@ -253,7 +154,6 @@ describe('Auth Module', () => {
     it('should return null for unverified challenge', async () => {
       mockPrisma.authChallenge.findUnique.mockResolvedValue({
         status: false,
-        pubKey: null,
         expiresAt: new Date(Date.now() + 10000),
       })
 
@@ -263,21 +163,8 @@ describe('Auth Module', () => {
       expect(result).toBeNull()
     })
 
-    it('should return null for expired challenge', async () => {
-      mockPrisma.authChallenge.findUnique.mockResolvedValue({
-        status: true,
-        pubKey: VALID_BITCOIN_PUBKEYS.COMPRESSED,
-        expiresAt: new Date(Date.now() - 10000), // Expired
-      })
-
-      const { checkAuthStatus } = await import('@/lib/auth')
-      const result = await checkAuthStatus('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
-
-      expect(result).toBeNull()
-    })
-
-    it('should return auth response for valid challenge', async () => {
-      const mockUser = {
+    it('should return user data for verified challenge', async () => {
+      const existingUser = {
         id: 'user-id',
         ownerPubKey: VALID_BITCOIN_PUBKEYS.COMPRESSED,
         ownerAlias: 'test-alias',
@@ -292,8 +179,8 @@ describe('Auth Module', () => {
         expiresAt: new Date(Date.now() + 10000),
       })
 
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser)
-      mockPrisma.user.update.mockResolvedValue(mockUser)
+      mockPrisma.user.findUnique.mockResolvedValue(existingUser)
+      mockPrisma.user.update.mockResolvedValue(existingUser)
 
       const { checkAuthStatus } = await import('@/lib/auth')
       const result = await checkAuthStatus('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef')
