@@ -98,21 +98,20 @@ export default function CodeGraphPage() {
 
   if (!isOnboardingComplete) {
     return (
-      <div className="w-full max-w-4xl mx-auto px-4 md:px-8 py-8">
+      <div className="w-full max-w-4xl px-4 md:px-8 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold tracking-tight mb-2">Welcome to Code Graph</h1>
           <p className="text-muted-foreground text-lg">
             Let's set up your code analysis workspace
           </p>
         </div>
-        
         <OnboardingWizard onComplete={handleOnboardingComplete} />
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-6">
+    <div className="w-full max-w-4xl px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Code Graph</h1>
