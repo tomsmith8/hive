@@ -471,8 +471,28 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const renderStep4 = () => (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <BarChart3 className="w-8 h-8 text-blue-600" />
+        <div className="flex items-center justify-center mx-auto mb-4">
+          {/* Animated Knowledge Graph SVG */}
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Edges */}
+            <line x1="32" y1="12" x2="12" y2="32" stroke="#60A5FA" strokeWidth="2" />
+            <line x1="32" y1="12" x2="52" y2="32" stroke="#60A5FA" strokeWidth="2" />
+            <line x1="12" y1="32" x2="32" y2="52" stroke="#60A5FA" strokeWidth="2" />
+            <line x1="52" y1="32" x2="32" y2="52" stroke="#60A5FA" strokeWidth="2" />
+            {/* Nodes with animation */}
+            <circle cx="32" cy="12" r="6" fill="#2563EB">
+              <animate attributeName="r" values="6;8;6" dur="1.2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="12" cy="32" r="5" fill="#3B82F6">
+              <animate attributeName="r" values="5;7;5" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="52" cy="32" r="5" fill="#3B82F6">
+              <animate attributeName="r" values="5;7;5" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="32" cy="52" r="5" fill="#60A5FA">
+              <animate attributeName="r" values="5;7;5" dur="1.2s" begin="0.9s" repeatCount="indefinite" />
+            </circle>
+          </svg>
         </div>
         <CardTitle className="text-2xl">Creating Graph Infrastructure</CardTitle>
         <CardDescription>
