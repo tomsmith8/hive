@@ -232,7 +232,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleNext = () => {
-    if (step < 5) {
+    if (step < 6) {
       setStep(step + 1);
     }
   };
@@ -625,6 +625,68 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             Back
           </Button>
           <Button className="px-8 bg-green-600 hover:bg-green-700" type="button" onClick={handleNext}>
+            Next
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Step 6: Creating Stakwork Account
+  const renderStep6 = () => (
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader className="text-center">
+        <div className="flex items-center justify-center mx-auto mb-4">
+          {/* Animated Chain SVG for workflows - teal/emerald */}
+          <svg width="96" height="40" viewBox="0 0 96 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Chain links */}
+            <circle cx="16" cy="20" r="7" fill="#10B981">
+              <animate attributeName="r" values="7;9;7" dur="2.4s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="40" cy="20" r="7" fill="#34D399">
+              <animate attributeName="r" values="7;9;7" dur="2.4s" begin="0.3s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="64" cy="20" r="7" fill="#10B981">
+              <animate attributeName="r" values="7;9;7" dur="2.4s" begin="0.6s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="88" cy="20" r="7" fill="#34D399">
+              <animate attributeName="r" values="7;9;7" dur="2.4s" begin="0.9s" repeatCount="indefinite" />
+            </circle>
+            {/* Animated connecting lines */}
+            <line x1="23" y1="20" x2="33" y2="20" stroke="#06B6D4" strokeWidth="4">
+              <animate attributeName="stroke" values="#06B6D4;#10B981;#06B6D4" dur="2.4s" repeatCount="indefinite" />
+            </line>
+            <line x1="47" y1="20" x2="57" y2="20" stroke="#06B6D4" strokeWidth="4">
+              <animate attributeName="stroke" values="#06B6D4;#10B981;#06B6D4" dur="2.4s" begin="0.3s" repeatCount="indefinite" />
+            </line>
+            <line x1="71" y1="20" x2="81" y2="20" stroke="#06B6D4" strokeWidth="4">
+              <animate attributeName="stroke" values="#06B6D4;#10B981;#06B6D4" dur="2.4s" begin="0.6s" repeatCount="indefinite" />
+            </line>
+          </svg>
+        </div>
+        <CardTitle className="text-2xl">Creating Stakwork Account</CardTitle>
+        <CardDescription>
+          Stakwork powers the automation engine for your workflows.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div>
+          <Label htmlFor="stakworkName" className="text-sm font-medium text-gray-700">
+            Stakwork Customer
+          </Label>
+          <Input
+            id="stakworkName"
+            value={workspaceName}
+            readOnly
+            className="mt-2 bg-gray-100 cursor-not-allowed"
+          />
+        </div>
+        <div className="flex justify-between pt-4">
+          <Button variant="outline" type="button" onClick={handleBack}>
+            Back
+          </Button>
+          <Button className="px-8 bg-green-600 hover:bg-green-700" type="button" onClick={handleNext}>
             Finish
             <CheckCircle className="w-4 h-4 ml-2" />
           </Button>
@@ -638,7 +700,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       {/* Progress Indicator */}
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-center space-x-4">
-          {[1, 2, 3, 4, 5].map((stepNumber) => (
+          {[1, 2, 3, 4, 5, 6].map((stepNumber) => (
             <div key={stepNumber} className="flex items-center">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -649,7 +711,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
               >
                 {stepNumber}
               </div>
-              {stepNumber < 5 && (
+              {stepNumber < 6 && (
                 <div
                   className={`w-12 h-1 mx-2 ${
                     step > stepNumber ? "bg-blue-600" : "bg-gray-200"
@@ -667,6 +729,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       {step === 3 && renderStep3()}
       {step === 4 && renderStep4()}
       {step === 5 && renderStep5()}
+      {step === 6 && renderStep6()}
     </div>
   );
 } 
