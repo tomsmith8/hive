@@ -425,8 +425,27 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const renderStep3 = () => (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-green-600" />
+        <div className="flex items-center justify-center mx-auto mb-4">
+          {/* Animated Workspace SVG - purple/violet */}
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Central node */}
+            <circle cx="32" cy="32" r="8" fill="#8B5CF6"> {/* violet-500 */}
+              <animate attributeName="r" values="8;10;8" dur="1.2s" repeatCount="indefinite" />
+            </circle>
+            {/* Orbiting nodes */}
+            <circle cx="32" cy="14" r="4" fill="#A78BFA"> {/* violet-300 */}
+              <animate attributeName="cy" values="14;10;14" dur="1.2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="50" cy="32" r="4" fill="#A78BFA">
+              <animate attributeName="cx" values="50;54;50" dur="1.2s" begin="0.4s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="32" cy="50" r="4" fill="#A78BFA">
+              <animate attributeName="cy" values="50;54;50" dur="1.2s" begin="0.8s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="14" cy="32" r="4" fill="#A78BFA">
+              <animate attributeName="cx" values="14;10;14" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+            </circle>
+          </svg>
         </div>
         <CardTitle className="text-2xl">Create Workspace</CardTitle>
         <CardDescription>
@@ -537,8 +556,22 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const renderStep5 = () => (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center">
-        <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Code className="w-8 h-8 text-yellow-600" />
+        <div className="flex items-center justify-center mx-auto mb-4">
+          {/* Animated Lock SVG for sensitive env setup - orange/amber */}
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Lock body */}
+            <rect x="18" y="28" width="28" height="24" rx="6" fill="#F59E42"> {/* amber-500 */}
+              <animate attributeName="fill" values="#F59E42;#FBBF24;#F59E42" dur="1.2s" repeatCount="indefinite" />
+            </rect>
+            {/* Lock shackle */}
+            <path d="M24 28v-6a8 8 0 0 1 16 0v6" stroke="#FBBF24" strokeWidth="3" fill="none"> {/* amber-400 */}
+              <animate attributeName="stroke" values="#FBBF24;#F59E42;#FBBF24" dur="1.2s" repeatCount="indefinite" />
+            </path>
+            {/* Keyhole */}
+            <circle cx="32" cy="40" r="3" fill="#fff">
+              <animate attributeName="r" values="3;5;3" dur="1.2s" repeatCount="indefinite" />
+            </circle>
+          </svg>
         </div>
         <CardTitle className="text-2xl">Setting up code environment</CardTitle>
         <CardDescription>
