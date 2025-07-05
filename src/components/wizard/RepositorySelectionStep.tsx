@@ -1,0 +1,141 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Github, CheckCircle, ArrowRight, Search, Star, Eye } from "lucide-react";
+import { Repository } from "@/types/wizard";
+
+interface RepositorySelectionStepProps {
+  repositories: Repository[];
+  selectedRepo: Repository | null;
+  searchTerm: string;
+  loading: boolean;
+  onSearchChange: (term: string) => void;
+  onRepoSelect: (repo: Repository) => void;
+  onNext: () => void;
+  onBack: () => void;
+}
+
+export function RepositorySelectionStep({
+  repositories,
+  selectedRepo,
+  searchTerm,
+  loading,
+  onSearchChange,
+  onRepoSelect,
+  onNext,
+  onBack,
+}: RepositorySelectionStepProps) {
+  const filteredRepositories = repositories.filter(repo =>
+    repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    repo.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <Card className="max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Github className="w-5 h-5" />
+          Select Repository
+        </CardTitle>
+        <CardDescription>
+          Choose a repository to analyze with Code Graph
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search repositories..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Repository List */}
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-gray-600 mt-2">Loading repositories...</p>
+            </div>
+          ) : filteredRepositories.length === 0 ? (
+            <div className="text-center py-8">
+              <Github className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-600">No repositories found</p>
+            </div>
+          ) : (
+            filteredRepositories.map((repo) => (
+              <div
+                key={repo.id}
+                className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                  selectedRepo?.id === repo.id
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                onClick={() => onRepoSelect(repo)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-medium text-gray-900">{repo.name}</h3>
+                      {repo.private && (
+                        <Badge variant="secondary" className="text-xs">
+                          Private
+                        </Badge>
+                      )}
+                      {repo.fork && (
+                        <Badge variant="outline" className="text-xs">
+                          Fork
+                        </Badge>
+                      )}
+                    </div>
+                    {repo.description && (
+                      <p className="text-sm text-gray-600 mb-2">{repo.description}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      {repo.language && (
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          {repo.language}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Star className="w-3 h-3" />
+                        {repo.stargazers_count}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {repo.watchers_count}
+                      </span>
+                    </div>
+                  </div>
+                  {selectedRepo?.id === repo.id && (
+                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between pt-4">
+          <Button variant="outline" onClick={onBack}>
+            Back
+          </Button>
+          <Button 
+            onClick={onNext} 
+            disabled={!selectedRepo}
+            className="px-8"
+          >
+            Continue
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+} 
