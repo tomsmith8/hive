@@ -16,7 +16,8 @@ import {
   Search,
   GitBranch,
   Star,
-  Eye
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 interface Repository {
@@ -54,6 +55,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [loading, setLoading] = useState(false);
   const [parsedRepoName, setParsedRepoName] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
+  const [envVars, setEnvVars] = useState([{ key: '', value: '', show: false }]);
 
   // Fetch repositories when component mounts
   useEffect(() => {
@@ -230,7 +232,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleNext = () => {
-    if (step < 3) {
+    if (step < 5) {
       setStep(step + 1);
     }
   };
@@ -239,6 +241,17 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     if (step > 1) {
       setStep(step - 1);
     }
+  };
+
+  // Helper to sanitize workspace name for domain
+  const getGraphDomain = () => {
+    return (
+      workspaceName
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-') // replace invalid domain chars with dash
+        .replace(/-+/g, '-') // collapse multiple dashes
+        .replace(/^-+|-+$/g, '') // trim leading/trailing dashes
+    );
   };
 
   const renderStep1 = () => (
@@ -454,12 +467,125 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     </Card>
   );
 
+  // Step 4: Graph Infrastructure
+  const renderStep4 = () => (
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader className="text-center">
+        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <BarChart3 className="w-8 h-8 text-blue-600" />
+        </div>
+        <CardTitle className="text-2xl">Creating Graph Infrastructure</CardTitle>
+        <CardDescription>
+          Your graph infrastructure domain will be:
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div>
+          <Label htmlFor="graphDomain" className="text-sm font-medium text-gray-700">
+            Graph Domain
+          </Label>
+          <Input
+            id="graphDomain"
+            value={`${getGraphDomain()}.sphinx.chat`}
+            readOnly
+            className="mt-2 bg-gray-100 cursor-not-allowed"
+          />
+        </div>
+        <div className="flex justify-between pt-4">
+          <Button variant="outline" type="button" onClick={handleBack}>
+            Back
+          </Button>
+          <Button className="px-8 bg-green-600 hover:bg-green-700" type="button" onClick={handleNext}>
+            Next
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Step 5: ENV Variables
+  const handleEnvChange = (idx: number, field: string, value: string | boolean) => {
+    setEnvVars((prev) => prev.map((pair, i) => i === idx ? { ...pair, [field]: value } : pair));
+  };
+  const handleAddEnv = () => {
+    setEnvVars((prev) => [...prev, { key: '', value: '', show: false }]);
+  };
+  const handleRemoveEnv = (idx: number) => {
+    setEnvVars((prev) => prev.filter((_, i) => i !== idx));
+  };
+  const renderStep5 = () => (
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader className="text-center">
+        <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Code className="w-8 h-8 text-yellow-600" />
+        </div>
+        <CardTitle className="text-2xl">Setting up code environment</CardTitle>
+        <CardDescription>
+          Add any ENV variables your code environment needs.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          {envVars.map((pair, idx) => (
+            <div key={idx} className="flex gap-2 items-center">
+              <Input
+                placeholder="KEY"
+                value={pair.key}
+                onChange={e => handleEnvChange(idx, 'key', e.target.value)}
+                className="w-1/3"
+              />
+              <div className="relative w-1/2 flex items-center">
+                <Input
+                  placeholder="VALUE"
+                  type={pair.show ? 'text' : 'password'}
+                  value={pair.value}
+                  onChange={e => handleEnvChange(idx, 'value', e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                  onClick={() => handleEnvChange(idx, 'show', !pair.show)}
+                  tabIndex={-1}
+                >
+                  {pair.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleRemoveEnv(idx)}
+                className="px-2"
+                disabled={envVars.length === 1}
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+          <Button type="button" variant="secondary" onClick={handleAddEnv} className="mt-2">
+            Add Variable
+          </Button>
+        </div>
+        <div className="flex justify-between pt-4">
+          <Button variant="outline" type="button" onClick={handleBack}>
+            Back
+          </Button>
+          <Button className="px-8 bg-green-600 hover:bg-green-700" type="button" onClick={handleNext}>
+            Finish
+            <CheckCircle className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       {/* Progress Indicator */}
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-center space-x-4">
-          {[1, 2, 3].map((stepNumber) => (
+          {[1, 2, 3, 4, 5].map((stepNumber) => (
             <div key={stepNumber} className="flex items-center">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -470,7 +596,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
               >
                 {stepNumber}
               </div>
-              {stepNumber < 3 && (
+              {stepNumber < 5 && (
                 <div
                   className={`w-12 h-1 mx-2 ${
                     step > stepNumber ? "bg-blue-600" : "bg-gray-200"
@@ -486,6 +612,8 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       {step === 1 && renderStep1()}
       {step === 2 && renderStep2()}
       {step === 3 && renderStep3()}
+      {step === 4 && renderStep4()}
+      {step === 5 && renderStep5()}
     </div>
   );
 } 
