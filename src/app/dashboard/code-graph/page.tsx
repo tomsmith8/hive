@@ -23,8 +23,8 @@ export default async function CodeGraphPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Code Graph</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-foreground">Code Graph</h1>
+          <p className="text-muted-foreground mt-2">
             Visualize and analyze your repository relationships and dependencies.
           </p>
         </div>

@@ -32,7 +32,7 @@ export function RepositorySelectionStep({
   );
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-4xl mx-auto bg-card text-card-foreground">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Github className="w-5 h-5" />
@@ -45,7 +45,7 @@ export function RepositorySelectionStep({
       <CardContent className="space-y-6">
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Search repositories..."
             value={searchTerm}
@@ -59,12 +59,12 @@ export function RepositorySelectionStep({
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-600 mt-2">Loading repositories...</p>
+              <p className="text-muted-foreground mt-2">Loading repositories...</p>
             </div>
           ) : filteredRepositories.length === 0 ? (
             <div className="text-center py-8">
-              <Github className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-600">No repositories found</p>
+              <Github className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">No repositories found</p>
             </div>
           ) : (
             filteredRepositories.map((repo) => (
@@ -72,15 +72,15 @@ export function RepositorySelectionStep({
                 key={repo.id}
                 className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
                   selectedRepo?.id === repo.id
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-muted hover:border-accent"
                 }`}
                 onClick={() => onRepoSelect(repo)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-gray-900">{repo.name}</h3>
+                      <h3 className="font-medium text-foreground">{repo.name}</h3>
                       {repo.private && (
                         <Badge variant="secondary" className="text-xs">
                           Private
@@ -93,12 +93,12 @@ export function RepositorySelectionStep({
                       )}
                     </div>
                     {repo.description && (
-                      <p className="text-sm text-gray-600 mb-2">{repo.description}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{repo.description}</p>
                     )}
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       {repo.language && (
                         <span className="flex items-center gap-1">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full"></div>
                           {repo.language}
                         </span>
                       )}
@@ -113,7 +113,7 @@ export function RepositorySelectionStep({
                     </div>
                   </div>
                   {selectedRepo?.id === repo.id && (
-                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                    <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                   )}
                 </div>
               </div>

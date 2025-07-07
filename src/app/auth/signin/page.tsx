@@ -20,7 +20,7 @@ export default function SignInPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading...</p>
@@ -30,7 +30,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Link 
           href="/" 
@@ -40,7 +40,7 @@ export default function SignInPage() {
           Back to Home
         </Link>
         
-        <Card className="border-0 shadow-xl">
+        <Card className="border-0 shadow-xl bg-card text-card-foreground">
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-2xl font-bold">Welcome to Hive</CardTitle>
             <CardDescription className="text-base">
@@ -50,7 +50,7 @@ export default function SignInPage() {
           <CardContent className="space-y-6">
             <Button 
               onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
-              className="w-full h-12 text-base font-medium bg-gray-900 hover:bg-gray-800 transition-colors"
+              className="w-full h-12 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <Github className="w-5 h-5 mr-3" />
               Continue with GitHub
@@ -59,9 +59,9 @@ export default function SignInPage() {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 By continuing, you agree to our{' '}
-                <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+                <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</a>
                 {' '}and{' '}
-                <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+                <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</a>
               </p>
             </div>
           </CardContent>

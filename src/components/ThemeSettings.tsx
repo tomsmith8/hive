@@ -1,57 +1,34 @@
 'use client';
 
-import { Moon, Sun, Monitor } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggleDropdown } from "./theme-toggle-dropdown";
 
 export function ThemeSettings() {
-  const themes = [
-    {
-      id: 'light' as const,
-      name: 'Light',
-      description: 'Light theme for bright environments',
-      icon: Sun,
-    },
-    {
-      id: 'system' as const,
-      name: 'System',
-      description: 'Follows your system preference',
-      icon: Monitor,
-    },
-  ];
-
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sun className="w-5 h-5" />
           Theme Settings
         </CardTitle>
         <CardDescription>
-          Choose your preferred theme for the application
+          Customize the appearance of your dashboard
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4">
-          {themes.map((themeOption) => {
-            const Icon = themeOption.icon;
-            
-            return (
-              <Button
-                key={themeOption.id}
-                variant="outline"
-                className="justify-start h-auto p-4"
-              >
-                <Icon className="w-5 h-5 mr-3" />
-                <div className="text-left">
-                  <div className="font-medium">{themeOption.name}</div>
-                  <div className="text-sm opacity-70">{themeOption.description}</div>
-                </div>
-              </Button>
-            );
-          })}
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center gap-4 mb-2">
+              <label className="text-sm font-medium text-foreground">
+                Choose Theme
+              </label>
+              <ThemeToggleDropdown />
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Select your preferred theme. System will automatically match your operating system's appearance.
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
   );
-} 
+}

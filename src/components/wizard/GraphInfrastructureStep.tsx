@@ -16,7 +16,7 @@ export function GraphInfrastructureStep({
   onBack,
 }: GraphInfrastructureStepProps) {
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mx-auto mb-4">
           {/* Animated Knowledge Graph SVG */}
@@ -48,21 +48,21 @@ export function GraphInfrastructureStep({
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <Label htmlFor="graphDomain" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="graphDomain" className="text-sm font-medium text-foreground">
             Graph Domain
           </Label>
           <Input
             id="graphDomain"
             value={`${graphDomain}.sphinx.chat`}
             readOnly
-            className="mt-2 bg-gray-100 cursor-not-allowed"
+            className="mt-2 bg-muted cursor-not-allowed"
           />
         </div>
         <div className="flex justify-between pt-4">
           <Button variant="outline" type="button" onClick={onBack}>
             Back
           </Button>
-          <Button className="px-8 bg-green-600 hover:bg-green-700" type="button" onClick={onNext}>
+          <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={onNext}>
             Next
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
