@@ -1,0 +1,60 @@
+import { ServiceConfig } from '@/types';
+
+// Service endpoint configurations
+export const serviceConfigs: Record<string, ServiceConfig> = {
+  stakwork: {
+    baseURL: process.env.STAKWORK_BASE_URL || 'https://jobs.stakwork.com/api/v1',
+    apiKey: process.env.STAKWORK_API_KEY || '',
+    timeout: parseInt(process.env.API_TIMEOUT || '10000'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  },
+  poolManager: {
+    baseURL: process.env.POOL_MANAGER_BASE_URL || 'https://workspaces.sphinx.chat/api',
+    apiKey: process.env.POOL_MANAGER_API_KEY || '',
+    timeout: parseInt(process.env.API_TIMEOUT || '10000'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  },
+} as const;
+
+// Service endpoints
+export const endpoints = {
+  stakwork: {
+    projects: '/projects',
+    proposals: '/proposals',
+    users: '/users',
+    categories: '/categories',
+  },
+  poolManager: {
+    pools: '/pools',
+    workspaces: '/workspaces',
+    members: '/members',
+    invitations: '/invitations',
+  },
+} as const;
+
+// Validate required environment variables
+export function validateServiceConfigs(): void {
+  const requiredVars = {
+    STAKWORK_API_KEY: process.env.STAKWORK_API_KEY,
+    POOL_MANAGER_API_KEY: process.env.POOL_MANAGER_API_KEY,
+  };
+
+  for (const [key, value] of Object.entries(requiredVars)) {
+    if (!value) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+  }
+}
+
+// Get service config by name
+export function getServiceConfig(serviceName: keyof typeof serviceConfigs): ServiceConfig {
+  const config = serviceConfigs[serviceName];
+  if (!config) {
+    throw new Error(`Unknown service: ${serviceName}`);
+  }
+  return config;
+} 

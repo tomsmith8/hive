@@ -1,28 +1,18 @@
-import { HttpClient } from '@/lib/http-client';
-import { config } from '@/lib/env';
+import { BaseServiceClass } from '@/lib/base-service';
+import { ServiceConfig } from '@/types';
+import { CreatePoolRequest, Pool } from '@/types';
 
-export interface CreatePoolRequest {
-  name: string;
-  description?: string;
-  members?: string[];
-}
+export class PoolManagerService extends BaseServiceClass {
+  public readonly serviceName = 'poolManager';
 
-class PoolManagerService {
-  private client: HttpClient;
-
-  constructor() {
-    this.client = new HttpClient({
-      baseURL: config.POOL_MANAGER_BASE_URL,
-      defaultHeaders: {
-        'Authorization': `Bearer ${config.POOL_MANAGER_API_KEY}`,
-      },
-      timeout: config.API_TIMEOUT,
-    });
+  constructor(config: ServiceConfig) {
+    super(config);
   }
 
-  async createPool(pool: CreatePoolRequest): Promise<any> {
-    return this.client.post('/workspaces', pool, undefined, 'pool-manager');
+  async createPool(pool: CreatePoolRequest): Promise<Pool> {
+    return this.handleRequest(
+      () => this.getClient().post<Pool>('/workspaces', pool, undefined, this.serviceName),
+      'create pool'
+    );
   }
-}
-
-export const poolManagerService = new PoolManagerService(); 
+} 

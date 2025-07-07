@@ -1,26 +1,20 @@
-// Export Stakwork service and types
-export { 
-  stakworkService,
-  type CreateProjectRequest
-} from './stakwork';
+// Export service classes
+export { StakworkService } from './stakwork';
+export { PoolManagerService } from './pool-manager';
 
-// Export Pool Manager service and types
+// Export service factory and convenience functions
 export { 
+  ServiceFactory, 
+  stakworkService, 
   poolManagerService,
-  type CreatePoolRequest
-} from './pool-manager';
+  type ServiceName 
+} from '@/lib/service-factory';
+
+// Export all types
+export * from '@/types';
+
+// Export service configurations
+export { serviceConfigs, endpoints, getServiceConfig } from '@/config/services';
 
 // Export HTTP client types
-export type { HttpClientConfig, ApiError } from '@/lib/http-client';
-
-// Export a services object for easy access
-import { stakworkService } from './stakwork';
-import { poolManagerService } from './pool-manager';
-
-export const services = {
-  stakwork: stakworkService,
-  poolManager: poolManagerService,
-} as const;
-
-// Export environment configuration
-export { config } from '@/lib/env'; 
+export type { HttpClientConfig, ApiError } from '@/lib/http-client'; 

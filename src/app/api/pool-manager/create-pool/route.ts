@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
-import { poolManagerService, type ApiError } from '@/services';
+import { poolManagerService } from '@/lib/service-factory';
+import { type ApiError } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pool = await poolManagerService.createPool({
+    const pool = await poolManagerService().createPool({
       name,
       description,
       members,

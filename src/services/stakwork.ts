@@ -1,33 +1,18 @@
-import { HttpClient } from '@/lib/http-client';
-import { config } from '@/lib/env';
+import { BaseServiceClass } from '@/lib/base-service';
+import { ServiceConfig } from '@/types';
+import { CreateProjectRequest, StakworkProject } from '@/types';
 
-export interface CreateProjectRequest {
-  title: string;
-  description: string;
-  budget: {
-    min: number;
-    max: number;
-    currency: string;
-  };
-  skills: string[];
-}
+export class StakworkService extends BaseServiceClass {
+  public readonly serviceName = 'stakwork';
 
-class StakworkService {
-  private client: HttpClient;
-
-  constructor() {
-    this.client = new HttpClient({
-      baseURL: config.STAKWORK_BASE_URL,
-      defaultHeaders: {
-        'Authorization': `Bearer ${config.STAKWORK_API_KEY}`,
-      },
-      timeout: config.API_TIMEOUT,
-    });
+  constructor(config: ServiceConfig) {
+    super(config);
   }
 
-  async createProject(project: CreateProjectRequest): Promise<any> {
-    return this.client.post('/projects', project, undefined, 'stakwork');
+  async createProject(project: CreateProjectRequest): Promise<StakworkProject> {
+    return this.handleRequest(
+      () => this.getClient().post<StakworkProject>('/projects', project, undefined, this.serviceName),
+      'create project'
+    );
   }
-}
-
-export const stakworkService = new StakworkService(); 
+} 
