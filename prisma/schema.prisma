@@ -52,6 +52,7 @@ model User {
   accounts      Account[]
   githubAuth    GitHubAuth?
   sessions      Session[]
+  workspaces    Workspace[] @relation("UserWorkspaces")
 
   @@index([createdAt])
   @@index([deleted])
@@ -96,6 +97,30 @@ model GitHubAuth {
   @@index([githubUserId])
   @@index([githubUsername])
   @@map("github_auth")
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Owner of the workspace
+  ownerId String
+  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // Members of the workspace
+  members WorkspaceMember[]
+  
+  // Repositories in this workspace
+  repositories Repository[]
+  
+  // Tasks in this workspace
+  tasks Task[]
+
+  @@map("workspaces")
 }
 
 enum UserRole {
