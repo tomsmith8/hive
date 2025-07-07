@@ -114,6 +114,9 @@ model Workspace {
   // Members of the workspace
   members WorkspaceMember[]
   
+  // One workspace has one swarm
+  swarm Swarm?
+  
   // Repositories in this workspace
   repositories Repository[]
   
@@ -121,6 +124,51 @@ model Workspace {
   tasks Task[]
 
   @@map("workspaces")
+}
+
+model Swarm {
+  id           String      @id @default(cuid())
+  name         String      @unique // domain name used for creation
+  swarmUrl     String?     @map("swarm_url") // https://{name}.sphinx.chat/api
+  status       SwarmStatus @default(PENDING) // pending, active, failed, deleted
+  instanceType String      @default("XL") @map("instance_type")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  
+  // One-to-one relationship with workspace
+  workspaceId String @unique @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("swarms")
+}
+
+model Repository {
+  id            String           @id @default(cuid())
+  name          String
+  repositoryUrl String           @map("repository_url")
+  branch        String           @default("main")
+  status        RepositoryStatus @default(PENDING)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  
+  // Repository belongs to workspace
+  workspaceId String @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("repositories")
+}
+
+enum SwarmStatus {
+  PENDING
+  ACTIVE
+  FAILED
+  DELETED
+}
+
+enum RepositoryStatus {
+  PENDING
+  SYNCED
+  FAILED
 }
 
 enum UserRole {
