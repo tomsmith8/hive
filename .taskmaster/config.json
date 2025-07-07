@@ -1,0 +1,15 @@
+{
+  "projectName": "Hive Platform",
+  "projectDescription": "AI-first product development platform for enterprise codebase challenges",
+  "mainModel": "claude-3-5-sonnet-20241022",
+  "researchModel": "claude-3-5-sonnet-20241022",
+  "fallbackModel": "claude-3-haiku-20240307",
+  "maxTokens": 4000,
+  "temperature": 0.1,
+  "logLevel": "info",
+  "defaultPriority": "medium",
+  "defaultSubtasks": 3,
+  "complexityThreshold": 5,
+  "enableResearch": true,
+  "enableComplexityAnalysis": true
+} 
