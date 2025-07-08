@@ -15,6 +15,8 @@ import ReactMarkdown from "react-markdown";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { X, Plus, Check, Pencil } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs as ShadcnTabs, TabsList as ShadcnTabsList, TabsTrigger as ShadcnTabsTrigger, TabsContent as ShadcnTabsContent } from "@/components/ui/tabs";
 
 // TODO: Replace with real feature fetching logic
 const mockFeature: Feature = {
@@ -56,6 +58,41 @@ export default function FeatureDetailPage() {
   };
   const handleDeleteLink = (idx: number) => {
     setArchLinks(archLinks.filter((_, i) => i !== idx));
+  };
+
+  // Tasks tab state
+  const [tasks, setTasks] = useState<{ title: string; content: string }[]>([]);
+  const [taskTitle, setTaskTitle] = useState("");
+  const [openTaskIdx, setOpenTaskIdx] = useState<number | null>(null);
+  const [modalContent, setModalContent] = useState<string>("");
+  const [modalEditMode, setModalEditMode] = useState<boolean>(false);
+  const [modalTab, setModalTab] = useState<string>("write");
+  const handleAddTask = () => {
+    if (taskTitle.trim()) {
+      setTasks([...tasks, { title: taskTitle.trim(), content: "" }]);
+      setTaskTitle("");
+    }
+  };
+  const handleDeleteTask = (idx: number) => {
+    setTasks(tasks.filter((_, i) => i !== idx));
+  };
+  const handleOpenTask = (idx: number) => {
+    setOpenTaskIdx(idx);
+    setModalContent(tasks[idx].content || "");
+    setModalTab("write");
+  };
+  const handleSaveModal = () => {
+    if (openTaskIdx !== null) {
+      setTasks(tasks.map((t, i) => i === openTaskIdx ? { ...t, content: modalContent } : t));
+      setOpenTaskIdx(null);
+    }
+  };
+  const handleCloseModal = () => {
+    setOpenTaskIdx(null);
+  };
+  const handleGenerateTasks = () => {
+    // TODO: Integrate AI task generation
+    alert("AI task generation coming soon!");
   };
 
   const getStatusColor = (status: Feature["status"]): string => {
@@ -254,8 +291,109 @@ export default function FeatureDetailPage() {
             </div>
           </TabsContent>
           <TabsContent value="tasks" className="mt-4 flex-1 overflow-hidden">
-            {/* TODO: Show tasks related to this feature only */}
-            <div className="text-muted-foreground">Feature-specific tasks will be shown here.</div>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold">Feature Tasks</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={handleGenerateTasks}
+                >
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  Generate Tasks
+                </Button>
+              </div>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  placeholder="Task title"
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddTask();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={handleAddTask}
+                  disabled={!taskTitle.trim()}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {tasks.length === 0 ? (
+                  <div className="text-muted-foreground text-sm">No tasks added yet.</div>
+                ) : (
+                  tasks.map((task, idx) => (
+                    <div key={idx} className="bg-muted/50 rounded-lg p-3 flex items-center justify-between gap-4">
+                      <div className="font-semibold text-base truncate">{task.title}</div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenTask(idx)}
+                          aria-label="Open task"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteTask(idx)}
+                          aria-label="Delete task"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <Dialog open={openTaskIdx !== null} onOpenChange={handleCloseModal}>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {openTaskIdx !== null ? tasks[openTaskIdx].title : ""}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="mb-4">
+                    <ShadcnTabs value={modalTab} onValueChange={setModalTab} className="w-full">
+                      <ShadcnTabsList className="w-full grid grid-cols-2 mb-2">
+                        <ShadcnTabsTrigger value="write">Write</ShadcnTabsTrigger>
+                        <ShadcnTabsTrigger value="preview">Preview</ShadcnTabsTrigger>
+                      </ShadcnTabsList>
+                      <ShadcnTabsContent value="write">
+                        <Textarea
+                          value={modalContent}
+                          onChange={(e) => setModalContent(e.target.value)}
+                          className="min-h-[180px] font-mono"
+                          placeholder="Write task details in markdown..."
+                        />
+                      </ShadcnTabsContent>
+                      <ShadcnTabsContent value="preview">
+                        <div className="prose prose-neutral dark:prose-invert bg-muted/50 rounded-lg p-3 min-h-[180px]">
+                          <ReactMarkdown>{modalContent || "_No content yet_"}</ReactMarkdown>
+                        </div>
+                      </ShadcnTabsContent>
+                    </ShadcnTabs>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>
+                    <Button variant="default" onClick={handleSaveModal}>Save</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </TabsContent>
         </div>
       </Tabs>
