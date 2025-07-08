@@ -52,7 +52,7 @@ model User {
   accounts      Account[]
   githubAuth    GitHubAuth?
   sessions      Session[]
-  workspaces    Workspace[] @relation("UserWorkspaces")
+  workspaces    Workspace[] @relation("WorkspaceOwner")
 
   @@index([createdAt])
   @@index([deleted])
@@ -112,7 +112,7 @@ model Workspace {
   owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   // Members of the workspace
-  members WorkspaceMember[]
+  // members WorkspaceMember[]
   
   // One workspace has one swarm
   swarm Swarm?
@@ -121,7 +121,7 @@ model Workspace {
   repositories Repository[]
   
   // Tasks in this workspace
-  tasks Task[]
+  // tasks Task[]
 
   @@map("workspaces")
 }
