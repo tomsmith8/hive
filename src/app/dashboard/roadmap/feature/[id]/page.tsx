@@ -11,6 +11,10 @@ import { RequirementsTab } from "@/components/roadmap/RequirementsTab";
 // import { EditFeatureDialog } from "@/components/roadmap/EditFeatureDialog";
 import React, { useState } from "react";
 import type { Feature } from "@/components/roadmap/RoadmapContent";
+import ReactMarkdown from "react-markdown";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { X, Plus, Check, Pencil } from "lucide-react";
 
 // TODO: Replace with real feature fetching logic
 const mockFeature: Feature = {
@@ -32,6 +36,27 @@ export default function FeatureDetailPage() {
   // TODO: Fetch feature by id
   const feature: Feature = mockFeature; // Replace with real fetch
   const [activeTab, setActiveTab] = useState<string>("overview");
+
+  // Architecture tab state
+  const [archMarkdown, setArchMarkdown] = useState<string>(
+    `# Sample Architecture\n\n- Use a service-oriented approach\n- Document all endpoints\n\n**Diagram:**\n\n![Sample](https://placehold.co/600x200?text=Architecture+Diagram)`
+  );
+  const [archEditMode, setArchEditMode] = useState<boolean>(false);
+  const [archLinks, setArchLinks] = useState<string[]>([
+    "https://github.com/example/repo",
+    "https://docs.example.com/architecture"
+  ]);
+  const [newLink, setNewLink] = useState<string>("");
+
+  const handleAddLink = () => {
+    if (newLink.trim() && !archLinks.includes(newLink.trim())) {
+      setArchLinks([...archLinks, newLink.trim()]);
+      setNewLink("");
+    }
+  };
+  const handleDeleteLink = (idx: number) => {
+    setArchLinks(archLinks.filter((_, i) => i !== idx));
+  };
 
   const getStatusColor = (status: Feature["status"]): string => {
     switch (status) {
@@ -146,8 +171,87 @@ export default function FeatureDetailPage() {
             <RequirementsTab feature={feature} onUpdateFeature={() => {}} />
           </TabsContent>
           <TabsContent value="architecture" className="mt-4 flex-1 overflow-hidden">
-            {/* TODO: Add architecture content here (no summary/diagram for now) */}
-            <div className="text-muted-foreground">Architecture content coming soon.</div>
+            <div className="space-y-8">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold">Architecture Notes</h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setArchEditMode((v) => !v)}
+                    aria-label={archEditMode ? "Preview" : "Edit"}
+                  >
+                    {archEditMode ? <Check className="w-5 h-5" /> : <Pencil className="w-5 h-5" />}
+                  </Button>
+                </div>
+                {archEditMode ? (
+                  <Textarea
+                    value={archMarkdown}
+                    onChange={(e) => setArchMarkdown(e.target.value)}
+                    className="min-h-[180px] font-mono"
+                    placeholder="Write architecture notes in markdown..."
+                  />
+                ) : (
+                  <div className="prose prose-neutral dark:prose-invert bg-muted/50 rounded-lg p-4 min-h-[180px]">
+                    <ReactMarkdown>{archMarkdown}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Reference Links</h3>
+                <div className="space-y-2">
+                  {archLinks.length === 0 && (
+                    <div className="text-muted-foreground text-sm">No links added yet.</div>
+                  )}
+                  {archLinks.map((link, idx) => (
+                    <div key={link} className="flex items-center gap-2">
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="truncate underline text-primary"
+                        style={{ maxWidth: 320 }}
+                      >
+                        {link}
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteLink(idx)}
+                        aria-label="Delete link"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newLink}
+                      onChange={(e) => setNewLink(e.target.value)}
+                      placeholder="Add new link..."
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddLink();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleAddLink}
+                      aria-label="Add link"
+                      disabled={!newLink.trim() || archLinks.includes(newLink.trim())}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </TabsContent>
           <TabsContent value="tasks" className="mt-4 flex-1 overflow-hidden">
             {/* TODO: Show tasks related to this feature only */}
