@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Feature } from "./RoadmapContent";
+import { Feature } from "@/components/roadmap/RoadmapContent";
 
 interface CreateFeatureDialogProps {
   open: boolean;
