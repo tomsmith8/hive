@@ -28,12 +28,14 @@ interface CreateRequirementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateRequirement: (requirement: Omit<Requirement, "id">) => void;
+  aiSuggestions?: string[];
 }
 
 export function CreateRequirementDialog({
   open,
   onOpenChange,
   onCreateRequirement,
+  aiSuggestions = [],
 }: CreateRequirementDialogProps) {
   const [formData, setFormData] = useState({
     title: "",
@@ -117,28 +119,16 @@ export function CreateRequirementDialog({
     setAcceptanceCriteria(updated);
   };
 
-  const fetchAIContext = async () => {
-    setIsAILoading(true);
-    // Simulate AI context fetching
-    setTimeout(() => {
-      const suggestions = [
-        "System must handle 1000 concurrent users",
-        "Response time must be under 200ms",
-        "Must integrate with existing authentication system",
-        "Should support mobile and desktop platforms"
-      ];
-      
-      // Add AI-generated suggestions to acceptance criteria
-      const newCriteria = [...acceptanceCriteria];
-      suggestions.forEach(suggestion => {
-        if (!newCriteria.includes(suggestion)) {
-          newCriteria.push(suggestion);
-        }
-      });
-      setAcceptanceCriteria(newCriteria);
-      setFormData(prev => ({ ...prev, source: "AI-generated context" }));
-      setIsAILoading(false);
-    }, 2000);
+  // Remove fetchAIContext and AI button from inside the dialog
+  // Add a button to add all AI suggestions to acceptance criteria if aiSuggestions is provided
+  const addAISuggestions = () => {
+    const newCriteria = [...acceptanceCriteria];
+    aiSuggestions.forEach(suggestion => {
+      if (!newCriteria.includes(suggestion)) {
+        newCriteria.push(suggestion);
+      }
+    });
+    setAcceptanceCriteria(newCriteria);
   };
 
   return (
@@ -150,6 +140,17 @@ export function CreateRequirementDialog({
             Define a requirement for this feature. Use the AI button to fetch context and suggestions.
           </DialogDescription>
         </DialogHeader>
+        {aiSuggestions.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mb-2 flex items-center gap-2"
+            onClick={addAISuggestions}
+          >
+            Add AI Suggestions to Acceptance Criteria
+          </Button>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 flex-1 overflow-y-auto">
           <div className="space-y-2">
@@ -206,12 +207,11 @@ export function CreateRequirementDialog({
                 <SelectContent>
                   <SelectItem value="functional">Functional</SelectItem>
                   <SelectItem value="non-functional">Non-Functional</SelectItem>
-                  <SelectItem value="technical">Technical</SelectItem>
                   <SelectItem value="business">Business</SelectItem>
+                  <SelectItem value="technical">Technical</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="priority">Priority</Label>
               <Select
@@ -230,7 +230,6 @@ export function CreateRequirementDialog({
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
@@ -259,16 +258,6 @@ export function CreateRequirementDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={fetchAIContext}
-                  disabled={isAILoading}
-                >
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  {isAILoading ? "Fetching..." : "AI Context"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={addCriteria}
                 >
                   <Plus className="w-4 h-4 mr-1" />
@@ -276,28 +265,25 @@ export function CreateRequirementDialog({
                 </Button>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              {acceptanceCriteria.map((criteria, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    placeholder={`Acceptance criteria ${index + 1}`}
-                    value={criteria}
-                    onChange={(e) => updateCriteria(index, e.target.value)}
-                  />
-                  {acceptanceCriteria.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeCriteria(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+            {acceptanceCriteria.map((criteria, index) => (
+              <div key={index} className="flex gap-2">
+                <Input
+                  placeholder={`Acceptance criteria ${index + 1}`}
+                  value={criteria}
+                  onChange={(e) => updateCriteria(index, e.target.value)}
+                />
+                {acceptanceCriteria.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeCriteria(index)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
 
           <div className="space-y-2">
@@ -320,4 +306,4 @@ export function CreateRequirementDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

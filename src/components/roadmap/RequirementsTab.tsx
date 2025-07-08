@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Edit, Trash2, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Sparkles } from "lucide-react";
 import { Feature, Requirement } from "./RoadmapContent";
 import { CreateRequirementDialog } from "./CreateRequirementDialog";
 import { EditRequirementDialog } from "./EditRequirementDialog";
@@ -19,6 +19,23 @@ export function RequirementsTab({ feature, onUpdateFeature }: RequirementsTabPro
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
+  const [aiSuggestions, setAISuggestions] = useState<string[]>([]);
+  const [isAILoading, setIsAILoading] = useState(false);
+
+  const fetchAIContext = async () => {
+    setIsAILoading(true);
+    // Simulate AI context fetching
+    setTimeout(() => {
+      const suggestions = [
+        "System must handle 1000 concurrent users",
+        "Response time must be under 200ms",
+        "Must integrate with existing authentication system",
+        "Should support mobile and desktop platforms"
+      ];
+      setAISuggestions(suggestions);
+      setIsAILoading(false);
+    }, 2000);
+  };
 
   const handleCreateRequirement = (requirementData: Omit<Requirement, "id">) => {
     const newRequirement: Requirement = {
@@ -97,10 +114,23 @@ export function RequirementsTab({ feature, onUpdateFeature }: RequirementsTabPro
             Document functional and technical requirements for this feature
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Requirement
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Requirement
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={fetchAIContext}
+            disabled={isAILoading}
+            className="flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            {isAILoading ? "Fetching..." : "AI Context"}
+          </Button>
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
@@ -197,6 +227,7 @@ export function RequirementsTab({ feature, onUpdateFeature }: RequirementsTabPro
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onCreateRequirement={handleCreateRequirement}
+        aiSuggestions={aiSuggestions}
       />
 
       {selectedRequirement && (
