@@ -25,20 +25,9 @@ export function FeatureCard({ feature, onEdit, getStatusColor, getPriorityColor 
               {feature.brief}
             </CardDescription>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
+          {/* Remove the edit button */}
         </div>
       </CardHeader>
-      
       <CardContent className="pt-0">
         <div className="space-y-4">
           {/* Status and Priority Badges */}
@@ -50,7 +39,6 @@ export function FeatureCard({ feature, onEdit, getStatusColor, getPriorityColor 
               {feature.priority.charAt(0).toUpperCase() + feature.priority.slice(1)} Priority
             </Badge>
           </div>
-
           {/* Stats */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-4">

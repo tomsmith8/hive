@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Lightbulb, Users, FileText, Sparkles } from "lucide-react";
 import { FeatureCard } from "./FeatureCard";
 import { CreateFeatureDialog } from "./CreateFeatureDialog";
-import { FeatureDetailDialog } from "./FeatureDetailDialog";
+import { useRouter } from "next/navigation";
 
 export interface Feature {
   id: string;
@@ -44,6 +44,7 @@ export interface Requirement {
 }
 
 export function RoadmapContent() {
+  const router = useRouter();
   const [features, setFeatures] = useState<Feature[]>([
     {
       id: "1",
@@ -95,8 +96,6 @@ export function RoadmapContent() {
   ]);
 
   const [createFeatureOpen, setCreateFeatureOpen] = useState(false);
-  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
-  const [featureDetailOpen, setFeatureDetailOpen] = useState(false);
 
   const handleCreateFeature = (featureData: Omit<Feature, "id" | "createdAt" | "updatedAt">) => {
     const newFeature: Feature = {
@@ -115,18 +114,10 @@ export function RoadmapContent() {
         ? { ...updatedFeature, updatedAt: new Date() }
         : f
     ));
-    setSelectedFeature(updatedFeature);
   };
 
   const handleDeleteFeature = (featureId: string) => {
     setFeatures(features.filter(f => f.id !== featureId));
-    setFeatureDetailOpen(false);
-    setSelectedFeature(null);
-  };
-
-  const openFeatureDetail = (feature: Feature) => {
-    setSelectedFeature(feature);
-    setFeatureDetailOpen(true);
   };
 
   const getStatusColor = (status: Feature["status"]) => {
@@ -250,7 +241,7 @@ export function RoadmapContent() {
             <FeatureCard
               key={feature.id}
               feature={feature}
-              onEdit={() => openFeatureDetail(feature)}
+              onEdit={() => router.push(`/dashboard/roadmap/feature/${feature.id}`)}
               getStatusColor={getStatusColor}
               getPriorityColor={getPriorityColor}
             />
@@ -264,17 +255,6 @@ export function RoadmapContent() {
         onOpenChange={setCreateFeatureOpen}
         onCreateFeature={handleCreateFeature}
       />
-
-      {/* Feature Detail Dialog */}
-      {selectedFeature && (
-        <FeatureDetailDialog
-          open={featureDetailOpen}
-          onOpenChange={setFeatureDetailOpen}
-          feature={selectedFeature}
-          onUpdateFeature={handleUpdateFeature}
-          onDeleteFeature={handleDeleteFeature}
-        />
-      )}
     </div>
   );
 } 
