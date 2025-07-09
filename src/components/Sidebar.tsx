@@ -16,6 +16,7 @@ import {
   Map
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 interface SidebarProps {
   user: {
@@ -48,12 +49,23 @@ export function Sidebar({ user }: SidebarProps) {
     });
   };
 
+  const handleWorkspaceChange = (workspace: any) => {
+    console.log("Workspace changed to:", workspace);
+    // TODO: Implement workspace switching logic
+  };
+
+  const handleCreateWorkspace = () => {
+    console.log("Create new workspace");
+    // TODO: Implement workspace creation logic
+  };
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">Hive Dashboard</h2>
-      </div>
+      {/* Workspace Switcher */}
+      <WorkspaceSwitcher 
+        onWorkspaceChange={handleWorkspaceChange}
+        onCreateWorkspace={handleCreateWorkspace}
+      />
 
       {/* User Profile */}
       <div className="p-4">
