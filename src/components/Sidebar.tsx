@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,9 +43,10 @@ const navigationItems = [
 ];
 
 export function Sidebar({ user }: SidebarProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [workspaceRefreshKey, setWorkspaceRefreshKey] = useState(0);
+  const [workspacesRefreshTrigger, setWorkspacesRefreshTrigger] = useState(0);
 
   const handleLogout = async () => {
     await signOut({ 
@@ -62,21 +64,25 @@ export function Sidebar({ user }: SidebarProps) {
     setCreateDialogOpen(true);
   };
 
+  const handleNavigate = (href: string) => {
+    router.push(href);
+    setIsOpen(false);
+  };
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Workspace Switcher */}
       <WorkspaceSwitcher
-        key={workspaceRefreshKey}
         onWorkspaceChange={handleWorkspaceChange}
         onCreateWorkspace={handleCreateWorkspace}
+        refreshTrigger={workspacesRefreshTrigger}
       />
       <CreateWorkspaceDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onCreated={() => {
           setCreateDialogOpen(false);
-          setWorkspaceRefreshKey((k) => k + 1); // Remount WorkspaceSwitcher to trigger refetch
-          // TODO: Use a better state management or callback for refresh in the future
+          setWorkspacesRefreshTrigger((prev) => prev + 1); // Trigger refresh without remounting
         }}
       />
 
@@ -88,10 +94,7 @@ export function Sidebar({ user }: SidebarProps) {
               <Button
                 variant="ghost"
                 className="w-full justify-start"
-                onClick={() => {
-                  window.location.href = item.href;
-                  setIsOpen(false);
-                }}
+                onClick={() => handleNavigate(item.href)}
               >
                 <item.icon className="w-4 h-4 mr-2" />
                 {item.label}
