@@ -25,8 +25,13 @@ export async function POST(request: NextRequest) {
   if (!name || !slug) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
-  const workspace = await createWorkspace({ name, description, slug, ownerId: userId });
-  return NextResponse.json({ workspace }, { status: 201 });
+  try {
+    const workspace = await createWorkspace({ name, description, slug, ownerId: userId });
+    return NextResponse.json({ workspace }, { status: 201 });
+  } catch (error: any) {
+    const message = typeof error === 'string' ? error : error?.message || 'Failed to create workspace.';
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 }
 
 export async function DELETE() {
