@@ -92,7 +92,7 @@ export function WorkspaceSwitcher({
             <ChevronsUpDown className="w-4 h-4 ml-2 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="start" forceMount>
+        <DropdownMenuContent className="w-56" align="end" side="bottom" sideOffset={8} forceMount>
           <DropdownMenuLabel className="text-xs text-muted-foreground">
             Workspaces
           </DropdownMenuLabel>
