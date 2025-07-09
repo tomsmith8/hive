@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
+import { NavUser } from "./NavUser";
 
 interface SidebarProps {
   user: {
@@ -67,38 +68,6 @@ export function Sidebar({ user }: SidebarProps) {
         onCreateWorkspace={handleCreateWorkspace}
       />
 
-      {/* User Profile */}
-      <div className="p-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-3">
-              {user.image && (
-                <Image 
-                  src={user.image} 
-                  alt="Avatar" 
-                  width={40}
-                  height={40}
-                  className="w-10 h-10 rounded-full"
-                />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{user.name || "User"}</div>
-                <div className="text-sm text-gray-500 truncate">{user.email}</div>
-              </div>
-            </div>
-            
-            {user.github && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Github className="w-4 h-4" />
-                <span>@{user.github.username}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Separator />
-
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
@@ -122,16 +91,13 @@ export function Sidebar({ user }: SidebarProps) {
 
       <Separator />
 
-      {/* Logout */}
+      {/* User Popover */}
       <div className="p-4">
-        <Button
-          variant="outline"
-          className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={handleLogout}
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Logout
-        </Button>
+        <NavUser user={{
+          name: user.name || "User",
+          email: user.email || "",
+          avatar: user.image || "",
+        }} />
       </div>
     </div>
   );
