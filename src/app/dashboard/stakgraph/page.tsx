@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Network, Save } from "lucide-react";
+import { EnvironmentSetupStep } from "@/components/wizard/EnvironmentSetupStep";
+import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
+import { EnvironmentVariable } from "@/types/wizard";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function StakgraphPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +21,15 @@ export default function StakgraphPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Environment variable state using shared hook
+  const {
+    envVars,
+    handleEnvChange,
+    handleAddEnv,
+    handleRemoveEnv,
+    setEnvVars,
+  } = useEnvironmentVars();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +64,11 @@ export default function StakgraphPage() {
     
     try {
       // TODO: Implement API call to save configuration
-      // await saveStakgraphConfig(formData);
-      
-      // Simulate API delay
+      // For now, include envVars in the saved config
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setSaved(true);
-      console.log("Stakgraph configuration saved:", formData);
+      console.log("Stakgraph configuration saved:", { ...formData, envVars });
     } catch (error) {
       console.error("Failed to save configuration:", error);
       setErrors({ general: "Failed to save configuration. Please try again." });
@@ -175,6 +186,58 @@ export default function StakgraphPage() {
               </p>
             </div>
 
+            <div className="space-y-4 pt-2">
+              <h3 className="text-lg font-semibold">Environment Variables</h3>
+              <p className="text-xs text-muted-foreground mb-2">
+                Add any ENV variables your Stakgraph integration needs. These will be included in your configuration.
+              </p>
+              {/* Inline the EnvironmentSetupStep's variable section only (not the full card/buttons) */}
+              <div className="space-y-2">
+                {envVars.map((pair, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="KEY"
+                      value={pair.key}
+                      onChange={(e) => handleEnvChange(idx, 'key', e.target.value)}
+                      className="w-1/3"
+                      disabled={loading}
+                    />
+                    <div className="relative w-1/2 flex items-center">
+                      <Input
+                        placeholder="VALUE"
+                        type={pair.show ? 'text' : 'password'}
+                        value={pair.value}
+                        onChange={(e) => handleEnvChange(idx, 'value', e.target.value)}
+                        className="pr-10"
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                        onClick={() => handleEnvChange(idx, 'show', !pair.show)}
+                        tabIndex={-1}
+                        disabled={loading}
+                      >
+                        {pair.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleRemoveEnv(idx)}
+                      className="px-2"
+                      disabled={envVars.length === 1 || loading}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="secondary" onClick={handleAddEnv} className="mt-2" disabled={loading}>
+                  Add Variable
+                </Button>
+              </div>
+            </div>
+
             <div className="flex gap-3 pt-4">
               <Button type="submit" disabled={loading} className="flex items-center gap-2">
                 {loading ? (
@@ -192,6 +255,7 @@ export default function StakgraphPage() {
                   setFormData({ swarmUrl: "", swarmApiKey: "", poolName: "" });
                   setErrors({});
                   setSaved(false);
+                  setEnvVars([{ key: '', value: '', show: false }]);
                 }}
                 disabled={loading}
               >
