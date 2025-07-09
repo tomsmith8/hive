@@ -14,7 +14,8 @@ import {
   Github,
   Menu,
   CheckSquare,
-  Map
+  Map,
+  Network
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
@@ -39,6 +40,7 @@ const navigationItems = [
   { icon: CheckSquare, label: "Tasks", href: "/dashboard/tasks" },
   { icon: Map, label: "Roadmap", href: "/dashboard/roadmap" },
   { icon: Github, label: "Code Graph", href: "/dashboard/code-graph" },
+  { icon: Network, label: "Stakgraph", href: "/dashboard/stakgraph" },
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
