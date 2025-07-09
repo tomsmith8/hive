@@ -1,6 +1,6 @@
 URL Structure Overview
 Base Pattern:
-Copy/{workspace-slug}/{resource}/{id?}/{sub-resource?}/{sub-id?}
+Copy/{workspace-id}/{resource}/{id?}/{sub-resource?}/{sub-id?}
 🏗️ Complete URL Structure
 1. Authentication & Onboarding
 Copy/login                          # GitHub OAuth login

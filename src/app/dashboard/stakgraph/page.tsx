@@ -10,6 +10,7 @@ import { EnvironmentSetupStep } from "@/components/wizard/EnvironmentSetupStep";
 import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
 import { EnvironmentVariable } from "@/types/wizard";
 import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function StakgraphPage() {
   const [formData, setFormData] = useState({
@@ -30,6 +31,8 @@ export default function StakgraphPage() {
     handleRemoveEnv,
     setEnvVars,
   } = useEnvironmentVars();
+
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +71,11 @@ export default function StakgraphPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setSaved(true);
+      toast({
+        title: "Configuration saved",
+        description: "Your Stakgraph settings have been saved successfully!",
+        variant: "success",
+      });
       console.log("Stakgraph configuration saved:", { ...formData, envVars });
     } catch (error) {
       console.error("Failed to save configuration:", error);
@@ -119,14 +127,6 @@ export default function StakgraphPage() {
             {errors.general && (
               <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                 <p className="text-sm text-destructive">{errors.general}</p>
-              </div>
-            )}
-
-            {saved && (
-              <div className="p-3 rounded-md bg-green-50 border border-green-200 dark:bg-green-950/20 dark:border-green-800">
-                <p className="text-sm text-green-700 dark:text-green-400">
-                  Configuration saved successfully!
-                </p>
               </div>
             )}
 
@@ -245,22 +245,9 @@ export default function StakgraphPage() {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {loading ? "Saving..." : "Save Configuration"}
+                {loading ? "Saving..." : "Save"}
               </Button>
               
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setFormData({ swarmUrl: "", swarmApiKey: "", poolName: "" });
-                  setErrors({});
-                  setSaved(false);
-                  setEnvVars([{ key: '', value: '', show: false }]);
-                }}
-                disabled={loading}
-              >
-                Clear Form
-              </Button>
             </div>
           </form>
         </CardContent>
