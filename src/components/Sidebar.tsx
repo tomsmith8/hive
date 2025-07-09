@@ -18,6 +18,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { NavUser } from "./NavUser";
+import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
 
 interface SidebarProps {
   user: {
@@ -42,6 +43,8 @@ const navigationItems = [
 
 export function Sidebar({ user }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [workspaceRefreshKey, setWorkspaceRefreshKey] = useState(0);
 
   const handleLogout = async () => {
     await signOut({ 
@@ -56,16 +59,25 @@ export function Sidebar({ user }: SidebarProps) {
   };
 
   const handleCreateWorkspace = () => {
-    console.log("Create new workspace");
-    // TODO: Implement workspace creation logic
+    setCreateDialogOpen(true);
   };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Workspace Switcher */}
-      <WorkspaceSwitcher 
+      <WorkspaceSwitcher
+        key={workspaceRefreshKey}
         onWorkspaceChange={handleWorkspaceChange}
         onCreateWorkspace={handleCreateWorkspace}
+      />
+      <CreateWorkspaceDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreated={() => {
+          setCreateDialogOpen(false);
+          setWorkspaceRefreshKey((k) => k + 1); // Remount WorkspaceSwitcher to trigger refetch
+          // TODO: Use a better state management or callback for refresh in the future
+        }}
       />
 
       {/* Navigation */}

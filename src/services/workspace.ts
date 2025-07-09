@@ -17,15 +17,13 @@ export async function createWorkspace(data: CreateWorkspaceRequest): Promise<Wor
   };
 }
 
-export async function getWorkspaceByUserId(userId: string): Promise<WorkspaceResponse | null> {
-  const workspace = await db.workspace.findFirst({
+export async function getWorkspacesByUserId(userId: string): Promise<WorkspaceResponse[]> {
+  const workspaces = await db.workspace.findMany({
     where: { ownerId: userId },
   });
-  return workspace
-    ? {
-        ...workspace,
-        createdAt: workspace.createdAt.toISOString(),
-        updatedAt: workspace.updatedAt.toISOString(),
-      }
-    : null;
+  return workspaces.map(workspace => ({
+    ...workspace,
+    createdAt: workspace.createdAt.toISOString(),
+    updatedAt: workspace.updatedAt.toISOString(),
+  }));
 } 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
-import { createWorkspace, getWorkspaceByUserId } from '@/services/workspace';
+import { createWorkspace, getWorkspacesByUserId } from '@/services/workspace';
 import { db } from '@/lib/db';
 
 export async function GET() {
@@ -10,11 +10,8 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const userId = (session.user as { id: string }).id;
-  const workspace = await getWorkspaceByUserId(userId);
-  if (!workspace) {
-    return NextResponse.json({ workspace: null }, { status: 200 });
-  }
-  return NextResponse.json({ workspace }, { status: 200 });
+  const workspaces = await getWorkspacesByUserId(userId);
+  return NextResponse.json({ workspaces }, { status: 200 });
 }
 
 export async function POST(request: NextRequest) {
