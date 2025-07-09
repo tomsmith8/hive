@@ -17,6 +17,31 @@ Refactor the application from `/dashboard/*` routes to `/{workspace-slug}/*` rou
 
 ---
 
+## Critical Implementation Corrections
+
+### **⚠️ Key Technical Fixes Required:**
+
+#### **1. Middleware Edge-Safety**
+- **Problem:** Edge middleware cannot call database directly
+- **Solution:** Keep middleware lightweight with regex validation only, move DB calls to layout.tsx
+- **Pattern:** `middleware.ts` → slug format validation → `[workspace]/layout.tsx` → actual workspace validation
+
+#### **2. Route Priority & Collision Prevention**
+- **Problem:** Static `/workspace` conflicts with dynamic `/[workspace]`
+- **Solution:** Use route groups `(legacy)` and implement reserved slug list
+- **Reserved Slugs:** `['api', 'auth', 'favicon.ico', 'robots.txt', 'workspace', 'workspaces', '_next']`
+
+#### **3. Early Testing Strategy**
+- **Problem:** No testing until Day 9 risks late-stage bugs
+- **Solution:** Playwright smoke tests from Day 1, test each migration step immediately
+
+#### **4. App Router Optimizations**
+- **Add:** `export const dynamic = 'force-dynamic'` to API routes needing per-request auth
+- **Use:** React Suspense boundaries in WorkspaceProvider
+- **Implement:** Tagged cache invalidation with `revalidateTag('workspace-' + id)`
+
+---
+
 ## Phase 1: Core Infrastructure Setup (Days 1-2)
 
 ### Step 1: Update Workspace Service Layer
@@ -26,242 +51,241 @@ Refactor the application from `/dashboard/*` routes to `/{workspace-slug}/*` rou
 - [ ] **Add `getUserWorkspaces(userId: string)` function with role checking** - Returns all workspaces the user has access to, including their role in each workspace
 - [ ] **Add workspace access validation functions** - Utility functions to check if a user can read/write/admin a specific workspace
 - [ ] **Update error handling for workspace not found scenarios** - Standardize error responses for invalid workspace slugs or access denied cases
+- [ ] **⚠️ Add reserved slug validation** - Implement `validateWorkspaceSlug(slug)` with reserved words list to prevent conflicts
+- [ ] **⚠️ Add slug history support** - Support for workspace slug changes with automatic redirects from old slugs
 
 ### Step 2: Create Workspace Context & Hooks
 **Files:** 
 - [ ] **`src/contexts/WorkspaceContext.tsx` - React context for current workspace** - Provides workspace data, user role, and workspace switching functionality to all child components
 - [ ] **`src/hooks/useWorkspace.ts` - Hook for workspace operations** - Encapsulates workspace CRUD operations, switching between workspaces, and loading states
 - [ ] **`src/hooks/useWorkspaceAccess.ts` - Hook for access control validation** - Provides easy access to permission checking functions (canRead, canWrite, canAdmin) for the current workspace
+- [ ] **⚠️ Implement WorkspaceProvider with Suspense** - Wrap children in React Suspense boundary for native App Router pattern
+- [ ] **⚠️ Store both slug and ID in context** - Context shape: `{ slug: string, id: string, role: string, ...workspace }`
 
-### Step 3: Update Middleware for Workspace Routing
+### Step 3: Update Middleware for Workspace Routing (EDGE-SAFE)
 **Files:** `middleware.ts`
-- [ ] **Add workspace slug validation and extraction** - Parse URLs to extract workspace slugs and validate they match the expected format (alphanumeric, hyphens, underscores)
-- [ ] **Implement workspace access control checks** - Verify user has permission to access the requested workspace before allowing route access
-- [ ] **Handle workspace not found → redirect to workspace selector** - Gracefully handle invalid workspace slugs by redirecting to a workspace selection page
+- [ ] **⚠️ LIGHTWEIGHT slug validation only** - Parse URLs with regex to validate slug format (no DB calls)
+- [ ] **⚠️ Check reserved slug list** - Block access to reserved slugs like 'api', 'auth', 'favicon.ico'
+- [ ] **⚠️ JWT-based workspace validation** - Validate workspace access using JWT claims, not database calls
 - [ ] **Handle user with no workspaces → redirect to onboarding** - Detect users without any workspace access and send them through the workspace creation flow
 - [ ] **Update route matching patterns to include both `/workspace/*` and `/[workspace-slug]/*`** - Support both old temporary routes and new workspace-scoped routes during migration
+- [ ] **⚠️ Add history.replaceState handling** - Ensure proper browser back-button behavior during migration
+
+### Step 4: Setup Early Testing Infrastructure (Day 1)
+**Files:** 
+- [ ] **⚠️ Setup Playwright smoke tests** - Create basic tests that verify routes return 200 and contain expected elements
+- [ ] **⚠️ Add CI smoke test pipeline** - Run smoke tests on every PR to catch regressions early
+- [ ] **⚠️ Create workspace test fixtures** - Setup test workspaces and users for consistent testing
+- [ ] **⚠️ Test reserved slug enforcement** - Verify reserved slugs are properly blocked
 
 ## Phase 2: Authentication & User Flow Setup (Day 2)
 
-### Step 4: Update Authentication Flow
+### Step 5: Update Authentication Flow
 **Files:** 
 - [ ] **`src/app/auth/signin/page.tsx` - Change redirect from `/dashboard` to workspace logic** - Replace hardcoded dashboard redirect with intelligent workspace resolution based on user's workspace access
-- [ ] **`src/lib/auth/nextauth.ts` - Update callbacks to handle workspace routing** - Modify NextAuth callbacks to check user workspace status and redirect appropriately after successful authentication
+- [ ] **⚠️ `src/lib/auth/nextauth.ts` - Embed defaultWorkspaceSlug in JWT claims** - Store workspace slug in JWT to avoid extra DB calls on each request
 - [ ] **Add post-login workspace resolution logic** - Implement logic to determine where to send users: onboarding (no workspaces), direct to workspace (one workspace), or workspace selector (multiple workspaces)
+- [ ] **⚠️ Implement one-redirect login flow** - Use JWT slug to redirect directly to `/{slug}` instead of multiple redirects
 
-### Step 5: Create Workspace Selection & Landing Pages
+### Step 6: Create Workspace Selection & Landing Pages
 **Files:**
 - [ ] **`src/app/page.tsx` - Landing page with workspace selector** - Root page that shows workspace selection for users with multiple workspaces or redirects appropriately for users with single/no workspaces
 - [ ] **`src/app/workspaces/page.tsx` - List all user workspaces** - Administrative page showing all workspaces the user has access to with options to switch, create new, or manage existing workspaces
 - [ ] **`src/app/workspaces/new/page.tsx` - Create new workspace** - Alternative workspace creation flow for users who already have workspaces but want to create additional ones
 - [ ] **`src/components/WorkspaceSelector.tsx` - Dropdown/modal for workspace switching** - Reusable component for quick workspace switching from navigation or other UI elements
+- [ ] **⚠️ Add router.prefetch for workspace switching** - Prefetch next workspace on hover for instant switching
 
 ---
 
 ## Phase 3: Incremental Route Migration (Days 3-6)
 
-### Step 6: Rename Dashboard to Workspace (Day 3)
-**Goal:** Simple path rename while integrating new infrastructure
-- [ ] **Rename `src/app/dashboard/` directory to `src/app/workspace/`** - Direct folder rename to change base path from /dashboard to /workspace without logic changes
-- [ ] **Update all imports referencing dashboard paths** - Search and replace all import statements that reference the old dashboard directory structure
-- [ ] **Update hardcoded `/dashboard` links in navigation components** - Find and update all navigation links, redirects, and route references to use /workspace instead
-- [ ] **Integrate WorkspaceContext into workspace layout** - Update the workspace layout to provide workspace context to all child pages using the new infrastructure
-- [ ] **Update workspace pages to use new hooks** - Modify existing workspace pages to consume workspace data through the new useWorkspace and useWorkspaceAccess hooks
-- [ ] **Test all /workspace routes work with new context** - Verify that all pages under /workspace function correctly with the new workspace context and access control
+### Step 7: Setup Route Groups (Day 3)
+**Goal:** Proper route organization to avoid conflicts
+- [ ] **⚠️ Create legacy route group `src/app/(legacy)/workspace/`** - Move existing workspace routes into route group to avoid collision
+- [ ] **⚠️ Create new workspace routes `src/app/[workspace]/`** - Establish clean dynamic routes without conflicts
+- [ ] **⚠️ Configure route priority explicitly** - Ensure predictable routing behavior between legacy and new routes
+- [ ] **Update imports for route group structure** - Update all import statements to reflect new route organization
 
-### Step 7: Create Workspace-Scoped Route Structure (Day 4)
-**Goal:** Establish new `/[workspace-slug]/*` routes alongside existing `/workspace/*` routes
+### Step 8: Create Workspace-Scoped Route Structure (Day 3-4)
+**Goal:** Establish new `/[workspace-slug]/*` routes alongside legacy routes
 **New Directory Structure:**
 ```
 src/app/
-├── workspace/                    # Temporary fallback routes (will be removed later)
-│   ├── layout.tsx               # Uses WorkspaceContext for consistency
-│   ├── page.tsx                 # Dashboard home
-│   ├── roadmap/page.tsx         # Roadmap features
-│   └── ...                      # Other existing pages
-├── [workspace]/                 # New workspace-scoped routes
-│   ├── layout.tsx               # Workspace access control + context loading
-│   └── ...                      # Pages migrated one by one
+├── (legacy)/
+│   └── workspace/               # Temporary fallback routes (route group)
+│       ├── layout.tsx          # Uses WorkspaceContext for consistency
+│       ├── page.tsx            # Dashboard home
+│       ├── roadmap/page.tsx    # Roadmap features
+│       └── ...                 # Other existing pages
+├── [workspace]/                # New workspace-scoped routes
+│   ├── layout.tsx              # ⚠️ DB calls happen HERE, not middleware
+│   └── ...                     # Pages migrated one by one
 ```
 
-- [ ] **Create `src/app/[workspace]/layout.tsx` with full access control** - New layout that extracts workspace slug, validates access, loads workspace data, and provides context to child routes
-- [ ] **Configure route priority so `/[workspace]/*` takes precedence** - Ensure Next.js routing prioritizes specific workspace routes over the temporary /workspace fallback routes
-- [ ] **Add comprehensive error handling for workspace not found/access denied** - Implement user-friendly error pages and automatic redirects for invalid workspace access attempts
-- [ ] **Set up workspace context loading with proper loading states** - Implement loading indicators and error boundaries for workspace data fetching in the new layout
+- [ ] **⚠️ Create `src/app/[workspace]/layout.tsx` with SERVER-SIDE workspace validation** - Move all DB calls from middleware to this server component
+- [ ] **⚠️ Implement proper error boundaries** - Handle workspace not found, access denied with user-friendly error pages
+- [ ] **⚠️ Add cache invalidation tags** - Use `revalidateTag('workspace-' + workspaceId)` for efficient cache management
+- [ ] **⚠️ Setup Suspense boundaries** - Implement loading states for workspace data fetching
 
-### Step 8: Migrate Pages One by One (Days 4-6)
+### Step 9: Migrate Pages One by One (Days 4-6)
+**⚠️ Test each page immediately after migration**
 
-#### 8a. Migrate Dashboard Home (Day 4)
-- [ ] **Copy `src/app/workspace/page.tsx` to `src/app/[workspace]/page.tsx`** - Create workspace-scoped version of dashboard home page with identical functionality
-- [ ] **Update navigation links to include workspace slug parameter** - Modify any internal navigation to use the workspace slug in URLs
-- [ ] **Test workspace context access and data loading** - Verify the page correctly receives and uses workspace data from the new context
-- [ ] **Verify workspace scoping works correctly** - Test that users only see data relevant to the current workspace and cannot access other workspace data
+#### 9a. Migrate Dashboard Home (Day 4)
+- [ ] **Copy `src/app/(legacy)/workspace/page.tsx` to `src/app/[workspace]/page.tsx`** - Create workspace-scoped version of dashboard home page with identical functionality
+- [ ] **⚠️ Update navigation to use workspace context, not props** - Use `useRouter().push({ pathname: '/[workspace]/tasks', query: { workspace } })`
+- [ ] **⚠️ Add `export const dynamic = 'force-dynamic'` if needed** - Ensure per-request auth for any API calls
+- [ ] **⚠️ Run Playwright tests** - Verify page loads correctly and workspace scoping works
+- [ ] **⚠️ Test workspace switching from this page** - Ensure switcher works correctly
 
-#### 8b. Migrate Roadmap Pages (Day 4-5)
-- [ ] **Copy `src/app/workspace/roadmap/page.tsx` to `src/app/[workspace]/roadmap/page.tsx`** - Migrate main roadmap listing page with workspace-scoped data fetching
-- [ ] **Copy `src/app/workspace/roadmap/feature/[id]/page.tsx` to `src/app/[workspace]/roadmap/feature/[id]/page.tsx`** - Migrate feature detail pages ensuring feature access is workspace-scoped
+#### 9b. Migrate Roadmap Pages (Day 4-5)
+- [ ] **Copy roadmap pages to `src/app/[workspace]/roadmap/`** - Migrate main roadmap and feature detail pages
 - [ ] **Update all roadmap components to use workspace context** - Modify roadmap components to filter and display only features belonging to the current workspace
-- [ ] **Update API calls to include workspace scope in data fetching** - Ensure all roadmap-related API calls include workspace ID for proper data isolation
-- [ ] **Test feature creation, editing, and viewing within workspace scope** - Verify all roadmap functionality works correctly within workspace boundaries
+- [ ] **⚠️ Update API routes with workspace validation** - Add workspace scoping to all roadmap API endpoints
+- [ ] **⚠️ Add intercepting routes for modals** - Consider `/@modal` pattern for zero-duplication entity creation
+- [ ] **⚠️ Test feature CRUD within workspace scope** - Verify all roadmap functionality respects workspace boundaries
 
-#### 8c. Migrate Tasks Page (Day 5)
-- [ ] **Copy `src/app/workspace/tasks/page.tsx` to `src/app/[workspace]/tasks/page.tsx`** - Migrate task management page with workspace-specific task filtering
+#### 9c. Migrate Tasks Page (Day 5)
+- [ ] **Copy `src/app/(legacy)/workspace/tasks/page.tsx` to `src/app/[workspace]/tasks/page.tsx`** - Migrate task management page with workspace-specific task filtering
 - [ ] **Update task filtering/loading to be workspace-scoped** - Ensure task lists only show tasks belonging to the current workspace
-- [ ] **Update all task-related API calls to include workspace context** - Modify task CRUD operations to include workspace validation and scoping
-- [ ] **Test task creation, editing, and status updates within workspace** - Verify task functionality is properly isolated to the current workspace
+- [ ] **⚠️ Update API routes with workspace validation** - Modify task CRUD operations to include workspace validation and scoping
+- [ ] **⚠️ Test task operations within workspace** - Verify task functionality is properly isolated
 
-#### 8d. Migrate Settings Page (Day 5)
-- [ ] **Copy `src/app/workspace/settings/page.tsx` to `src/app/[workspace]/settings/page.tsx`** - Migrate settings page with both user and workspace-specific settings
+#### 9d. Migrate Settings Page (Day 5)
+- [ ] **Copy settings page to `src/app/[workspace]/settings/page.tsx`** - Migrate settings page with both user and workspace-specific settings
 - [ ] **Add workspace-specific settings sections** - Implement settings that are specific to the current workspace (name, description, member management)
-- [ ] **Update settings context to handle both user and workspace settings** - Extend settings functionality to manage workspace-level configurations
-- [ ] **Test workspace settings changes and user settings isolation** - Verify workspace settings only affect the current workspace and don't interfere with user settings
+- [ ] **⚠️ Add workspace slug rename functionality** - Allow workspace name/slug changes with proper redirect handling
+- [ ] **⚠️ Test settings changes isolation** - Verify workspace settings only affect current workspace
 
-#### 8e. Migrate Code Graph Page (Day 6)
-- [ ] **Copy `src/app/workspace/code-graph/page.tsx` to `src/app/[workspace]/code-graph/page.tsx`** - Migrate code graph visualization with workspace-scoped repository access
-- [ ] **Update to use workspace-scoped repositories** - Ensure code graph only shows repositories and code data belonging to the current workspace
-- [ ] **Update CodeGraphWizard component to work with workspace context** - Modify wizard to create and configure code graphs within the workspace scope
-- [ ] **Test code graph generation and visualization within workspace** - Verify code graph functionality is properly isolated and workspace-specific
+#### 9e. Migrate Code Graph Page (Day 6)
+- [ ] **Copy code graph page to `src/app/[workspace]/code-graph/page.tsx`** - Migrate with workspace-scoped repository access
+- [ ] **Update to use workspace-scoped repositories** - Ensure code graph only shows repositories belonging to current workspace
+- [ ] **⚠️ Update API routes with workspace validation** - Scope all code graph API calls to workspace
+- [ ] **⚠️ Test code graph generation within workspace** - Verify functionality is workspace-isolated
 
-#### 8f. Migrate Stakgraph Page (Day 6)
-- [ ] **Copy `src/app/workspace/stakgraph/page.tsx` to `src/app/[workspace]/stakgraph/page.tsx`** - Migrate stakeholder graph with workspace-scoped swarm and stakeholder data
-- [ ] **Update to use workspace-scoped swarm data** - Ensure stakeholder graphs only display data relevant to the current workspace
-- [ ] **Test stakeholder graph functionality within workspace scope** - Verify stakeholder management is properly isolated to the workspace
+#### 9f. Migrate Stakgraph Page (Day 6)
+- [ ] **Copy stakgraph page to `src/app/[workspace]/stakgraph/page.tsx`** - Migrate with workspace-scoped stakeholder data
+- [ ] **Update to use workspace-scoped swarm data** - Ensure stakeholder graphs only display workspace-relevant data
+- [ ] **⚠️ Test stakeholder operations within workspace scope** - Verify proper workspace isolation
 
 ---
 
 ## Phase 4: Component & API Updates (Days 7-8)
 
-### Step 9: Update Navigation Components (Day 7)
-- [ ] **Update `src/components/DashboardLayout.tsx` for workspace context integration** - Modify main layout component to seamlessly work with both old and new routing during migration
-- [ ] **Update `src/components/Sidebar.tsx` navigation links to include workspace slug** - Ensure all sidebar navigation generates correct workspace-scoped URLs
-- [ ] **Update `src/components/NavUser.tsx` to add workspace switching functionality** - Add workspace switching dropdown or menu to user navigation area
-- [ ] **Update `src/components/WorkspaceSwitcher.tsx` for new routing structure** - Modify workspace switcher to generate correct URLs for the new routing system
-- [ ] **Add workspace indicator to navigation** - Display current workspace name/slug in navigation so users know which workspace they're viewing
+### Step 10: Update Navigation Components (Day 7)
+- [ ] **Update `src/components/DashboardLayout.tsx` for workspace context integration** - Modify main layout component to work with new routing
+- [ ] **⚠️ Update `src/components/Sidebar.tsx` to use context-based navigation** - Generate URLs using workspace from context, not props
+- [ ] **Update `src/components/NavUser.tsx` to add workspace switching functionality** - Add workspace switching dropdown with prefetch
+- [ ] **⚠️ Add workspace indicator to navigation** - Display current workspace name/slug clearly
+- [ ] **⚠️ Implement Link wrapper for URL auto-correction** - Automatically fix any stale URLs
 
-### Step 10: Update API Routes for Workspace Scoping (Day 7)
-- [ ] **Update `src/app/api/workspaces/route.ts` for new workspace operations** - Add endpoints for workspace switching, validation, and user workspace listing
-- [ ] **Update `src/app/api/github/repositories/route.ts` to add workspace scoping** - Ensure repository API endpoints filter results by workspace and validate workspace access
-- [ ] **Update `src/app/api/stakwork/create-project/route.ts` to add workspace scoping** - Modify Stakwork integration to create projects within the correct workspace context
-- [ ] **Update `src/app/api/pool-manager/create-pool/route.ts` to add workspace scoping** - Ensure pool manager operations are scoped to the current workspace
-- [ ] **Add workspace validation middleware for API routes** - Create reusable middleware to validate workspace access for all workspace-scoped API endpoints
+### Step 11: Update API Routes for Workspace Scoping (Day 7)
+- [ ] **⚠️ Add `export const dynamic = 'force-dynamic'` to auth-dependent routes** - Prevent caching of user-specific data
+- [ ] **Update `src/app/api/workspaces/route.ts` for new workspace operations** - Add endpoints for workspace switching, validation, and listing
+- [ ] **⚠️ Update all API routes to validate workspace access** - Ensure all data operations include workspace scoping and access validation
+- [ ] **⚠️ Implement workspace-scoped cache invalidation** - Use tagged caching for efficient workspace data management
+- [ ] **⚠️ Remove any DB calls from middleware** - Ensure middleware stays edge-safe
 
-### Step 11: Update Components with Workspace Context (Day 8)
-- [ ] **Update `src/components/roadmap/*` components to use workspace context** - Modify all roadmap-related components to consume and respect workspace scoping
-- [ ] **Update `src/components/wizard/*` components to work with workspace scope** - Ensure setup wizards create resources within the correct workspace
-- [ ] **Update `src/components/CreateWorkspaceDialog.tsx` for new workspace flow** - Modify workspace creation dialog to integrate with the new routing and context system
-- [ ] **Update any other components making API calls to include workspace context** - Search for and update all components that make API calls to include proper workspace scoping
+### Step 12: Update Components with Workspace Context (Day 8)
+- [ ] **Update all components to use workspace context** - Modify components to consume workspace data through context
+- [ ] **⚠️ Add branded TypeScript types** - Create `type WorkspaceSlug = string & { __brand: 'WorkspaceSlug' }` for type safety
+- [ ] **⚠️ Update components to use workspace ID for API calls** - Use workspace ID internally while displaying slug in URLs
+- [ ] **⚠️ Add Storybook stories for workspace-aware components** - Create regression testing for workspace components
 
 ---
 
 ## Phase 5: Data Layer & Service Updates (Day 8)
 
-### Step 12: Update Hooks and Services
-- [ ] **Update `src/hooks/use-stakwork.ts` to add workspace scoping** - Ensure Stakwork hook operations are scoped to the current workspace
-- [ ] **Update `src/hooks/use-pool-manager.ts` to add workspace scoping** - Modify pool manager hook to work within workspace boundaries
-- [ ] **Update `src/hooks/useRepositories.ts` to add workspace scoping** - Ensure repository hook only fetches and manages repositories within the current workspace
-- [ ] **Update `src/services/*` to include workspace context in all operations** - Modify all service layer functions to accept and use workspace context for data operations
+### Step 13: Update Hooks and Services
+- [ ] **Update all hooks to add workspace scoping** - Ensure all data hooks operate within workspace boundaries
+- [ ] **⚠️ Implement parallel data fetching with cache()** - Use new App Router cache API for deduped workspace data
+- [ ] **⚠️ Add revalidateTag support to all workspace operations** - Enable efficient cache invalidation
+- [ ] **Update all services to include workspace context** - Modify service layer for workspace-scoped operations
 
-### Step 13: Update Type Definitions
-- [ ] **Update `src/types/workspace.ts` to add workspace context types** - Define TypeScript types for workspace context, user roles, and workspace-scoped operations
-- [ ] **Update `src/types/common.ts` to add workspace-scoped type unions** - Add workspace-aware types that can be used across the application
-- [ ] **Update all other type files to include workspace context where needed** - Review and update type definitions throughout the application to support workspace scoping
+### Step 14: Update Type Definitions
+- [ ] **Update `src/types/workspace.ts` to add workspace context types** - Define comprehensive workspace-related types
+- [ ] **⚠️ Add branded slug types** - Implement type-safe slug handling throughout application
+- [ ] **Update all type files to include workspace context** - Ensure type safety across workspace-scoped operations
 
 ---
 
 ## Phase 6: Testing & Validation (Days 9-10)
 
-### Step 14: Comprehensive Route Testing (Day 9)
-- [ ] **Test new user signup → onboarding → workspace creation → redirect to workspace dashboard** - Verify complete new user onboarding flow works correctly with new routing
-- [ ] **Test existing user login → workspace resolution → redirect to default workspace** - Ensure existing users are properly directed to their workspace after login
-- [ ] **Test user with multiple workspaces → workspace selection flow** - Verify users with multiple workspaces can select and switch between them
-- [ ] **Test workspace switching functionality across all pages** - Ensure workspace switching works correctly from any page in the application
-- [ ] **Test all migrated pages work correctly with workspace context** - Verify each migrated page functions properly with workspace-scoped data and access control
-- [ ] **Test edge cases: invalid workspace slugs, access denied, workspace not found** - Ensure proper error handling and user experience for all edge cases
+### Step 15: Comprehensive Testing (Day 9)
+- [ ] **⚠️ Run full Playwright test suite** - Execute comprehensive tests including smoke tests that ran throughout migration
+- [ ] **Test all user flows end-to-end** - Verify complete user journeys work correctly
+- [ ] **⚠️ Test reserved slug enforcement** - Verify users cannot create workspaces with reserved names
+- [ ] **⚠️ Test workspace slug rename flow** - Verify old URLs redirect properly to new slugs
+- [ ] **⚠️ Load test workspace switching** - Ensure performance remains good under load
+- [ ] **Test edge cases and error scenarios** - Verify proper error handling for all edge cases
 
-### Step 15: Access Control Validation (Day 9)
-- [ ] **Test workspace access control across different user roles** - Verify that admin, member, and read-only users have appropriate access levels
-- [ ] **Test API endpoint security with workspace scoping** - Ensure API endpoints properly validate workspace access and return appropriate errors
-- [ ] **Test data isolation between workspaces** - Verify that users cannot access or modify data from workspaces they don't have access to
-- [ ] **Test middleware catches and handles unauthorized access attempts** - Ensure middleware properly redirects or blocks unauthorized workspace access
-
-### Step 16: Performance & User Experience Testing (Day 10)
-- [ ] **Test page load performance with workspace context loading** - Ensure workspace data loading doesn't significantly impact page performance
-- [ ] **Test workspace switching performance** - Verify workspace switching is fast and doesn't cause unnecessary data reloading
-- [ ] **Test error boundaries and loading states** - Ensure good user experience during workspace data loading and error conditions
-- [ ] **Test navigation and URL handling** - Verify URLs are clean, shareable, and properly handle browser back/forward navigation
+### Step 16: Performance & UX Testing (Day 9)
+- [ ] **⚠️ Test edge middleware performance** - Verify middleware stays fast without DB calls
+- [ ] **Test workspace data caching** - Verify cache invalidation works correctly
+- [ ] **⚠️ Test browser back-button behavior** - Ensure proper navigation history handling
+- [ ] **⚠️ Test social sharing with Open Graph tags** - Verify link previews work correctly
 
 ---
 
 ## Phase 7: Cleanup & Launch (Day 10)
 
-### Step 17: Remove Temporary Routes
-- [ ] **Remove `src/app/workspace/` directory entirely** - Delete all temporary /workspace routes once migration is confirmed working
-- [ ] **Add redirects from `/workspace/*` to `/{default-workspace}/*`** - Implement automatic redirects for any remaining /workspace URLs to user's default workspace
-- [ ] **Update any imports that referenced old workspace files** - Clean up any remaining import statements that reference the removed workspace directory
-- [ ] **Remove any temporary migration code or feature flags** - Clean up any code that was only needed during the migration process
+### Step 17: Remove Legacy Routes & Add Redirects
+- [ ] **⚠️ Add next.config.js redirects** - Implement static 308 redirects for `/workspace/*` → `/{defaultSlug}/*`
+- [ ] **Remove `src/app/(legacy)/workspace/` directory** - Delete legacy routes once migration confirmed working
+- [ ] **⚠️ Implement client-side URL correction** - Handle any remaining stale URLs gracefully
+- [ ] **⚠️ Add slug history redirects** - Ensure old workspace slugs redirect to new ones
 
-### Step 18: Final Documentation & Configuration Updates
-- [ ] **Update `base_url_structure.md` to reflect new implementation** - Document the new routing structure and how workspace scoping works
-- [ ] **Update middleware configuration patterns** - Document middleware patterns and configurations for future development
-- [ ] **Update development setup documentation** - Ensure new developers understand the workspace scoping system and how to work with it
-- [ ] **Add workspace management documentation** - Document how to create, manage, and switch between workspaces
-
-### Step 19: Performance & SEO Optimization
-- [ ] **Add workspace-aware metadata generation** - Implement dynamic metadata that reflects the current workspace context
-- [ ] **Implement workspace-scoped caching where appropriate** - Add caching strategies that respect workspace boundaries
-- [ ] **Add workspace context to error boundaries** - Ensure error handling includes workspace context for better debugging and user experience
-- [ ] **Optimize workspace data loading and caching** - Implement efficient strategies for loading and caching workspace data
+### Step 18: Final Optimizations (Day 10)
+- [ ] **⚠️ Implement edge-friendly slug cache** - Add KV/Redis cache for slug→ID mapping if needed
+- [ ] **⚠️ Setup workspace data prefetching** - Optimize workspace switching with prefetch
+- [ ] **⚠️ Add monitoring and analytics** - Track workspace switching and performance metrics
+- [ ] **⚠️ Feature flag rollout** - Ship behind `NEXT_PUBLIC_WS_ROUTING=v2` for gradual rollout
 
 ---
 
 ## Implementation Timeline
 
-### **Total Estimated Time: 8-10 days**
+### **Total Estimated Time: 10 days (adjusted for safety)**
 
-- **Days 1-2:** Infrastructure setup (context, hooks, middleware, auth flow)
-- **Day 3:** Rename routes + integrate new infrastructure into `/workspace`
-- **Days 4-6:** Migrate pages to `/[workspace]` one by one
-- **Days 7-8:** Update components, APIs, and data layer
-- **Days 9-10:** Testing, cleanup, and documentation
+- **Day 1:** Infrastructure + Testing setup + Reserved slug validation
+- **Day 2:** Auth flow with JWT + Edge-safe middleware
+- **Day 3:** Route groups + Legacy migration + Early testing
+- **Days 4-6:** Page migration (with immediate testing each step)
+- **Days 7-8:** Component/API updates + Performance optimization
+- **Day 9:** Comprehensive testing + Load testing
+- **Day 10:** Cleanup + Feature flag rollout + Monitoring
 
 ---
 
 ## Critical Success Factors
 
-### **Data Migration & Compatibility:**
-- **No database changes required** - Schema already supports workspace scoping through existing relationships
-- **Backward compatibility during migration** - Old `/workspace` routes work during transition period
-- **Graceful error handling** - All edge cases (workspace not found, access denied) have proper user experience
+### **Edge-Safe Architecture:**
+- **No DB calls in middleware** - All database operations happen in server components
+- **JWT-based workspace validation** - Fast edge validation without database hits
+- **Lightweight slug validation** - Regex-based format checking in middleware
 
-### **Security & Access Control:**
-- **Middleware enforces access control from day one** - No routes are accessible without proper workspace validation
-- **API endpoints validate workspace access** - All data operations include workspace scoping and access validation
-- **Data isolation between workspaces** - Users cannot access or modify data from workspaces they don't have access to
+### **Route Collision Prevention:**
+- **Reserved slug list** - Prevent conflicts with static assets and API routes
+- **Route groups for organization** - Clean separation between legacy and new routes
+- **Proper route priority configuration** - Predictable routing behavior
 
-### **User Experience:**
-- **Seamless onboarding flow** - New users without workspaces are guided through workspace creation
-- **Intuitive workspace switching** - Users with multiple workspaces can easily switch between them
-- **Clean, shareable URLs** - Workspace-scoped URLs are clean and can be shared with team members
+### **Early Testing & Safety:**
+- **Smoke tests from Day 1** - Catch regressions immediately
+- **Test each migration step** - Verify functionality before moving to next page
+- **Feature flag rollout** - Gradual rollout with ability to quickly rollback
 
-### **Development & Maintenance:**
-- **Incremental migration reduces risk** - Each page can be migrated and tested independently
-- **Reusable infrastructure** - Context, hooks, and middleware can be used across all workspace-scoped features
-- **Future-proof architecture** - Easy to add new workspace-scoped features and functionality
+### **Performance & UX:**
+- **Tagged cache invalidation** - Efficient workspace data management
+- **Prefetch workspace switching** - Instant workspace transitions
+- **Proper browser history handling** - Smooth back-button behavior
 
 ---
 
-## Rollback Plan
+## Emergency Rollback Plan
 
-### **If Issues Arise During Migration:**
-- **Keep old `/workspace` routes until new routes are confirmed working** - Can quickly revert to old routing if issues are discovered
-- **Use route prioritization to prefer old routes during testing** - Can temporarily disable new routes without code changes
-- **Database backup strategy** - Although no schema changes are needed, maintain backups for safety
-- **Feature flag system** - Can quickly disable new routing features if needed
+### **If Critical Issues Arise:**
+1. **Disable feature flag** - Set `NEXT_PUBLIC_WS_ROUTING=v1` to revert to legacy routes
+2. **Redirect traffic** - Update redirects to point back to legacy routes
+3. **Database rollback** - No schema changes needed, just feature flag toggle
+4. **Monitoring alerts** - Set up alerts for error rates and performance regressions
 
-### **Emergency Rollback Steps:**
-1. Disable new `/[workspace]` routes by renaming the directory
-2. Restore navigation to point to `/workspace` routes
-3. Disable new middleware workspace validation
-4. Revert authentication flow to redirect to `/workspace`
-
-This rollback can be executed in under 30 minutes if critical issues are discovered. 
+**Rollback time: Under 5 minutes with feature flags** 
