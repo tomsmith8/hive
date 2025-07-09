@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { redirect } from "next/navigation";
-import { OnboardingWorkspaceClient } from "./client";
+import { OnboardingWorkspaceClient } from "@/app/onboarding/workspace/client";
 
 export default async function OnboardingWorkspacePage() {
   const session = await getServerSession(authOptions);
