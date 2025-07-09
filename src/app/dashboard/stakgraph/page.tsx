@@ -14,6 +14,9 @@ import { useToast } from "@/components/ui/use-toast";
 
 export default function StakgraphPage() {
   const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    repositoryUrl: "",
     swarmUrl: "",
     swarmApiKey: "",
     poolName: "",
@@ -43,6 +46,18 @@ export default function StakgraphPage() {
     
     // Validation
     const newErrors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = "Description is required";
+    }
+    if (!formData.repositoryUrl.trim()) {
+      newErrors.repositoryUrl = "Repository URL is required";
+    } else if (!isValidUrl(formData.repositoryUrl.trim())) {
+      newErrors.repositoryUrl = "Please enter a valid URL";
+    }
     
     if (!formData.swarmUrl.trim()) {
       newErrors.swarmUrl = "Swarm URL is required";
@@ -130,7 +145,53 @@ export default function StakgraphPage() {
               </div>
             )}
 
-            <div className="space-y-2">
+            {/* Section 1: Name & Description */}
+            <div className="space-y-2 mb-4">
+              <h3 className="text-lg font-semibold mb-2">Project Info</h3>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                placeholder="Project Name"
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                className={errors.name ? "border-destructive" : ""}
+                disabled={loading}
+              />
+              {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="Short description of the project"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                className={errors.description ? "border-destructive" : ""}
+                disabled={loading}
+              />
+              {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+            </div>
+
+            {/* Section 2: Code (Repository URL) */}
+            <div className="space-y-2 mb-4">
+              <h3 className="text-lg font-semibold mb-2">Code</h3>
+              <Label htmlFor="repositoryUrl">Repository URL</Label>
+              <Input
+                id="repositoryUrl"
+                type="url"
+                placeholder="https://github.com/your/repo"
+                value={formData.repositoryUrl}
+                onChange={(e) => handleInputChange("repositoryUrl", e.target.value)}
+                className={errors.repositoryUrl ? "border-destructive" : ""}
+                disabled={loading}
+              />
+              {errors.repositoryUrl && <p className="text-sm text-destructive">{errors.repositoryUrl}</p>}
+              <p className="text-xs text-muted-foreground">
+                The URL of your code repository (GitHub, GitLab, etc.)
+              </p>
+            </div>
+
+            {/* Section 3: Swarm */}
+            <div className="space-y-2 mb-4">
+              <h3 className="text-lg font-semibold mb-2">Swarm</h3>
               <Label htmlFor="swarmUrl">Swarm URL</Label>
               <Input
                 id="swarmUrl"
@@ -147,9 +208,7 @@ export default function StakgraphPage() {
               <p className="text-xs text-muted-foreground">
                 The base URL of your Swarm instance
               </p>
-            </div>
 
-            <div className="space-y-2">
               <Label htmlFor="swarmApiKey">Swarm API Key</Label>
               <Input
                 id="swarmApiKey"
@@ -168,7 +227,9 @@ export default function StakgraphPage() {
               </p>
             </div>
 
-            <div className="space-y-2">
+            {/* Section 4: ENV */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold mb-2">Environment</h3>
               <Label htmlFor="poolName">Pool Name</Label>
               <Input
                 id="poolName"
@@ -184,14 +245,11 @@ export default function StakgraphPage() {
               <p className="text-xs text-muted-foreground">
                 The name of the pool to use for your Stakgraph configuration
               </p>
-            </div>
 
-            <div className="space-y-4 pt-2">
-              <h3 className="text-lg font-semibold">Environment Variables</h3>
+              <h4 className="text-md font-medium mt-2">Environment Variables</h4>
               <p className="text-xs text-muted-foreground mb-2">
                 Add any ENV variables your Stakgraph integration needs. These will be included in your configuration.
               </p>
-              {/* Inline the EnvironmentSetupStep's variable section only (not the full card/buttons) */}
               <div className="space-y-2">
                 {envVars.map((pair, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
@@ -247,7 +305,6 @@ export default function StakgraphPage() {
                 )}
                 {loading ? "Saving..." : "Save"}
               </Button>
-              
             </div>
           </form>
         </CardContent>

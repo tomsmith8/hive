@@ -15,7 +15,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const showToast = React.useCallback((toast: Omit<ToastProps, "open" | "onOpenChange">) => {
     const id = toastId.current++
-    setToasts((prev) => [...prev, { ...toast, id, open: true }])
+      setToasts((prev) => [...prev, { ...toast, id, open: true } as ToastProps & { id: number }])
     if (toast.duration !== 0) {
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id))

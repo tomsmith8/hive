@@ -185,25 +185,12 @@ model Swarm {
   swarmUrl     String?     @map("swarm_url") // https://{name}.sphinx.chat/api
   status       SwarmStatus @default(PENDING) // pending, active, failed, deleted
   instanceType String      @default("XL") @map("instance_type")
-
-  // Stakgraph/Codegraph configuration
-  swarmApiKey  String?     @map("swarm_api_key")
-  poolName     String?     @map("pool_name")
-  environmentVariables Json @default("[]") @map("environment_variables")
-
-  // Repository connection (one swarm can have one primary repo)
-  repositoryUrl String?    @map("repository_url")
-  repositoryName String?   @map("repository_name")
-  repositoryDescription String? @map("repository_description")
-
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
-
-  // One-to-one relationship with workspace (for now)
+  
+  // One-to-one relationship with workspace
   workspaceId String @unique @map("workspace_id")
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  // For future: to support multiple swarms per workspace, remove @unique from workspaceId and update Workspace.swarms to Swarm[]
 
   @@map("swarms")
 }
