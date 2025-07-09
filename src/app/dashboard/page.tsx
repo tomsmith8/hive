@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Github, Calendar, Activity, Code, BarChart3, Settings } from "lucide-react";
+import { getWorkspacesByUserId } from "@/services/workspace";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
