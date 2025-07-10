@@ -34,8 +34,11 @@ export async function createWorkspace(data: CreateWorkspaceRequest): Promise<Wor
       createdAt: workspace.createdAt.toISOString(),
       updatedAt: workspace.updatedAt.toISOString(),
     };
-  } catch (error: any) {
-    if (error.code === 'P2002' && error.meta?.target?.includes('slug')) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002' && 
+        'meta' in error && error.meta && typeof error.meta === 'object' && 
+        'target' in error.meta && Array.isArray(error.meta.target) && 
+        error.meta.target.includes('slug')) {
       throw new Error(WORKSPACE_ERRORS.SLUG_ALREADY_EXISTS);
     }
     throw error;
@@ -276,7 +279,7 @@ export function validateWorkspaceSlug(slug: string): { isValid: boolean; error?:
   }
 
   // Check against reserved slugs
-  if (RESERVED_WORKSPACE_SLUGS.includes(slug as any)) {
+  if (RESERVED_WORKSPACE_SLUGS.includes(slug as typeof RESERVED_WORKSPACE_SLUGS[number])) {
     return { isValid: false, error: WORKSPACE_ERRORS.SLUG_RESERVED };
   }
 
