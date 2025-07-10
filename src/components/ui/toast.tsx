@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { CheckCircle2 } from "lucide-react"
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-lg border p-4 pr-6 shadow-lg transition-all bg-white dark:bg-zinc-900",
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-lg border p-4 pr-6 shadow-lg transition-all bg-background dark:bg-background",
   {
     variants: {
       variant: {
