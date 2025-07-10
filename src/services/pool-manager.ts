@@ -66,27 +66,45 @@ export class PoolManagerService extends BaseServiceClass {
       throw new Error(`Failed to fetch pool env vars: ${response.status}`);
     }
     const data = await response.json();
-    // Expecting data.config.env_vars as per API
+    // Always return the value, regardless of masked
     if (!data.config || !Array.isArray(data.config.env_vars)) {
       throw new Error('Invalid response from Pool Manager API');
     }
-    // Convert env_vars to { key, value }[]; if masked, value is ''
-    return data.config.env_vars.map((env: { name: string; value: string; masked?: boolean }) => ({
+    return data.config.env_vars.map((env: { name: string; value: string }) => ({
       key: env.name,
-      value: env.masked ? '' : env.value,
+      value: env.value,
     }));
   }
 
   /**
    * Updates environment variables for a pool in the Pool Manager API.
+   * Always sends all env vars. For changed values, sends masked: false and the new value; for unchanged, sends masked: true and the masked value.
    * @param poolName The name of the pool.
-   * @param envVars Array of { key, value } objects.
+   * @param envVars Array of { key, value } objects (the desired state).
+   * @param currentEnvVars Array of { key, value, masked } objects (the current state from Pool Manager).
    */
-  async updatePoolEnvVars(poolName: string, envVars: Array<{ key: string; value: string }>): Promise<unknown> {
+  async updatePoolEnvVars(
+    poolName: string,
+    envVars: Array<{ key: string; value: string }>,
+    currentEnvVars: Array<{ key: string; value: string; masked?: boolean }>
+  ): Promise<unknown> {
     const token = await this.getPoolManagerApiKey();
     const url = `${config.POOL_MANAGER_BASE_URL}/pools/${encodeURIComponent(poolName)}`;
-    // Transform to [{ name, value, masked }]
-    const envVarsForApi = envVars.map(({ key, value }) => ({ name: key, value, masked: false }));
+    // Create a map of current env vars for comparison
+    const currentMap = new Map(currentEnvVars.map(env => [env.key, env.value]));
+    const envVarsForApi = envVars.map(({ key, value }) => {
+      const currentValue = currentMap.get(key);
+      if (currentValue === undefined) {
+        // New var
+        return { name: key, value, masked: false };
+      } else if (currentValue !== value) {
+        // Changed var
+        return { name: key, value, masked: false };
+      } else {
+        // Unchanged var, send masked:true and masked value
+        return { name: key, value, masked: true };
+      }
+    });
     const body = JSON.stringify({ env_vars: envVarsForApi });
     const response = await fetch(url, {
       method: 'PUT',

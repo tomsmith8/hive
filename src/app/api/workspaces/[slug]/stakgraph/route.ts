@@ -201,17 +201,17 @@ export async function PUT(
       });
     }
 
-    // Update environment variables in Pool Manager using poolName
+    // After updating/creating the swarm, update environment variables in Pool Manager if poolName and environmentVariables are present
     if (settings.poolName && Array.isArray(settings.environmentVariables)) {
       try {
         const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
-        await poolManager.updatePoolEnvVars(settings.poolName, settings.environmentVariables);
+        // Fetch current env vars from Pool Manager
+        const currentEnvVars = await poolManager.getPoolEnvVars(settings.poolName);
+        // Always send all vars, with correct masked/changed status
+        await poolManager.updatePoolEnvVars(settings.poolName, settings.environmentVariables, currentEnvVars);
       } catch (err) {
         console.error('Failed to update env vars in Pool Manager:', err);
-        return NextResponse.json(
-          { success: false, message: 'Failed to update environment variables in Pool Manager', error: 'POOL_MANAGER_ERROR' },
-          { status: 502 }
-        );
+        // Optionally, return error or continue
       }
     }
 
