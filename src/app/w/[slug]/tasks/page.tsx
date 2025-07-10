@@ -1,9 +1,15 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckSquare, Clock, Users, Calendar, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
-export default async function TasksPage() {
+export default function TasksPage() {
+  const router = useRouter();
+  const { slug } = useWorkspace();
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -14,7 +20,7 @@ export default async function TasksPage() {
             Manage and track your development tasks and issues.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => router.push(`/w/${slug}/tasks/new`)}>
           <Plus className="w-4 h-4 mr-2" />
           New Task
         </Button>
