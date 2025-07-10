@@ -4,8 +4,22 @@ import { Badge } from "@/components/ui/badge";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import { ArrowRight, Sparkles, Users, Zap, Shield, Bell, TrendingUp, LogIn } from "lucide-react";
 import Link from "next/link";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth/nextauth";
+import { handleWorkspaceRedirect } from "@/lib/auth/workspace-resolver";
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Check if user is authenticated and handle workspace redirection
+  const session = await getServerSession(authOptions);
+  
+  if (session?.user) {
+    // User is authenticated - redirect them to their appropriate workspace
+    await handleWorkspaceRedirect(session);
+    // This redirect prevents the rest of the page from rendering
+    return null;
+  }
+
+  // User is not authenticated - show landing page
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header Navigation */}
