@@ -91,10 +91,9 @@ export default withAuth(
         return NextResponse.redirect(new URL('/onboarding/workspace', req.url));
       }
       
-      // Handle root route - redirect authenticated users to workspace onboarding
+      // Handle root route - let the root page handle redirection logic
       if (pathname === '/') {
-        console.log('Root route for authenticated user, redirecting to workspace onboarding');
-        return NextResponse.redirect(new URL('/onboarding/workspace', req.url));
+        return NextResponse.next();
       }
     }
     

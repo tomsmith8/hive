@@ -13,7 +13,7 @@ export default async function HomePage() {
   const session = await getServerSession(authOptions);
   
   if (session?.user) {
-    // User is authenticated - redirect them to their appropriate workspace
+    // User is authenticated - redirect them to their appropriate workspace or onboarding
     await handleWorkspaceRedirect(session);
     // This redirect prevents the rest of the page from rendering
     return null;

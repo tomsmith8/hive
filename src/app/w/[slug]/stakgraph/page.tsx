@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Network, Save, Loader2 } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
 import { EnvironmentVariable } from "@/types/wizard";
 import { Eye, EyeOff } from "lucide-react";
@@ -246,7 +246,7 @@ export default function StakgraphPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Network className="w-8 h-8 text-primary" />
+          {/* <Network className="w-8 h-8 text-primary" /> */}
           <div>
             <h1 className="text-3xl font-bold">Stakgraph Configuration</h1>
             <p className="text-muted-foreground">
@@ -269,7 +269,7 @@ export default function StakgraphPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Network className="w-8 h-8 text-primary" />
+        {/* <Network className="w-8 h-8 text-primary" /> */}
         <div>
           <h1 className="text-3xl font-bold">Stakgraph Configuration</h1>
           <p className="text-muted-foreground">

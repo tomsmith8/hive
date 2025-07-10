@@ -7,10 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { 
   Home, 
   Settings, 
-  Github,
   Menu,
   CheckSquare,
-  Map,
   Network
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -36,8 +34,8 @@ interface SidebarProps {
 const navigationItems = [
   { icon: Home, label: "Dashboard", href: "" },
   { icon: CheckSquare, label: "Tasks", href: "/tasks" },
-  { icon: Map, label: "Roadmap", href: "/roadmap" },
-  { icon: Github, label: "Code Graph", href: "/code-graph" },
+  // { icon: Map, label: "Roadmap", href: "/roadmap" },
+  // { icon: Github, label: "Code Graph", href: "/code-graph" },
   { icon: Network, label: "Stakgraph", href: "/stakgraph" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
