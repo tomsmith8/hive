@@ -47,4 +47,58 @@ export class PoolManagerService extends BaseServiceClass {
     }
     return data.token;
   }
+
+  /**
+   * Fetches environment variables for a pool from the Pool Manager API.
+   * @param poolName The name of the pool.
+   */
+  async getPoolEnvVars(poolName: string): Promise<Array<{ key: string; value: string }>> {
+    const token = await this.getPoolManagerApiKey();
+    const url = `${config.POOL_MANAGER_BASE_URL}/pools/${encodeURIComponent(poolName)}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch pool env vars: ${response.status}`);
+    }
+    const data = await response.json();
+    // Expecting data.config.env_vars as per API
+    if (!data.config || !Array.isArray(data.config.env_vars)) {
+      throw new Error('Invalid response from Pool Manager API');
+    }
+    // Convert env_vars to { key, value }[]; if masked, value is ''
+    return data.config.env_vars.map((env: { name: string; value: string; masked?: boolean }) => ({
+      key: env.name,
+      value: env.masked ? '' : env.value,
+    }));
+  }
+
+  /**
+   * Updates environment variables for a pool in the Pool Manager API.
+   * @param poolName The name of the pool.
+   * @param envVars Array of { key, value } objects.
+   */
+  async updatePoolEnvVars(poolName: string, envVars: Array<{ key: string; value: string }>): Promise<unknown> {
+    const token = await this.getPoolManagerApiKey();
+    const url = `${config.POOL_MANAGER_BASE_URL}/pools/${encodeURIComponent(poolName)}`;
+    // Transform to [{ name, value, masked }]
+    const envVarsForApi = envVars.map(({ key, value }) => ({ name: key, value, masked: false }));
+    const body = JSON.stringify({ env_vars: envVarsForApi });
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body,
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to update pool env vars: ${response.status}`);
+    }
+    return response.json();
+  }
 } 

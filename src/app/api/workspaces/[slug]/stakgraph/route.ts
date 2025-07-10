@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth/nextauth";
 import { getWorkspaceBySlug } from "@/services/workspace";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { PoolManagerService } from '@/services/pool-manager';
+import { ServiceConfig } from '@/types';
+import { config } from '@/lib/env';
 
 // Validation schema for stakgraph settings
 const stakgraphSettingsSchema = z.object({
@@ -63,7 +66,6 @@ export async function GET(
         repositoryDescription: true,
         repositoryUrl: true,
         swarmApiKey: true,
-        environmentVariables: true,
         status: true,
         updatedAt: true
       }
@@ -76,6 +78,18 @@ export async function GET(
       );
     }
 
+    // Fetch environment variables from Pool Manager using poolName
+    let environmentVariables: Array<{ key: string; value: string }> = [];
+    if (swarm.poolName) {
+      try {
+        const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
+        environmentVariables = await poolManager.getPoolEnvVars(swarm.poolName);
+      } catch (err) {
+        console.error('Failed to fetch env vars from Pool Manager:', err);
+        // Optionally, you can return an error or fallback to empty array
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Stakgraph settings retrieved successfully",
@@ -86,9 +100,7 @@ export async function GET(
         swarmUrl: swarm.swarmUrl || "",
         swarmApiKey: swarm.swarmApiKey || "",
         poolName: swarm.poolName || "",
-        environmentVariables: Array.isArray(swarm.environmentVariables) 
-          ? swarm.environmentVariables 
-          : [],
+        environmentVariables,
         status: swarm.status,
         lastUpdated: swarm.updatedAt
       }
@@ -159,7 +171,7 @@ export async function PUT(
     });
 
     if (swarm) {
-      // Update existing swarm
+      // Update existing swarm (excluding environmentVariables)
       swarm = await db.swarm.update({
         where: { workspaceId: workspace.id },
         data: {
@@ -169,12 +181,11 @@ export async function PUT(
           swarmUrl: settings.swarmUrl,
           swarmApiKey: settings.swarmApiKey,
           poolName: settings.poolName,
-          environmentVariables: settings.environmentVariables,
           updatedAt: new Date()
         }
       });
     } else {
-      // Create new swarm
+      // Create new swarm (excluding environmentVariables)
       swarm = await db.swarm.create({
         data: {
           name: workspace.name, // Use workspace name for swarm name
@@ -185,10 +196,23 @@ export async function PUT(
           swarmUrl: settings.swarmUrl,
           swarmApiKey: settings.swarmApiKey,
           poolName: settings.poolName,
-          environmentVariables: settings.environmentVariables,
           status: "PENDING"
         }
       });
+    }
+
+    // Update environment variables in Pool Manager using poolName
+    if (settings.poolName && Array.isArray(settings.environmentVariables)) {
+      try {
+        const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
+        await poolManager.updatePoolEnvVars(settings.poolName, settings.environmentVariables);
+      } catch (err) {
+        console.error('Failed to update env vars in Pool Manager:', err);
+        return NextResponse.json(
+          { success: false, message: 'Failed to update environment variables in Pool Manager', error: 'POOL_MANAGER_ERROR' },
+          { status: 502 }
+        );
+      }
     }
 
     return NextResponse.json({
