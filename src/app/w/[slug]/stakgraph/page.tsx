@@ -11,6 +11,8 @@ import { EnvironmentVariable } from "@/types/wizard";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface StakgraphSettings {
   name: string;
@@ -242,6 +244,17 @@ export default function StakgraphPage() {
     }
   };
 
+  // Determine if any field is filled out (including env vars)
+  const hasAnyField = (
+    formData.name.trim() ||
+    formData.description.trim() ||
+    formData.repositoryUrl.trim() ||
+    formData.swarmUrl.trim() ||
+    formData.swarmApiKey.trim() ||
+    formData.poolName.trim() ||
+    (envVars && envVars.some(env => env.key.trim() || env.value.trim()))
+  );
+
   if (initialLoading) {
     return (
       <div className="space-y-6">
@@ -278,6 +291,34 @@ export default function StakgraphPage() {
           {/* Removed Swarm Status and Last updated */}
         </div>
       </div>
+
+      {/* Subtle: Create Stakgraph section (only if all fields are empty, with smooth animation) */}
+      <AnimatePresence>
+        {!hasAnyField && (
+          <motion.div
+            key="create-stakgraph-prompt"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className="max-w-2xl bg-muted/40 rounded-md px-4 py-2 mb-2 flex items-center gap-3"
+          >
+            <span className="text-sm text-muted-foreground">
+              Don&apos;t have a Stakgraph configuration?&nbsp;
+            </span>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="px-2 h-7"
+            >
+              <Link href={slug ? `/w/${slug}/code-graph` : "#"}>
+                Create Stakgraph
+              </Link>
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Card className="max-w-2xl">
         <CardHeader>
