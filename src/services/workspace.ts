@@ -1,6 +1,10 @@
 import { db } from '@/lib/db';
-import { CreateWorkspaceRequest, WorkspaceResponse } from '@/types/workspace';
-import { RESERVED_WORKSPACE_SLUGS, WORKSPACE_SLUG_PATTERNS, WORKSPACE_ERRORS } from '@/lib/constants';
+import type { PrismaClient } from '@prisma/client';
+import { CreateWorkspaceRequest, WorkspaceResponse, WorkspaceWithRole, WorkspaceWithAccess, WorkspaceAccessValidation, WorkspaceRole } from '@/types/workspace';
+import { RESERVED_WORKSPACE_SLUGS, WORKSPACE_SLUG_PATTERNS, WORKSPACE_ERRORS, WORKSPACE_PERMISSION_LEVELS } from '@/lib/constants';
+
+// Type assertion to help IDE recognize Prisma client methods
+const prisma = db as PrismaClient;
 
 // Existing functions
 export async function createWorkspace(data: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
@@ -53,13 +57,177 @@ export async function getWorkspacesByUserId(userId: string): Promise<WorkspaceRe
 /**
  * Gets a workspace by slug if user has access (owner or member)
  */
-export async function getWorkspaceBySlug(slug: string, userId: string): Promise<WorkspaceResponse | null> {
-  // First check if user owns the workspace
-  const ownedWorkspace = await db.workspace.findFirst({
+export async function getWorkspaceBySlug(slug: string, userId: string): Promise<WorkspaceWithAccess | null> {
+  // Get the workspace with owner info
+  const workspace = await db.workspace.findFirst({
     where: { 
-      slug,
+      slug
+    },
+    include: {
+      owner: {
+        select: { id: true, name: true, email: true }
+      }
+    }
+  });
+
+  if (!workspace) {
+    return null;
+  }
+
+  // Check if user is owner
+  if (workspace.ownerId === userId) {
+    return {
+      id: workspace.id,
+      name: workspace.name,
+      description: workspace.description,
+      slug: workspace.slug,
+      ownerId: workspace.ownerId,
+      createdAt: workspace.createdAt.toISOString(),
+      updatedAt: workspace.updatedAt.toISOString(),
+      userRole: 'OWNER',
+      owner: workspace.owner
+    };
+  }
+
+  // Check if user is a member
+  const membership = await prisma.workspaceMember.findFirst({
+    where: {
+      workspaceId: workspace.id,
+      userId,
+      leftAt: null
+    }
+  });
+
+  if (!membership) {
+    return null; // User has no access
+  }
+
+  return {
+    id: workspace.id,
+    name: workspace.name,
+    description: workspace.description,
+    slug: workspace.slug,
+    ownerId: workspace.ownerId,
+    createdAt: workspace.createdAt.toISOString(),
+    updatedAt: workspace.updatedAt.toISOString(),
+    userRole: membership.role as WorkspaceRole,
+    owner: workspace.owner
+  };
+}
+
+/**
+ * Gets all workspaces a user has access to, including their role
+ */
+export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRole[]> {
+  const result: WorkspaceWithRole[] = [];
+
+  // Get owned workspaces
+  const ownedWorkspaces = await db.workspace.findMany({
+    where: { 
       ownerId: userId
     }
+  });
+
+  // Add owned workspaces with member count
+  for (const workspace of ownedWorkspaces) {
+    const memberCount = await prisma.workspaceMember.count({
+      where: { workspaceId: workspace.id, leftAt: null }
+    });
+
+    result.push({
+      id: workspace.id,
+      name: workspace.name,
+      description: workspace.description,
+      slug: workspace.slug,
+      ownerId: workspace.ownerId,
+      createdAt: workspace.createdAt.toISOString(),
+      updatedAt: workspace.updatedAt.toISOString(),
+      userRole: 'OWNER',
+      memberCount: memberCount + 1 // +1 for owner
+    });
+  }
+
+  // Get member workspaces
+  const memberships = await prisma.workspaceMember.findMany({
+    where: {
+      userId,
+      leftAt: null
+    },
+    include: {
+      workspace: true
+    }
+  });
+
+  // Add member workspaces
+  for (const membership of memberships) {
+    if (membership.workspace) {
+      const memberCount = await prisma.workspaceMember.count({
+        where: { workspaceId: membership.workspace.id, leftAt: null }
+      });
+
+      result.push({
+        id: membership.workspace.id,
+        name: membership.workspace.name,
+        description: membership.workspace.description,
+        slug: membership.workspace.slug,
+        ownerId: membership.workspace.ownerId,
+        createdAt: membership.workspace.createdAt.toISOString(),
+        updatedAt: membership.workspace.updatedAt.toISOString(),
+        userRole: membership.role as WorkspaceRole,
+        memberCount: memberCount + 1 // +1 for owner
+      });
+    }
+  }
+
+  // Sort by name and return
+  return result.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Validates user access to a workspace and returns permission details
+ */
+export async function validateWorkspaceAccess(slug: string, userId: string): Promise<WorkspaceAccessValidation> {
+  const workspace = await getWorkspaceBySlug(slug, userId);
+  
+  if (!workspace) {
+    return {
+      hasAccess: false,
+      canRead: false,
+      canWrite: false,
+      canAdmin: false
+    };
+  }
+
+  const roleLevel = WORKSPACE_PERMISSION_LEVELS[workspace.userRole];
+  
+  return {
+    hasAccess: true,
+    userRole: workspace.userRole,
+    workspace: {
+      id: workspace.id,
+      name: workspace.name,
+      description: workspace.description,
+      slug: workspace.slug,
+      ownerId: workspace.ownerId,
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt
+    },
+    canRead: roleLevel >= WORKSPACE_PERMISSION_LEVELS.VIEWER,
+    canWrite: roleLevel >= WORKSPACE_PERMISSION_LEVELS.DEVELOPER,
+    canAdmin: roleLevel >= WORKSPACE_PERMISSION_LEVELS.ADMIN
+  };
+}
+
+/**
+ * Gets the user's default/primary workspace (first owned, then first member)
+ */
+export async function getDefaultWorkspaceForUser(userId: string): Promise<WorkspaceResponse | null> {
+  // Try to get the first owned workspace
+  const ownedWorkspace = await db.workspace.findFirst({
+    where: { 
+      ownerId: userId
+    },
+    orderBy: { createdAt: 'asc' }
   });
 
   if (ownedWorkspace) {
@@ -70,12 +238,28 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     };
   }
 
-  // TODO: Add member check when workspace membership is needed
-  // For now, only return workspaces the user owns
+  // Get first workspace where user is a member
+  const membership = await prisma.workspaceMember.findFirst({
+    where: {
+      userId,
+      leftAt: null
+    },
+    include: { workspace: true },
+    orderBy: { joinedAt: 'asc' }
+  });
+
+  if (membership?.workspace) {
+    return {
+      ...membership.workspace,
+      createdAt: membership.workspace.createdAt.toISOString(),
+      updatedAt: membership.workspace.updatedAt.toISOString(),
+    };
+  }
+
   return null;
 }
 
-// New enhanced functions
+// Enhanced functions
 
 /**
  * Validates a workspace slug against reserved words and format requirements
