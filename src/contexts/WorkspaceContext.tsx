@@ -46,13 +46,7 @@ export function WorkspaceProvider({ children, initialSlug }: WorkspaceProviderPr
   const [workspaces, setWorkspaces] = useState<WorkspaceWithRole[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Extract current slug from pathname or use initialSlug
-  const getCurrentSlug = useCallback(() => {
-    // Extract slug from pathname like "/w/[slug]" or "/w/[slug]/tasks"
-    const matches = pathname.match(/^\/w\/([^\/]+)/);
-    return matches?.[1] || initialSlug || '';
-  }, [pathname, initialSlug]);
+  const [currentLoadedSlug, setCurrentLoadedSlug] = useState<string>(''); // Track currently loaded workspace slug
 
   // Fetch user's workspaces
   const fetchWorkspaces = useCallback(async (): Promise<WorkspaceWithRole[]> => {
@@ -69,28 +63,6 @@ export function WorkspaceProvider({ children, initialSlug }: WorkspaceProviderPr
       return data.workspaces || [];
     } catch (err) {
       console.error('Failed to fetch workspaces:', err);
-      throw err;
-    }
-  }, [status]);
-
-  // Fetch specific workspace by slug
-  const fetchWorkspaceBySlug = useCallback(async (slug: string): Promise<WorkspaceWithAccess | null> => {
-    if (!slug || status !== 'authenticated') return null;
-    
-    try {
-      const response = await fetch(`/api/workspaces/${slug}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        if (response.status === 404 || response.status === 403) {
-          return null; // User doesn't have access or workspace doesn't exist
-        }
-        throw new Error(data.error || 'Failed to fetch workspace');
-      }
-      
-      return data.workspace;
-    } catch (err) {
-      console.error(`Failed to fetch workspace ${slug}:`, err);
       throw err;
     }
   }, [status]);
@@ -112,30 +84,12 @@ export function WorkspaceProvider({ children, initialSlug }: WorkspaceProviderPr
     }
   }, [fetchWorkspaces, status]);
 
-  // Refresh current workspace
+  // Refresh current workspace - simplified to just re-trigger the effect
   const refreshCurrentWorkspace = useCallback(async () => {
-    const currentSlug = getCurrentSlug();
-    if (!currentSlug || status !== 'authenticated') return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const fetchedWorkspace = await fetchWorkspaceBySlug(currentSlug);
-      setWorkspace(fetchedWorkspace);
-      
-      if (!fetchedWorkspace) {
-        setError('Workspace not found or access denied');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load workspace');
-      setWorkspace(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [getCurrentSlug, fetchWorkspaceBySlug, status]);
+    setCurrentLoadedSlug(''); // Clear the loaded slug to force refetch
+  }, []);
 
-  // Switch to a different workspace
+  // Switch to a different workspace - SIMPLIFIED to only handle navigation
   const switchWorkspace = useCallback((targetWorkspace: WorkspaceWithRole) => {
     // Update URL to reflect the new workspace
     const currentPath = pathname.replace(/^\/w\/[^\/]+/, '') || '';
@@ -153,22 +107,81 @@ export function WorkspaceProvider({ children, initialSlug }: WorkspaceProviderPr
       setWorkspace(null);
       setWorkspaces([]);
       setError(null);
+      setCurrentLoadedSlug(''); // Reset loaded slug tracking
     }
   }, [status, refreshWorkspaces]);
 
-  // Load current workspace when slug changes
+  // Load current workspace when URL slug changes - FIXED to prevent loops
   useEffect(() => {
-    const currentSlug = getCurrentSlug();
+    // Extract slug directly from pathname
+    const matches = pathname.match(/^\/w\/([^\/]+)/);
+    const currentSlug = matches?.[1] || initialSlug || '';
+    
+    // Only fetch if we have a slug and are authenticated
     if (currentSlug && status === 'authenticated') {
-      refreshCurrentWorkspace();
-    } else if (!currentSlug && status === 'authenticated') {
-      // No slug in URL, try to redirect to user's default workspace
-      if (workspaces.length > 0) {
-        const defaultWorkspace = workspaces[0]; // First workspace as default
-        switchWorkspace(defaultWorkspace);
+      // Only fetch if we haven't already loaded this workspace
+      if (currentSlug !== currentLoadedSlug) {
+        const fetchCurrentWorkspace = async () => {
+          setLoading(true);
+          setError(null);
+          
+          try {
+            const response = await fetch(`/api/workspaces/${currentSlug}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+              if (response.status === 404 || response.status === 403) {
+                setWorkspace(null);
+                setCurrentLoadedSlug(''); // Clear loaded slug on error
+                setError('Workspace not found or access denied');
+                return;
+              }
+              throw new Error(data.error || 'Failed to fetch workspace');
+            }
+            
+            setWorkspace(data.workspace);
+            setCurrentLoadedSlug(currentSlug); // Track the loaded slug
+          } catch (err) {
+            console.error(`Failed to fetch workspace ${currentSlug}:`, err);
+            setError(err instanceof Error ? err.message : 'Failed to load workspace');
+            setWorkspace(null);
+            setCurrentLoadedSlug(''); // Clear loaded slug on error
+          } finally {
+            setLoading(false);
+          }
+        };
+        
+        fetchCurrentWorkspace();
       }
+    } else if (!currentSlug && status === 'authenticated') {
+      // Clear workspace if no slug
+      setWorkspace(null);
+      setCurrentLoadedSlug('');
     }
-  }, [getCurrentSlug, status, refreshCurrentWorkspace, workspaces, switchWorkspace]);
+  }, [pathname, status, initialSlug, currentLoadedSlug]); // Include currentLoadedSlug in dependencies
+
+  // Handle redirect to default workspace - SEPARATE effect to prevent loops
+  useEffect(() => {
+    // Extract slug directly from pathname
+    const matches = pathname.match(/^\/w\/([^\/]+)/);
+    const currentSlug = matches?.[1] || initialSlug || '';
+    
+    // Only redirect if:
+    // 1. We're authenticated
+    // 2. We're not already on a workspace page
+    // 3. We have workspaces available
+    // 4. We're not currently loading
+    if (
+      status === 'authenticated' && 
+      !currentSlug && 
+      workspaces.length > 0 && 
+      !loading &&
+      !pathname.startsWith('/w/')
+    ) {
+      const defaultWorkspace = workspaces[0];
+      router.push(`/w/${defaultWorkspace.slug}`);
+    }
+  }, [status, workspaces, loading, pathname, router, initialSlug]); // Include all dependencies
 
   // Computed values
   const slug = workspace?.slug || '';

@@ -39,13 +39,10 @@ export function WorkspaceSwitcher({
   const router = useRouter();
 
   // Handle workspace selection with navigation
-  const handleWorkspaceSelect = async (targetWorkspace: WorkspaceWithRole) => {
+  const handleWorkspaceSelect = (targetWorkspace: WorkspaceWithRole) => {
     try {
-      // Switch workspace context
-      await switchWorkspace(targetWorkspace);
-      
-      // Navigate to the new workspace
-      router.push(`/w/${targetWorkspace.slug}`);
+      // Switch workspace context - this already handles navigation
+      switchWorkspace(targetWorkspace);
       
       // Call optional callback for backward compatibility
       onWorkspaceChange?.(targetWorkspace);
