@@ -3,10 +3,29 @@ import { authOptions } from "@/lib/auth/nextauth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DisconnectAccount } from "@/components/DisconnectAccount";
 import { ThemeSettings } from "@/components/ThemeSettings";
+import { DeleteWorkspace } from "@/components/DeleteWorkspace";
+import { getWorkspaceBySlug } from "@/services/workspace";
+import { notFound } from "next/navigation";
 import { Github } from "lucide-react";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getServerSession(authOptions);
+  const { slug } = await params;
+
+  if (!session?.user) {
+    notFound();
+  }
+
+  const userId = (session.user as { id?: string })?.id;
+  if (!userId) {
+    notFound();
+  }
+
+  // Get workspace information
+  const workspace = await getWorkspaceBySlug(slug, userId);
+  if (!workspace) {
+    notFound();
+  }
 
   const user = {
     name: session?.user?.name,
@@ -41,6 +60,8 @@ export default async function SettingsPage() {
             <DisconnectAccount user={user} />
           </CardContent>
         </Card>
+
+        <DeleteWorkspace workspaceSlug={workspace.slug} workspaceName={workspace.name} />
       </div>
     </div>
   );

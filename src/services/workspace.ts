@@ -93,7 +93,7 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
   }
 
   // Check if user is a member
-  const membership = await prisma.workspaceMember.findFirst({
+  const membership = await db.workspaceMember.findFirst({
     where: {
       workspaceId: workspace.id,
       userId,
@@ -263,6 +263,29 @@ export async function getDefaultWorkspaceForUser(userId: string): Promise<Worksp
 }
 
 // Enhanced functions
+
+/**
+ * Deletes a workspace by slug if user has admin access (owner)
+ */
+export async function deleteWorkspaceBySlug(slug: string, userId: string): Promise<void> {
+  // First check if user has access and is owner
+  const workspace = await getWorkspaceBySlug(slug, userId);
+  
+  if (!workspace) {
+    throw new Error('Workspace not found or access denied');
+  }
+
+  if (workspace.userRole !== 'OWNER') {
+    throw new Error('Only workspace owners can delete workspaces');
+  }
+
+  // Delete the workspace (cascade will handle related records)
+  await db.workspace.delete({
+    where: { 
+      id: workspace.id 
+    }
+  });
+}
 
 /**
  * Validates a workspace slug against reserved words and format requirements
