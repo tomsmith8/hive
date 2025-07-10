@@ -7,5 +7,8 @@ export * from './common';
 export * from './stakwork';
 export * from './pool-manager';
 
+// Workspace types
+export * from './workspace';
+
 // Existing types
 export * from './wizard'; 
