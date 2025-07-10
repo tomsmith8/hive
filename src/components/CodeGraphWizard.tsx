@@ -8,7 +8,6 @@ import { parseRepositoryName, sanitizeWorkspaceName } from "@/utils/repositoryPa
 import { WizardProgress } from "@/components/wizard/WizardProgress";
 import { WelcomeStep } from "@/components/wizard/WelcomeStep";
 import { RepositorySelectionStep } from "@/components/wizard/RepositorySelectionStep";
-import { WorkspaceSetupStep } from "@/components/wizard/WorkspaceSetupStep";
 import { GraphInfrastructureStep } from "@/components/wizard/GraphInfrastructureStep";
 import { EnvironmentSetupStep } from "@/components/wizard/EnvironmentSetupStep";
 import { StakworkSetupStep } from "@/components/wizard/StakworkSetupStep";
@@ -49,7 +48,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleNext = () => {
-    if (step < 6) {
+    if (step < 5) { // Now only 5 steps
       setStep((step + 1) as WizardStep);
     }
   };
@@ -84,22 +83,13 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         );
       case 3:
         return (
-          <WorkspaceSetupStep
-            workspaceName={workspaceName}
-            onWorkspaceNameChange={setWorkspaceName}
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        );
-      case 4:
-        return (
           <GraphInfrastructureStep
             graphDomain={getGraphDomain()}
             onNext={handleNext}
             onBack={handleBack}
           />
         );
-      case 5:
+      case 4:
         return (
           <EnvironmentSetupStep
             envVars={envVars}
@@ -110,7 +100,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             onBack={handleBack}
           />
         );
-      case 6:
+      case 5:
         return (
           <StakworkSetupStep
             workspaceName={workspaceName}
