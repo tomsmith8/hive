@@ -14,3 +14,34 @@ export interface WorkspaceResponse {
   createdAt: string;
   updatedAt: string;
 } 
+
+// New types for enhanced workspace functions
+export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'PM' | 'DEVELOPER' | 'STAKEHOLDER' | 'VIEWER';
+
+export interface WorkspaceWithRole extends WorkspaceResponse {
+  userRole: WorkspaceRole;
+  memberCount: number;
+}
+
+export interface WorkspaceWithAccess extends WorkspaceResponse {
+  userRole: WorkspaceRole;
+  owner: {
+    id: string;
+    name: string | null;
+    email: string | null;
+  };
+}
+
+export interface WorkspaceAccessValidation {
+  hasAccess: boolean;
+  userRole?: WorkspaceRole;
+  workspace?: WorkspaceResponse;
+  canRead: boolean;
+  canWrite: boolean;
+  canAdmin: boolean;
+}
+
+export interface SlugValidationResult {
+  isValid: boolean;
+  error?: string;
+} 
