@@ -16,7 +16,6 @@ import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { NavUser } from "./NavUser";
 import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import type { WorkspaceWithRole } from "@/types/workspace";
 
 interface SidebarProps {
   user: {
@@ -41,18 +40,33 @@ const navigationItems = [
 
 export function Sidebar({ user }: SidebarProps) {
   const router = useRouter();
-  const { slug: workspaceSlug } = useWorkspace();
+  const {
+    slug: workspaceSlug,
+    switchWorkspace,
+    refreshWorkspaces,
+    getWorkspaceBySlug,
+  } = useWorkspace();
   const [isOpen, setIsOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [workspacesRefreshTrigger, setWorkspacesRefreshTrigger] = useState(0);
 
-  const handleWorkspaceChange = (workspace: WorkspaceWithRole) => {
-    console.log("Workspace changed to:", workspace);
-    // TODO: Implement workspace switching logic
+  const handleWorkspaceChange = () => {
+    // Optionally implement logic if needed
   };
 
   const handleCreateWorkspace = () => {
     setCreateDialogOpen(true);
+  };
+
+  const handleWorkspaceCreated = async (createdWorkspace: { slug: string }) => {
+    setCreateDialogOpen(false);
+    await refreshWorkspaces();
+    const newWorkspace = getWorkspaceBySlug(createdWorkspace.slug);
+    if (newWorkspace) {
+      switchWorkspace(newWorkspace); // This will handle navigation
+    } else {
+      // Fallback: route directly if not found (shouldn't happen)
+      router.push(`/w/${createdWorkspace.slug}`);
+    }
   };
 
   const handleNavigate = (href: string) => {
@@ -72,17 +86,12 @@ export function Sidebar({ user }: SidebarProps) {
       <WorkspaceSwitcher
         onWorkspaceChange={handleWorkspaceChange}
         onCreateWorkspace={handleCreateWorkspace}
-        refreshTrigger={workspacesRefreshTrigger}
       />
       <CreateWorkspaceDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onCreated={() => {
-          setCreateDialogOpen(false);
-          setWorkspacesRefreshTrigger((prev) => prev + 1); // Trigger refresh without remounting
-        }}
+        onCreated={handleWorkspaceCreated}
       />
-
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
@@ -100,9 +109,7 @@ export function Sidebar({ user }: SidebarProps) {
           ))}
         </ul>
       </nav>
-
       <Separator />
-
       {/* User Popover */}
       <div className="p-4">
         <NavUser user={{
@@ -127,7 +134,6 @@ export function Sidebar({ user }: SidebarProps) {
           <SidebarContent />
         </SheetContent>
       </Sheet>
-
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-80 md:flex-col md:fixed md:inset-y-0 md:z-50">
         <div className="flex flex-col flex-grow bg-sidebar border-sidebar-border border-r">
