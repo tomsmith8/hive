@@ -16,4 +16,14 @@ export interface Pool {
   status: 'active' | 'archived' | 'deleted';
 }
 
+export interface AuthBody {
+  username: string;
+  password: string;
+}
+
+export interface PoolManagerAuthResponse {
+  success: boolean;
+  token: string;
+}
+
 

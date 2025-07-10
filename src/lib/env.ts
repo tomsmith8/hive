@@ -1,6 +1,8 @@
 const requiredEnvVars = {
   STAKWORK_API_KEY: process.env.STAKWORK_API_KEY,
   POOL_MANAGER_API_KEY: process.env.POOL_MANAGER_API_KEY,
+  POOL_MANAGER_API_USERNAME: process.env.POOL_MANAGER_API_USERNAME,
+  POOL_MANAGER_API_PASSWORD: process.env.POOL_MANAGER_API_PASSWORD,
 } as const;
 
 // Validate environment variables
