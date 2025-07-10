@@ -1,29 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Network, Save } from "lucide-react";
-import { EnvironmentSetupStep } from "@/components/wizard/EnvironmentSetupStep";
+import { Network, Save, Loader2 } from "lucide-react";
 import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
 import { EnvironmentVariable } from "@/types/wizard";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useWorkspace } from "@/hooks/useWorkspace";
+
+interface StakgraphSettings {
+  name: string;
+  description: string;
+  repositoryUrl: string;
+  swarmUrl: string;
+  swarmApiKey: string;
+  poolName: string;
+  environmentVariables: EnvironmentVariable[];
+  status?: string;
+  lastUpdated?: string;
+}
 
 export default function StakgraphPage() {
-  const [formData, setFormData] = useState({
+  const { slug } = useWorkspace();
+  const [formData, setFormData] = useState<StakgraphSettings>({
     name: "",
     description: "",
     repositoryUrl: "",
     swarmUrl: "",
     swarmApiKey: "",
     poolName: "",
+    environmentVariables: []
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [saved, setSaved] = useState(false);
 
   // Environment variable state using shared hook
@@ -37,8 +52,67 @@ export default function StakgraphPage() {
 
   const { toast } = useToast();
 
+  // Load existing settings on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!slug) return;
+      
+      try {
+        setInitialLoading(true);
+        const response = await fetch(`/api/workspaces/${slug}/stakgraph`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const settings = result.data;
+            setFormData({
+              name: settings.name || "",
+              description: settings.description || "",
+              repositoryUrl: settings.repositoryUrl || "",
+              swarmUrl: settings.swarmUrl || "",
+              swarmApiKey: settings.swarmApiKey || "",
+              poolName: settings.poolName || "",
+              environmentVariables: settings.environmentVariables || [],
+              status: settings.status,
+              lastUpdated: settings.lastUpdated
+            });
+            
+            // Also update the environment variables hook
+            if (settings.environmentVariables && Array.isArray(settings.environmentVariables)) {
+              setEnvVars(settings.environmentVariables.map((env: EnvironmentVariable) => ({
+                key: env.key,
+                value: env.value,
+                show: false
+              })));
+            }
+          }
+        } else if (response.status === 404) {
+          // No swarm found - this is expected for workspaces without swarms
+          console.log("No swarm found for this workspace yet");
+        } else {
+          console.error("Failed to load stakgraph settings");
+        }
+      } catch (error) {
+        console.error("Error loading stakgraph settings:", error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [slug, setEnvVars]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!slug) {
+      toast({
+        title: "Error",
+        description: "Workspace not found",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Reset previous states
     setErrors({});
@@ -81,20 +155,67 @@ export default function StakgraphPage() {
     setLoading(true);
     
     try {
-      // TODO: Implement API call to save configuration
-      // For now, include envVars in the saved config
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setSaved(true);
-      toast({
-        title: "Configuration saved",
-        description: "Your Stakgraph settings have been saved successfully!",
-        variant: "success",
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        repositoryUrl: formData.repositoryUrl.trim(),
+        swarmUrl: formData.swarmUrl.trim(),
+        swarmApiKey: formData.swarmApiKey.trim(),
+        poolName: formData.poolName.trim(),
+        environmentVariables: envVars.map(env => ({
+          key: env.key,
+          value: env.value
+        }))
+      };
+
+      const response = await fetch(`/api/workspaces/${slug}/stakgraph`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
       });
-      console.log("Stakgraph configuration saved:", { ...formData, envVars });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setSaved(true);
+        toast({
+          title: "Configuration saved",
+          description: "Your Stakgraph settings have been saved successfully!",
+          variant: "default",
+        });
+        
+        // Update form data with response data
+        if (result.data) {
+          setFormData(prev => ({
+            ...prev,
+            status: result.data.status,
+            lastUpdated: result.data.updatedAt
+          }));
+        }
+      } else {
+        // Handle validation errors
+        if (result.error === "VALIDATION_ERROR" && result.details) {
+          setErrors(result.details);
+        } else {
+          setErrors({ general: result.message || "Failed to save configuration. Please try again." });
+        }
+        
+        toast({
+          title: "Error",
+          description: result.message || "Failed to save configuration",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Failed to save configuration:", error);
       setErrors({ general: "Failed to save configuration. Please try again." });
+      toast({
+        title: "Error",
+        description: "Network error occurred while saving",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -116,10 +237,34 @@ export default function StakgraphPage() {
     try {
       new URL(string);
       return true;
-    } catch (_) {
+    } catch {
       return false;
     }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Network className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Stakgraph Configuration</h1>
+            <p className="text-muted-foreground">
+              Configure your settings for Stakgraph integration
+            </p>
+          </div>
+        </div>
+        <Card className="max-w-2xl">
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Loading settings...</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -130,6 +275,14 @@ export default function StakgraphPage() {
           <p className="text-muted-foreground">
             Configure your settings for Stakgraph integration
           </p>
+          {formData.status && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Swarm Status: <span className="capitalize">{formData.status.toLowerCase()}</span>
+              {formData.lastUpdated && (
+                <span> • Last updated: {new Date(formData.lastUpdated).toLocaleDateString()}</span>
+              )}
+            </p>
+          )}
         </div>
       </div>
 
@@ -142,6 +295,12 @@ export default function StakgraphPage() {
             {errors.general && (
               <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
                 <p className="text-sm text-destructive">{errors.general}</p>
+              </div>
+            )}
+
+            {saved && (
+              <div className="p-3 rounded-md bg-green-50 border border-green-200">
+                <p className="text-sm text-green-700">Configuration saved successfully!</p>
               </div>
             )}
 
@@ -172,20 +331,22 @@ export default function StakgraphPage() {
 
             {/* Section 2: Code (Repository URL) */}
             <div className="space-y-2 mb-4">
-              <h3 className="text-lg font-semibold mb-2">Code</h3>
+              <h3 className="text-lg font-semibold mb-2">Repository</h3>
               <Label htmlFor="repositoryUrl">Repository URL</Label>
               <Input
                 id="repositoryUrl"
                 type="url"
-                placeholder="https://github.com/your/repo"
+                placeholder="https://github.com/username/repository"
                 value={formData.repositoryUrl}
                 onChange={(e) => handleInputChange("repositoryUrl", e.target.value)}
                 className={errors.repositoryUrl ? "border-destructive" : ""}
                 disabled={loading}
               />
-              {errors.repositoryUrl && <p className="text-sm text-destructive">{errors.repositoryUrl}</p>}
+              {errors.repositoryUrl && (
+                <p className="text-sm text-destructive">{errors.repositoryUrl}</p>
+              )}
               <p className="text-xs text-muted-foreground">
-                The URL of your code repository (GitHub, GitLab, etc.)
+                The URL of the repository containing your project code
               </p>
             </div>
 
@@ -296,16 +457,19 @@ export default function StakgraphPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button type="submit" disabled={loading} className="flex items-center gap-2">
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                {loading ? "Saving..." : "Save"}
-              </Button>
-            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Configuration
+                </>
+              )}
+            </Button>
           </form>
         </CardContent>
       </Card>

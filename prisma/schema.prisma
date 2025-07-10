@@ -188,6 +188,14 @@ model Swarm {
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
   
+  // Stakgraph configuration fields
+  poolName              String? @map("pool_name")
+  repositoryName        String? @map("repository_name")
+  repositoryDescription String? @map("repository_description")
+  repositoryUrl         String? @map("repository_url")
+  swarmApiKey          String? @map("swarm_api_key")
+  environmentVariables Json    @default("[]") @map("environment_variables")
+  
   // One-to-one relationship with workspace
   workspaceId String @unique @map("workspace_id")
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
