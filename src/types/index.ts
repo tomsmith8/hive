@@ -11,4 +11,5 @@ export * from './pool-manager';
 export * from './workspace';
 
 // Existing types
-export * from './wizard'; 
+export * from './wizard';
+export * from './swarm'; 

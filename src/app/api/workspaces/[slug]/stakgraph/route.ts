@@ -7,6 +7,7 @@ import { z } from "zod";
 import { PoolManagerService } from '@/services/pool-manager';
 import { ServiceConfig } from '@/types';
 import { config } from '@/lib/env';
+import { saveOrUpdateSwarm } from '@/services/swarm/db';
 
 // Validation schema for stakgraph settings
 const stakgraphSettingsSchema = z.object({
@@ -165,41 +166,17 @@ export async function PUT(
 
     const settings = validationResult.data;
 
-    // Check if swarm exists for this workspace
-    let swarm = await db.swarm.findUnique({
-      where: { workspaceId: workspace.id }
+    // Save or update Swarm using shared service
+    const swarm = await saveOrUpdateSwarm({
+      workspaceId: workspace.id,
+      name: workspace.name, // Use workspace name for swarm name
+      repositoryName: settings.name,
+      repositoryDescription: settings.description,
+      repositoryUrl: settings.repositoryUrl,
+      swarmUrl: settings.swarmUrl,
+      swarmApiKey: settings.swarmApiKey,
+      poolName: settings.poolName,
     });
-
-    if (swarm) {
-      // Update existing swarm (excluding environmentVariables)
-      swarm = await db.swarm.update({
-        where: { workspaceId: workspace.id },
-        data: {
-          repositoryName: settings.name,
-          repositoryDescription: settings.description,
-          repositoryUrl: settings.repositoryUrl,
-          swarmUrl: settings.swarmUrl,
-          swarmApiKey: settings.swarmApiKey,
-          poolName: settings.poolName,
-          updatedAt: new Date()
-        }
-      });
-    } else {
-      // Create new swarm (excluding environmentVariables)
-      swarm = await db.swarm.create({
-        data: {
-          name: workspace.name, // Use workspace name for swarm name
-          workspaceId: workspace.id,
-          repositoryName: settings.name,
-          repositoryDescription: settings.description,
-          repositoryUrl: settings.repositoryUrl,
-          swarmUrl: settings.swarmUrl,
-          swarmApiKey: settings.swarmApiKey,
-          poolName: settings.poolName,
-          status: "PENDING"
-        }
-      });
-    }
 
     // After updating/creating the swarm, update environment variables in Pool Manager if poolName and environmentVariables are present
     if (settings.poolName && Array.isArray(settings.environmentVariables)) {
