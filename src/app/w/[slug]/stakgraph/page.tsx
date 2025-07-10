@@ -275,14 +275,7 @@ export default function StakgraphPage() {
           <p className="text-muted-foreground">
             Configure your settings for Stakgraph integration
           </p>
-          {formData.status && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Swarm Status: <span className="capitalize">{formData.status.toLowerCase()}</span>
-              {formData.lastUpdated && (
-                <span> • Last updated: {new Date(formData.lastUpdated).toLocaleDateString()}</span>
-              )}
-            </p>
-          )}
+          {/* Removed Swarm Status and Last updated */}
         </div>
       </div>
 
@@ -457,7 +450,7 @@ export default function StakgraphPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -466,7 +459,7 @@ export default function StakgraphPage() {
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  Save Configuration
+                  Save
                 </>
               )}
             </Button>
