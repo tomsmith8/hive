@@ -49,7 +49,7 @@ export function WorkspaceProvider({ children, initialSlug }: WorkspaceProviderPr
 
   // Extract current slug from pathname or use initialSlug
   const getCurrentSlug = useCallback(() => {
-    // Extract slug from pathname like "/dashboard" or "/w/[slug]/dashboard"
+    // Extract slug from pathname like "/w/[slug]" or "/w/[slug]/tasks"
     const matches = pathname.match(/^\/w\/([^\/]+)/);
     return matches?.[1] || initialSlug || '';
   }, [pathname, initialSlug]);
@@ -138,7 +138,7 @@ export function WorkspaceProvider({ children, initialSlug }: WorkspaceProviderPr
   // Switch to a different workspace
   const switchWorkspace = useCallback((targetWorkspace: WorkspaceWithRole) => {
     // Update URL to reflect the new workspace
-    const currentPath = pathname.replace(/^\/w\/[^\/]+/, '') || '/dashboard';
+    const currentPath = pathname.replace(/^\/w\/[^\/]+/, '') || '';
     const newPath = `/w/${targetWorkspace.slug}${currentPath}`;
     
     router.push(newPath);

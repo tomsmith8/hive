@@ -112,8 +112,8 @@ export function MyComponent() {
 ### URL Structure
 
 The context automatically handles workspace routing:
-- `/w/[slug]/dashboard` - Workspace-specific pages
-- `/dashboard` - No workspace context (will redirect to default workspace)
+- `/w/[slug]` - Workspace-specific pages  
+- `/dashboard` - Legacy route (will redirect to default workspace)
 
 ### Permission System
 

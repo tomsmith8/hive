@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { 
   Home, 
   Settings, 
-  LogOut, 
   Github,
   Menu,
   CheckSquare,
@@ -21,6 +17,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { NavUser } from "./NavUser";
 import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import type { WorkspaceWithRole } from "@/types/workspace";
 
 interface SidebarProps {
   user: {
@@ -36,28 +34,22 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  { icon: Home, label: "Dashboard", href: "/dashboard" },
-  { icon: CheckSquare, label: "Tasks", href: "/dashboard/tasks" },
-  { icon: Map, label: "Roadmap", href: "/dashboard/roadmap" },
-  { icon: Github, label: "Code Graph", href: "/dashboard/code-graph" },
-  { icon: Network, label: "Stakgraph", href: "/dashboard/stakgraph" },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
+  { icon: Home, label: "Dashboard", href: "" },
+  { icon: CheckSquare, label: "Tasks", href: "/tasks" },
+  { icon: Map, label: "Roadmap", href: "/roadmap" },
+  { icon: Github, label: "Code Graph", href: "/code-graph" },
+  { icon: Network, label: "Stakgraph", href: "/stakgraph" },
+  { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
 export function Sidebar({ user }: SidebarProps) {
   const router = useRouter();
+  const { slug: workspaceSlug } = useWorkspace();
   const [isOpen, setIsOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [workspacesRefreshTrigger, setWorkspacesRefreshTrigger] = useState(0);
 
-  const handleLogout = async () => {
-    await signOut({ 
-      callbackUrl: "/",
-      redirect: true 
-    });
-  };
-
-  const handleWorkspaceChange = (workspace: any) => {
+  const handleWorkspaceChange = (workspace: WorkspaceWithRole) => {
     console.log("Workspace changed to:", workspace);
     // TODO: Implement workspace switching logic
   };
@@ -67,7 +59,13 @@ export function Sidebar({ user }: SidebarProps) {
   };
 
   const handleNavigate = (href: string) => {
-    router.push(href);
+    if (workspaceSlug) {
+      const fullPath = href === "" ? `/w/${workspaceSlug}` : `/w/${workspaceSlug}${href}`;
+      router.push(fullPath);
+    } else {
+      // Fallback to workspaces page if no workspace detected
+      router.push("/workspaces");
+    }
     setIsOpen(false);
   };
 

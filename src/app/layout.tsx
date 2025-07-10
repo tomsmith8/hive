@@ -4,6 +4,7 @@ import "./globals.css";
 import SessionProvider from "@/providers/SessionProvider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,7 +27,9 @@ export default function RootLayout({
             storageKey="theme"
           >
             <SessionProvider>
-              {children}
+              <WorkspaceProvider>
+                {children}
+              </WorkspaceProvider>
             </SessionProvider>
           </ThemeProvider>
         </ToastProvider>

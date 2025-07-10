@@ -22,11 +22,11 @@ export default async function OnboardingWorkspacePage() {
       const defaultWorkspace = await getDefaultWorkspaceForUser(userId);
       
       if (defaultWorkspace) {
-        // Redirect to the default workspace dashboard
-        redirect(`/w/${defaultWorkspace.slug}/dashboard`);
+        // Redirect to the default workspace
+        redirect(`/w/${defaultWorkspace.slug}`);
       } else {
         // Fallback to first workspace from the list
-        redirect(`/w/${userWorkspaces[0].slug}/dashboard`);
+        redirect(`/w/${userWorkspaces[0].slug}`);
       }
     }
   } catch (error) {

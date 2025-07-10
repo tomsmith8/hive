@@ -4,6 +4,9 @@ import { authOptions } from '@/lib/auth/nextauth';
 import { createWorkspace, getWorkspacesByUserId } from '@/services/workspace';
 import { db } from '@/lib/db';
 
+// Prevent caching of user-specific data
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user || !(session.user as { id?: string }).id) {
@@ -28,8 +31,9 @@ export async function POST(request: NextRequest) {
   try {
     const workspace = await createWorkspace({ name, description, slug, ownerId: userId });
     return NextResponse.json({ workspace }, { status: 201 });
-  } catch (error: any) {
-    const message = typeof error === 'string' ? error : error?.message || 'Failed to create workspace.';
+  } catch (error: unknown) {
+    const message = typeof error === 'string' ? error : 
+                   (error instanceof Error ? error.message : 'Failed to create workspace.');
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

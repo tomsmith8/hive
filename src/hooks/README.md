@@ -222,7 +222,7 @@ function Navigation() {
   
   return (
     <nav>
-      <Link href={`/w/${slug}/dashboard`}>Dashboard</Link>
+      <Link href={`/w/${slug}`}>Dashboard</Link>
       
       {canWrite && (
         <Link href={`/w/${slug}/tasks`}>Tasks</Link>

@@ -42,7 +42,7 @@ export async function resolveUserWorkspaceRedirect(session: Session | null): Pro
       const workspace = userWorkspaces[0];
       return {
         shouldRedirect: true,
-        redirectUrl: `/w/${workspace.slug}/dashboard`,
+        redirectUrl: `/w/${workspace.slug}`,
         workspaceCount: 1,
         defaultWorkspaceSlug: workspace.slug,
       };
@@ -54,7 +54,7 @@ export async function resolveUserWorkspaceRedirect(session: Session | null): Pro
     if (defaultWorkspace) {
       return {
         shouldRedirect: true,
-        redirectUrl: `/w/${defaultWorkspace.slug}/dashboard`,
+        redirectUrl: `/w/${defaultWorkspace.slug}`,
         workspaceCount: userWorkspaces.length,
         defaultWorkspaceSlug: defaultWorkspace.slug,
       };
@@ -64,7 +64,7 @@ export async function resolveUserWorkspaceRedirect(session: Session | null): Pro
     const fallbackWorkspace = userWorkspaces[0];
     return {
       shouldRedirect: true,
-      redirectUrl: `/w/${fallbackWorkspace.slug}/dashboard`,
+      redirectUrl: `/w/${fallbackWorkspace.slug}`,
       workspaceCount: userWorkspaces.length,
       defaultWorkspaceSlug: fallbackWorkspace.slug,
     };

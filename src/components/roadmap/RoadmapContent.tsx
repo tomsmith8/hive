@@ -7,6 +7,7 @@ import { Plus, Lightbulb, Users, FileText, Sparkles } from "lucide-react";
 import { FeatureCard } from "./FeatureCard";
 import { CreateFeatureDialog } from "./CreateFeatureDialog";
 import { useRouter } from "next/navigation";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 export interface Feature {
   id: string;
@@ -45,6 +46,7 @@ export interface Requirement {
 
 export function RoadmapContent() {
   const router = useRouter();
+  const { slug: workspaceSlug } = useWorkspace();
   const [features, setFeatures] = useState<Feature[]>([
     {
       id: "1",
@@ -241,7 +243,7 @@ export function RoadmapContent() {
             <FeatureCard
               key={feature.id}
               feature={feature}
-              onEdit={() => router.push(`/dashboard/roadmap/feature/${feature.id}`)}
+                                      onEdit={() => router.push(`/w/${workspaceSlug}/roadmap/feature/${feature.id}`)}
               getStatusColor={getStatusColor}
               getPriorityColor={getPriorityColor}
             />

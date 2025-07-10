@@ -35,7 +35,7 @@ export default async function WorkspacesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {userWorkspaces.map((workspace) => (
             <Card key={workspace.id} className="group hover:shadow-lg transition-all duration-200 cursor-pointer relative">
-              <Link href={`/w/${workspace.slug}/dashboard`} className="block">
+              <Link href={`/w/${workspace.slug}`} className="block">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

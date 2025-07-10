@@ -5,7 +5,7 @@ import { getWorkspaceBySlug } from '@/services/workspace';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +19,7 @@ export async function GET(
       );
     }
 
-    const { slug } = params;
+    const { slug } = await params;
     
     if (!slug) {
       return NextResponse.json(

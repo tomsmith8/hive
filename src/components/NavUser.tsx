@@ -7,6 +7,8 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
+  Building2,
+  Users,
 } from "lucide-react";
 
 import {
@@ -30,6 +32,9 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { signOut } from "next-auth/react";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { useRouter } from "next/navigation";
+import type { WorkspaceWithRole } from "@/types/workspace";
 
 export function NavUser({
   user,
@@ -41,6 +46,8 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar();
+  const { workspace, workspaces, switchWorkspace } = useWorkspace();
+  const router = useRouter();
 
   // Get initials for fallback
   const getInitials = (name: string) => {
@@ -48,6 +55,15 @@ export function NavUser({
     const parts = name.split(" ");
     if (parts.length === 1) return parts[0][0];
     return parts[0][0] + parts[1][0];
+  };
+
+  const handleWorkspaceSwitch = async (targetWorkspace: WorkspaceWithRole) => {
+    await switchWorkspace(targetWorkspace);
+    router.push(`/w/${targetWorkspace.slug}`);
+  };
+
+  const handleViewAllWorkspaces = () => {
+    router.push("/workspaces");
   };
 
   return (
@@ -88,6 +104,24 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            
+            {/* Current Workspace Section */}
+            {workspace && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Current Workspace
+                </DropdownMenuLabel>
+                <DropdownMenuItem className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{workspace.name}</div>
+                  </div>
+                </DropdownMenuItem>
+              </>
+            )}
+
+
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>

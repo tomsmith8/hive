@@ -46,9 +46,9 @@ export default function NotFound() {
           </Button>
           
           <Button asChild variant="outline" size="lg">
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/workspaces" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Dashboard
+              Workspaces
             </Link>
           </Button>
         </div>

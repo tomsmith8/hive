@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Edit, Trash2, Users, FileText, Sparkles, ArrowLeft } from "lucide-react";
+import { Edit, Trash2, FileText, Sparkles, ArrowLeft } from "lucide-react";
 import { UserStoriesTab } from "@/components/roadmap/UserStoriesTab";
 import { RequirementsTab } from "@/components/roadmap/RequirementsTab";
 // import { EditFeatureDialog } from "@/components/roadmap/EditFeatureDialog";
@@ -35,6 +35,7 @@ export default function FeatureDetailPage() {
   const router = useRouter();
   const params = useParams();
   const featureId = params.id as string;
+  const workspaceSlug = params.slug as string;
   // TODO: Fetch feature by id
   const feature: Feature = mockFeature; // Replace with real fetch
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -121,7 +122,7 @@ export default function FeatureDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
-      <Button variant="ghost" onClick={() => router.push("/dashboard/roadmap")}
+                      <Button variant="ghost" onClick={() => router.push(`/w/${workspaceSlug}/roadmap`)}
         className="mb-4 flex items-center gap-2">
         <ArrowLeft className="w-4 h-4" /> Back to Roadmap
       </Button>

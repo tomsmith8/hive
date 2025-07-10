@@ -76,7 +76,7 @@ export default withAuth(
         return NextResponse.next();
       }
       
-      // Handle routes that should be workspace-scoped but don't have a slug
+      // Handle legacy routes that should be workspace-scoped but don't have a slug
       if (
         pathname.startsWith('/dashboard') ||
         pathname.startsWith('/roadmap') ||
@@ -85,7 +85,7 @@ export default withAuth(
         pathname.startsWith('/code-graph') ||
         pathname.startsWith('/stakgraph')
       ) {
-        console.log('Dashboard route without workspace slug, redirecting to onboarding...');
+        console.log('Legacy route detected, redirecting to workspace onboarding...');
         
         // Redirect to onboarding page which can handle workspace checking server-side
         return NextResponse.redirect(new URL('/onboarding/workspace', req.url));
@@ -125,7 +125,7 @@ export default withAuth(
           return !!token;
         }
         
-        // Require auth for dashboard routes (will be redirected to workspace-scoped versions)
+        // Require auth for legacy routes (will be redirected to workspace-scoped versions)
         if (
           pathname.startsWith('/dashboard') ||
           pathname.startsWith('/roadmap') ||
@@ -140,6 +140,9 @@ export default withAuth(
         // Allow public routes
         return true;
       },
+    },
+    pages: {
+      signIn: '/auth/signin',
     },
   }
 );
