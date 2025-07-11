@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ServicesForm from "@/components/stakgraph/forms/ServicesForm";
+import { ServicesData } from "@/components/stakgraph/types";
 
 function IngestCodeStep({ status, onStart, onContinue, onBack }: { status: 'idle' | 'pending' | 'complete'; onStart: () => void; onContinue: () => void; onBack: () => void }) {
   const isPending = status === 'pending';
@@ -109,6 +111,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [projectName, setProjectName] = useState("");
   const [graphStepStatus, setGraphStepStatus] = useState<'idle' | 'pending' | 'complete'>('idle');
   const [ingestStepStatus, setIngestStepStatus] = useState<'idle' | 'pending' | 'complete'>('idle');
+  const [servicesData, setServicesData] = useState<ServicesData>({ services: [] });
 
   // Use custom hooks
   const { repositories, loading } = useRepositories({ username: user.github?.username });
@@ -132,7 +135,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleNext = () => {
-    if (step < 7) {
+    if (step < 8) {
       setStep((step + 1) as WizardStep);
     }
   };
@@ -196,6 +199,38 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         );
       case 6:
         return (
+          <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
+            <CardHeader className="text-center">
+              <div className="flex items-center justify-center mx-auto mb-4">
+                {/* Service icon */}
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="12" y="20" width="40" height="24" rx="6" fill="#F3F4F6" stroke="#60A5FA" strokeWidth="2" />
+                  <path d="M24 32h16" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="32" cy="32" r="4" fill="#60A5FA" />
+                </svg>
+              </div>
+              <CardTitle className="text-2xl">Add Services</CardTitle>
+              <CardDescription>Define your services, ports, and scripts for your project.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ServicesForm
+                data={servicesData}
+                loading={false}
+                onChange={partial => setServicesData(prev => ({ ...prev, ...partial, services: partial.services ?? prev.services }))}
+              />
+              <div className="flex justify-between pt-6">
+                <Button variant="outline" type="button" onClick={() => setStep(5)}>
+                  Back
+                </Button>
+                <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleNext}>
+                  Next
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      case 7:
+        return (
           <EnvironmentSetupStep
             envVars={envVars}
             onEnvChange={handleEnvChange}
@@ -205,7 +240,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             onBack={handleBack}
           />
         );
-      case 7:
+      case 8:
         return (
           <StakworkSetupStep
             workspaceName={projectName}
@@ -220,7 +255,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
 
   return (
     <div className="space-y-6">
-      <WizardProgress currentStep={step} totalSteps={7} />
+      <WizardProgress currentStep={step} totalSteps={8} />
       {renderCurrentStep()}
     </div>
   );
