@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Play, Download, Hammer, TestTube } from "lucide-react";
 import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
 import { EnvironmentVariable } from "@/types/wizard";
 import { Eye, EyeOff } from "lucide-react";
@@ -558,82 +558,129 @@ export default function StakgraphPage() {
               <p className="text-xs text-muted-foreground mb-2">
                 Define your services, their ports, and scripts. The <b>start</b> script is required.
               </p>
-              {formData.services.map((svc, idx) => (
-                <div key={idx} className="border rounded-md p-3 mb-2 bg-muted/10">
-                  <div className="flex gap-2 mb-2">
-                    <Input
-                      placeholder="Service Name"
-                      value={svc.name}
-                      onChange={e => handleServiceChange(idx, "name", e.target.value)}
-                      className="w-1/3"
-                      disabled={loading}
-                    />
-                    <Input
-                      placeholder="Port"
-                      type="text"
-                      value={svc.port === 0 ? '' : svc.port}
-                      onChange={e => {
-                        const val = e.target.value;
-                        // Allow empty for editing
-                        if (val === '') {
-                          handleServiceChange(idx, 'port', 0);
-                          return;
-                        }
-                        // Only allow positive integers, no leading zeros (except '0'), no letters/special chars
-                        if (/^(0|[1-9][0-9]*)$/.test(val)) {
-                          handleServiceChange(idx, 'port', Number(val));
-                        }
-                        // else: ignore invalid input
-                      }}
-                      className="w-1/4"
-                      disabled={loading}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleRemoveService(idx)}
-                      className="px-2"
-                      disabled={formData.services.length === 1 || loading}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Input
-                      placeholder="Start script (required)"
-                      value={svc.scripts.start}
-                      onChange={e => handleServiceScriptChange(idx, "start", e.target.value)}
-                      className="w-1/2"
-                      disabled={loading}
-                    />
-                    <Input
-                      placeholder="Install script"
-                      value={svc.scripts.install || ""}
-                      onChange={e => handleServiceScriptChange(idx, "install", e.target.value)}
-                      className="w-1/2"
-                      disabled={loading}
-                    />
-                    <Input
-                      placeholder="Build script"
-                      value={svc.scripts.build || ""}
-                      onChange={e => handleServiceScriptChange(idx, "build", e.target.value)}
-                      className="w-1/2"
-                      disabled={loading}
-                    />
-                    <Input
-                      placeholder="Test script"
-                      value={svc.scripts.test || ""}
-                      onChange={e => handleServiceScriptChange(idx, "test", e.target.value)}
-                      className="w-1/2"
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-              ))}
-              <Button type="button" variant="secondary" onClick={handleAddService} className="mt-2" disabled={loading}>
-                Add Service
-              </Button>
+              {formData.services.length === 0 ? (
+                <Button type="button" variant="secondary" onClick={handleAddService} disabled={loading}>
+                  Add Service
+                </Button>
+              ) : (
+                <>
+                  {formData.services.map((svc, idx) => (
+                    <Card key={idx} className="mb-2">
+                      <CardContent className="space-y-3 py-2">
+                        <div className="mb-2">
+                          <span className="text-md font-bold">Service</span>
+                        </div>
+                        <div className="flex gap-2 mb-2 items-end">
+                          <div className="w-1/3">
+                            <Label htmlFor={`service-name-${idx}`} className="mb-1">Name</Label>
+                            <Input
+                              id={`service-name-${idx}`}
+                              placeholder="e.g. api-server"
+                              value={svc.name}
+                              onChange={e => handleServiceChange(idx, "name", e.target.value)}
+                              className=""
+                              disabled={loading}
+                            />
+                          </div>
+                          <div className="w-1/4">
+                            <Label htmlFor={`service-port-${idx}`} className="mb-1">Port</Label>
+                            <Input
+                              id={`service-port-${idx}`}
+                              placeholder="e.g. 3000"
+                              type="text"
+                              value={svc.port === 0 ? '' : svc.port}
+                              onChange={e => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                  handleServiceChange(idx, 'port', 0);
+                                  return;
+                                }
+                                if (/^(0|[1-9][0-9]*)$/.test(val)) {
+                                  handleServiceChange(idx, 'port', Number(val));
+                                }
+                              }}
+                              className=""
+                              disabled={loading}
+                              required
+                            />
+                          </div>
+                          <div className="flex-1 flex justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => handleRemoveService(idx)}
+                              className="px-2"
+                              disabled={loading}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="mb-2 mt-2">
+                          <span className="text-md font-bold">Scripts Configuration</span>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Play className="w-4 h-4 text-muted-foreground" />
+                            <Label htmlFor={`service-start-${idx}`}>Start</Label>
+                          </div>
+                          <Input
+                            id={`service-start-${idx}`}
+                            placeholder="npm start"
+                            value={svc.scripts.start}
+                            onChange={e => handleServiceScriptChange(idx, 'start', e.target.value)}
+                            className="font-mono"
+                            disabled={loading}
+                            required
+                          />
+
+                          <div className="flex items-center gap-2 mt-3">
+                            <Download className="w-4 h-4 text-muted-foreground" />
+                            <Label htmlFor={`service-install-${idx}`}>Install</Label>
+                          </div>
+                          <Input
+                            id={`service-install-${idx}`}
+                            placeholder="npm install"
+                            value={svc.scripts.install || ''}
+                            onChange={e => handleServiceScriptChange(idx, 'install', e.target.value)}
+                            className="font-mono"
+                            disabled={loading}
+                          />
+
+                          <div className="flex items-center gap-2 mt-3">
+                            <Hammer className="w-4 h-4 text-muted-foreground" />
+                            <Label htmlFor={`service-build-${idx}`}>Build</Label>
+                          </div>
+                          <Input
+                            id={`service-build-${idx}`}
+                            placeholder="npm run build"
+                            value={svc.scripts.build || ''}
+                            onChange={e => handleServiceScriptChange(idx, 'build', e.target.value)}
+                            className="font-mono"
+                            disabled={loading}
+                          />
+
+                          <div className="flex items-center gap-2 mt-3">
+                            <TestTube className="w-4 h-4 text-muted-foreground" />
+                            <Label htmlFor={`service-test-${idx}`}>Test</Label>
+                          </div>
+                          <Input
+                            id={`service-test-${idx}`}
+                            placeholder="npm test"
+                            value={svc.scripts.test || ''}
+                            onChange={e => handleServiceScriptChange(idx, 'test', e.target.value)}
+                            className="font-mono"
+                            disabled={loading}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  <Button type="button" variant="secondary" onClick={handleAddService} disabled={loading}>
+                    Add Service
+                  </Button>
+                </>
+              )}
             </div>
 
             <Button type="submit" disabled={loading}>
