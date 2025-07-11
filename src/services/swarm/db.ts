@@ -4,7 +4,7 @@ import { SwarmStatus } from '@prisma/client';
 // Add ServiceConfig interface for the services array
 export interface ServiceConfig {
   name: string;
-  port: string;
+  port: number;
   scripts: {
     start: string;
     install?: string;
