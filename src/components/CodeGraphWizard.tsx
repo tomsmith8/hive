@@ -11,13 +11,13 @@ import { RepositorySelectionStep } from "@/components/wizard/RepositorySelection
 import { GraphInfrastructureStep } from "@/components/wizard/GraphInfrastructureStep";
 import { EnvironmentSetupStep } from "@/components/wizard/EnvironmentSetupStep";
 import { StakworkSetupStep } from "@/components/wizard/StakworkSetupStep";
+import { ProjectNameStep } from "@/components/wizard/ProjectNameStep";
 
 export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [step, setStep] = useState<WizardStep>(1);
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [parsedRepoName, setParsedRepoName] = useState("");
-  const [workspaceName, setWorkspaceName] = useState("");
+  const [projectName, setProjectName] = useState("");
 
   // Use custom hooks
   const { repositories, loading } = useRepositories({ username: user.github?.username });
@@ -32,23 +32,16 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   useEffect(() => {
     if (selectedRepo) {
       const parsed = parseRepositoryName(selectedRepo.name);
-      setParsedRepoName(parsed);
+      setProjectName(parsed); // Default project name from repo
     }
   }, [selectedRepo]);
-
-  // Update workspaceName when parsedRepoName changes (after repo selection)
-  useEffect(() => {
-    if (parsedRepoName) {
-      setWorkspaceName(parsedRepoName);
-    }
-  }, [parsedRepoName]);
 
   const handleRepoSelect = (repo: Repository) => {
     setSelectedRepo(repo);
   };
 
   const handleNext = () => {
-    if (step < 5) { // Now only 5 steps
+    if (step < 6) {
       setStep((step + 1) as WizardStep);
     }
   };
@@ -57,11 +50,6 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     if (step > 1) {
       setStep((step - 1) as WizardStep);
     }
-  };
-
-  // Helper to sanitize workspace name for domain
-  const getGraphDomain = () => {
-    return sanitizeWorkspaceName(workspaceName);
   };
 
   const renderCurrentStep = () => {
@@ -83,13 +71,22 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         );
       case 3:
         return (
-          <GraphInfrastructureStep
-            graphDomain={getGraphDomain()}
+          <ProjectNameStep
+            projectName={projectName}
+            onProjectNameChange={setProjectName}
             onNext={handleNext}
             onBack={handleBack}
           />
         );
       case 4:
+        return (
+          <GraphInfrastructureStep
+            graphDomain={sanitizeWorkspaceName(projectName)}
+            onNext={handleNext}
+            onBack={handleBack}
+          />
+        );
+      case 5:
         return (
           <EnvironmentSetupStep
             envVars={envVars}
@@ -100,10 +97,10 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             onBack={handleBack}
           />
         );
-      case 5:
+      case 6:
         return (
           <StakworkSetupStep
-            workspaceName={workspaceName}
+            workspaceName={projectName}
             onFinish={handleNext}
             onBack={handleBack}
           />
@@ -115,7 +112,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
 
   return (
     <div className="space-y-6">
-      <WizardProgress currentStep={step} />
+      <WizardProgress currentStep={step} totalSteps={6} />
       {renderCurrentStep()}
     </div>
   );
