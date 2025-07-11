@@ -50,7 +50,7 @@ export function ProjectNameStep({
         </div>
         <CardTitle className="text-2xl">Name Your Project</CardTitle>
         <CardDescription>
-          Enter a name for your project. This will be used for your workspace and graph domain.
+          Enter a name for your project.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

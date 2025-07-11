@@ -12,12 +12,27 @@ import { GraphInfrastructureStep } from "@/components/wizard/GraphInfrastructure
 import { EnvironmentSetupStep } from "@/components/wizard/EnvironmentSetupStep";
 import { StakworkSetupStep } from "@/components/wizard/StakworkSetupStep";
 import { ProjectNameStep } from "@/components/wizard/ProjectNameStep";
+import { Button } from "@/components/ui/button";
+
+function IngestCodeStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+  return (
+    <div className="max-w-2xl mx-auto bg-card text-card-foreground p-8 rounded-lg border mt-8">
+      <h2 className="text-2xl font-bold mb-2">Ingest Code</h2>
+      <p className="mb-4">This is a placeholder for the Ingest Code step.</p>
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onBack}>Back</Button>
+        <Button onClick={onNext}>Next</Button>
+      </div>
+    </div>
+  );
+}
 
 export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [step, setStep] = useState<WizardStep>(1);
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [graphStepStatus, setGraphStepStatus] = useState<'idle' | 'pending' | 'complete'>('idle');
 
   // Use custom hooks
   const { repositories, loading } = useRepositories({ username: user.github?.username });
@@ -41,7 +56,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleNext = () => {
-    if (step < 6) {
+    if (step < 7) {
       setStep((step + 1) as WizardStep);
     }
   };
@@ -82,11 +97,26 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         return (
           <GraphInfrastructureStep
             graphDomain={sanitizeWorkspaceName(projectName)}
-            onNext={handleNext}
+            status={graphStepStatus}
+            onCreate={() => setGraphStepStatus('pending')}
+            onComplete={() => {
+              setGraphStepStatus('complete');
+              setStep(5);
+            }}
             onBack={handleBack}
           />
         );
       case 5:
+        return (
+          <IngestCodeStep
+            onNext={handleNext}
+            onBack={() => {
+              setStep(4);
+              setGraphStepStatus('idle');
+            }}
+          />
+        );
+      case 6:
         return (
           <EnvironmentSetupStep
             envVars={envVars}
@@ -97,7 +127,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             onBack={handleBack}
           />
         );
-      case 6:
+      case 7:
         return (
           <StakworkSetupStep
             workspaceName={projectName}
@@ -112,7 +142,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
 
   return (
     <div className="space-y-6">
-      <WizardProgress currentStep={step} totalSteps={6} />
+      <WizardProgress currentStep={step} totalSteps={7} />
       {renderCurrentStep()}
     </div>
   );

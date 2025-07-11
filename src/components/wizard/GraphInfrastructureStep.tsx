@@ -1,20 +1,41 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface GraphInfrastructureStepProps {
   graphDomain: string;
-  onNext: () => void;
+  status: "idle" | "pending" | "complete";
+  onCreate: () => void;
+  onComplete: () => void;
   onBack: () => void;
 }
 
 export function GraphInfrastructureStep({
   graphDomain,
-  onNext,
+  status,
+  onCreate,
+  onComplete,
   onBack,
 }: GraphInfrastructureStepProps) {
+  const isPending = status === "pending";
+  // Countdown state for pending
+  const [countdown, setCountdown] = useState(5);
+  useEffect(() => {
+    if (isPending) {
+      setCountdown(5);
+    }
+  }, [isPending]);
+  useEffect(() => {
+    if (isPending && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPending, countdown]);
+  const canContinue = isPending && countdown === 0;
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
@@ -41,10 +62,31 @@ export function GraphInfrastructureStep({
             </circle>
           </svg>
         </div>
-        <CardTitle className="text-2xl">Creating Graph Infrastructure</CardTitle>
-        <CardDescription>
-          Your graph infrastructure domain will be:
-        </CardDescription>
+        <AnimatePresence mode="wait">
+          {!isPending ? (
+            <motion.div
+              key="title-creating"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CardTitle className="text-2xl">Creating Graph Infrastructure</CardTitle>
+              <CardDescription>Your graph infrastructure domain will be:</CardDescription>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="title-swarm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CardTitle className="text-2xl">Setting up Swarm</CardTitle>
+              <CardDescription>Your swarm is being set up. This may take a few minutes.</CardDescription>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
@@ -55,17 +97,35 @@ export function GraphInfrastructureStep({
             id="graphDomain"
             value={`${graphDomain}.sphinx.chat`}
             readOnly
-            className="mt-2 bg-muted cursor-not-allowed"
+            tabIndex={-1}
+            className="mt-2 bg-muted cursor-not-allowed select-all focus:outline-none focus:ring-0 hover:bg-muted"
+            style={{ pointerEvents: 'none' }}
           />
         </div>
         <div className="flex justify-between pt-4">
-          <Button variant="outline" type="button" onClick={onBack}>
-            Back
-          </Button>
-          <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={onNext}>
-            Next
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          {!isPending && (
+            <Button variant="outline" type="button" onClick={onBack}>
+              Back
+            </Button>
+          )}
+          {status === "idle" && (
+            <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={onCreate}>
+              Create
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
+          {status === "pending" && (
+            <div className="flex flex-col items-end gap-2 w-full">
+              <Button
+                className={`mt-2 ml-auto px-8 ${canContinue ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground'}`}
+                type="button"
+                onClick={onComplete}
+                disabled={!canContinue}
+              >
+                {canContinue ? 'Continue' : `Continue (${countdown})`}
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
