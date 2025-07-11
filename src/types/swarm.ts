@@ -21,7 +21,7 @@ export interface CreateSwarmResponse {
   data: {
     swarm_id: string;
   };
-}
+} 
 
 export interface SwarmSelectResult {
   id: string;

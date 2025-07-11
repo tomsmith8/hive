@@ -70,17 +70,17 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
     swarm = await db.swarm.update({ where: { workspaceId: params.workspaceId }, data, select });
   } else {
     const createData = {
-      workspaceId: params.workspaceId,
-      name: params.name || '',
-      instanceType: params.instanceType || '',
-      environmentVariables: params.environmentVariables ? JSON.stringify(params.environmentVariables) : '[]',
-      status: params.status || SwarmStatus.PENDING,
-      swarmUrl: params.swarmUrl || null,
-      repositoryName: params.repositoryName || '',
-      repositoryDescription: params.repositoryDescription || '',
-      repositoryUrl: params.repositoryUrl || '',
-      swarmApiKey: params.swarmApiKey || '',
-      poolName: params.poolName || '',
+        workspaceId: params.workspaceId,
+        name: params.name || '',
+        instanceType: params.instanceType || '',
+        environmentVariables: params.environmentVariables ? JSON.stringify(params.environmentVariables) : '[]',
+        status: params.status || SwarmStatus.PENDING,
+        swarmUrl: params.swarmUrl || null,
+        repositoryName: params.repositoryName || '',
+        repositoryDescription: params.repositoryDescription || '',
+        repositoryUrl: params.repositoryUrl || '',
+        swarmApiKey: params.swarmApiKey || '',
+        poolName: params.poolName || '',
       services: params.services ? params.services : [],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
