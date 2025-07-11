@@ -7,7 +7,8 @@ import { z } from "zod";
 import { PoolManagerService } from '@/services/pool-manager';
 import { ServiceConfig } from '@/types';
 import { config } from '@/lib/env';
-import { saveOrUpdateSwarm } from '@/services/swarm/db';
+import { saveOrUpdateSwarm, select as swarmSelect } from '@/services/swarm/db';
+import type { SwarmSelectResult } from '@/types/swarm';
 
 // Validation schema for stakgraph settings
 const stakgraphSettingsSchema = z.object({
@@ -20,7 +21,17 @@ const stakgraphSettingsSchema = z.object({
   environmentVariables: z.array(z.object({
     key: z.string(),
     value: z.string()
-  })).default([])
+  })).default([]),
+  services: z.array(z.object({
+    name: z.string().min(1, "Service name is required"),
+    port: z.preprocess((val) => Number(val), z.number().int().min(1, "Port is required")),
+    scripts: z.object({
+      start: z.string().min(1, "Start script is required"),
+      install: z.string().optional(),
+      build: z.string().optional(),
+      test: z.string().optional(),
+    }),
+  })).default([]),
 });
 
 export async function GET(
@@ -58,19 +69,8 @@ export async function GET(
     // Get the swarm associated with this workspace
     const swarm = await db.swarm.findUnique({
       where: { workspaceId: workspace.id },
-      select: {
-        id: true,
-        name: true,
-        swarmUrl: true,
-        poolName: true,
-        repositoryName: true,
-        repositoryDescription: true,
-        repositoryUrl: true,
-        swarmApiKey: true,
-        status: true,
-        updatedAt: true
-      }
-    });
+      select: swarmSelect
+    }) as SwarmSelectResult | null;
 
     if (!swarm) {
       return NextResponse.json(
@@ -102,6 +102,7 @@ export async function GET(
         swarmApiKey: swarm.swarmApiKey || "",
         poolName: swarm.poolName || "",
         environmentVariables,
+        services: typeof swarm.services === 'string' ? JSON.parse(swarm.services) : (swarm.services || []),
         status: swarm.status,
         lastUpdated: swarm.updatedAt
       }
@@ -176,6 +177,7 @@ export async function PUT(
       swarmUrl: settings.swarmUrl,
       swarmApiKey: settings.swarmApiKey,
       poolName: settings.poolName,
+      services: settings.services,
     });
 
     // After updating/creating the swarm, update environment variables in Pool Manager if poolName and environmentVariables are present
@@ -192,18 +194,20 @@ export async function PUT(
       }
     }
 
+    const typedSwarm = swarm as SwarmSelectResult;
     return NextResponse.json({
       success: true,
       message: "Stakgraph settings saved successfully",
       data: {
-        id: swarm.id,
-        name: swarm.repositoryName,
-        description: swarm.repositoryDescription,
-        repositoryUrl: swarm.repositoryUrl,
-        swarmUrl: swarm.swarmUrl,
-        poolName: swarm.poolName,
-        status: swarm.status,
-        updatedAt: swarm.updatedAt
+        id: typedSwarm.id,
+        name: typedSwarm.repositoryName,
+        description: typedSwarm.repositoryDescription,
+        repositoryUrl: typedSwarm.repositoryUrl,
+        swarmUrl: typedSwarm.swarmUrl,
+        poolName: typedSwarm.poolName,
+        services: typeof typedSwarm.services === 'string' ? JSON.parse(typedSwarm.services) : (typedSwarm.services || []),
+        status: typedSwarm.status,
+        updatedAt: typedSwarm.updatedAt
       }
     });
 

@@ -1,1 +1,1 @@
-export * from './SwarmService'; 
+export * from '@/services/swarm/SwarmService'; 

@@ -14,6 +14,17 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface ServiceConfig {
+  name: string;
+  port: number;
+  scripts: {
+    start: string;
+    install?: string;
+    build?: string;
+    test?: string;
+  };
+}
+
 interface StakgraphSettings {
   name: string;
   description: string;
@@ -22,6 +33,7 @@ interface StakgraphSettings {
   swarmApiKey: string;
   poolName: string;
   environmentVariables: EnvironmentVariable[];
+  services: ServiceConfig[];
   status?: string;
   lastUpdated?: string;
 }
@@ -35,7 +47,8 @@ export default function StakgraphPage() {
     swarmUrl: "",
     swarmApiKey: "",
     poolName: "",
-    environmentVariables: []
+    environmentVariables: [],
+    services: [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,6 +66,51 @@ export default function StakgraphPage() {
   } = useEnvironmentVars();
 
   const { toast } = useToast();
+
+  // Service management handlers
+  const handleAddService = () => {
+    setFormData(prev => ({
+      ...prev,
+      services: [
+        ...prev.services,
+        { name: "", port: 0, scripts: { start: "" } }
+      ]
+    }));
+    setSaved(false);
+  };
+
+  const handleRemoveService = (idx: number) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.filter((_, i) => i !== idx)
+    }));
+    setSaved(false);
+  };
+
+  const handleServiceChange = (idx: number, field: keyof ServiceConfig, value: string | number) => {
+    setFormData(prev => {
+      const updatedServices = [...prev.services];
+      if (field === 'port') {
+        updatedServices[idx].port = typeof value === 'number' ? value : Number(value);
+      } else if (field === 'name') {
+        updatedServices[idx].name = value as string;
+      } else if (field === 'scripts') {
+        // handle scripts separately if needed
+      }
+      return { ...prev, services: updatedServices };
+    });
+    setSaved(false);
+  };
+
+  const handleServiceScriptChange = (idx: number, scriptKey: keyof ServiceConfig['scripts'], value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.map((svc, i) =>
+        i === idx ? { ...svc, scripts: { ...svc.scripts, [scriptKey]: value } } : svc
+      )
+    }));
+    setSaved(false);
+  };
 
   // Load existing settings on component mount
   useEffect(() => {
@@ -75,6 +133,7 @@ export default function StakgraphPage() {
               swarmApiKey: settings.swarmApiKey || "",
               poolName: settings.poolName || "",
               environmentVariables: settings.environmentVariables || [],
+              services: settings.services || [],
               status: settings.status,
               lastUpdated: settings.lastUpdated
             });
@@ -167,7 +226,8 @@ export default function StakgraphPage() {
         environmentVariables: envVars.map(env => ({
           key: env.key,
           value: env.value
-        }))
+        })),
+        services: formData.services,
       };
 
       const response = await fetch(`/api/workspaces/${slug}/stakgraph`, {
@@ -252,7 +312,8 @@ export default function StakgraphPage() {
     formData.swarmUrl.trim() ||
     formData.swarmApiKey.trim() ||
     formData.poolName.trim() ||
-    (envVars && envVars.some(env => env.key.trim() || env.value.trim()))
+    (envVars && envVars.some(env => env.key.trim() || env.value.trim())) ||
+    (formData.services && formData.services.some(svc => svc.name.trim() || svc.port.toString().trim() || svc.scripts.start.trim()))
   );
 
   if (initialLoading) {
@@ -489,6 +550,90 @@ export default function StakgraphPage() {
                   Add Variable
                 </Button>
               </div>
+            </div>
+
+            {/* Section 5: Services */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold mb-2">Services</h3>
+              <p className="text-xs text-muted-foreground mb-2">
+                Define your services, their ports, and scripts. The <b>start</b> script is required.
+              </p>
+              {formData.services.map((svc, idx) => (
+                <div key={idx} className="border rounded-md p-3 mb-2 bg-muted/10">
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      placeholder="Service Name"
+                      value={svc.name}
+                      onChange={e => handleServiceChange(idx, "name", e.target.value)}
+                      className="w-1/3"
+                      disabled={loading}
+                    />
+                    <Input
+                      placeholder="Port"
+                      type="text"
+                      value={svc.port === 0 ? '' : svc.port}
+                      onChange={e => {
+                        const val = e.target.value;
+                        // Allow empty for editing
+                        if (val === '') {
+                          handleServiceChange(idx, 'port', 0);
+                          return;
+                        }
+                        // Only allow positive integers, no leading zeros (except '0'), no letters/special chars
+                        if (/^(0|[1-9][0-9]*)$/.test(val)) {
+                          handleServiceChange(idx, 'port', Number(val));
+                        }
+                        // else: ignore invalid input
+                      }}
+                      className="w-1/4"
+                      disabled={loading}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleRemoveService(idx)}
+                      className="px-2"
+                      disabled={formData.services.length === 1 || loading}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Input
+                      placeholder="Start script (required)"
+                      value={svc.scripts.start}
+                      onChange={e => handleServiceScriptChange(idx, "start", e.target.value)}
+                      className="w-1/2"
+                      disabled={loading}
+                    />
+                    <Input
+                      placeholder="Install script"
+                      value={svc.scripts.install || ""}
+                      onChange={e => handleServiceScriptChange(idx, "install", e.target.value)}
+                      className="w-1/2"
+                      disabled={loading}
+                    />
+                    <Input
+                      placeholder="Build script"
+                      value={svc.scripts.build || ""}
+                      onChange={e => handleServiceScriptChange(idx, "build", e.target.value)}
+                      className="w-1/2"
+                      disabled={loading}
+                    />
+                    <Input
+                      placeholder="Test script"
+                      value={svc.scripts.test || ""}
+                      onChange={e => handleServiceScriptChange(idx, "test", e.target.value)}
+                      className="w-1/2"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+              ))}
+              <Button type="button" variant="secondary" onClick={handleAddService} className="mt-2" disabled={loading}>
+                Add Service
+              </Button>
             </div>
 
             <Button type="submit" disabled={loading}>

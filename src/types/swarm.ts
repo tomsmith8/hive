@@ -21,4 +21,32 @@ export interface CreateSwarmResponse {
   data: {
     swarm_id: string;
   };
+}
+
+export interface SwarmSelectResult {
+  id: string;
+  name: string;
+  swarmUrl: string | null;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  workspaceId: string;
+  instanceType: string;
+  repositoryName: string;
+  repositoryDescription: string;
+  repositoryUrl: string;
+  swarmApiKey: string;
+  poolName: string;
+  services: ServiceConfig[] | string; // string if not parsed yet
+}
+
+export interface ServiceConfig {
+  name: string;
+  port: number;
+  scripts: {
+    start: string;
+    install?: string;
+    build?: string;
+    test?: string;
+  };
 } 

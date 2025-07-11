@@ -195,6 +195,7 @@ model Swarm {
   repositoryUrl         String? @map("repository_url")
   swarmApiKey          String? @map("swarm_api_key")
   environmentVariables Json    @default("[]") @map("environment_variables")
+  services             Json    @default("[]") @map("services")
   
   // One-to-one relationship with workspace
   workspaceId String @unique @map("workspace_id")

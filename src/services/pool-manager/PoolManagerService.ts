@@ -2,8 +2,8 @@ import { BaseServiceClass } from '@/lib/base-service';
 import { ServiceConfig } from '@/types';
 import { CreatePoolRequest, Pool } from '@/types';
 import { getPoolManagerApiKey } from './api/auth';
-import { fetchPoolEnvVars, updatePoolEnvVarsApi } from './api/envVars';
-import { createPoolApi } from './api/pool';
+import { fetchPoolEnvVars, updatePoolEnvVarsApi } from '@/services/pool-manager/api/envVars';
+import { createPoolApi } from '@/services/pool-manager/api/pool';
 
 export class PoolManagerService extends BaseServiceClass {
   public readonly serviceName = 'poolManager';

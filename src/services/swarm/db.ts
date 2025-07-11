@@ -1,5 +1,17 @@
 import { db } from '@/lib/db';
-import { Prisma, SwarmStatus } from '@prisma/client';
+import { SwarmStatus } from '@prisma/client';
+
+// Add ServiceConfig interface for the services array
+export interface ServiceConfig {
+  name: string;
+  port: string;
+  scripts: {
+    start: string;
+    install?: string;
+    build?: string;
+    test?: string;
+  };
+}
 
 interface SaveOrUpdateSwarmParams {
   workspaceId: string;
@@ -13,9 +25,10 @@ interface SaveOrUpdateSwarmParams {
   repositoryUrl?: string;
   swarmApiKey?: string;
   poolName?: string;
+  services?: ServiceConfig[]; // Use ServiceConfig[]
 }
 
-const select = {
+export const select = {
   id: true,
   name: true,
   swarmUrl: true,
@@ -29,40 +42,51 @@ const select = {
   repositoryUrl: true,
   swarmApiKey: true,
   poolName: true,
+  services: true,
 };
 
 export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   let swarm = await db.swarm.findUnique({ where: { workspaceId: params.workspaceId } });
-  const data: Prisma.SwarmUpdateInput = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: Record<string, any> = {};
   if (params.name !== undefined) data.name = params.name;
   if (params.instanceType !== undefined) data.instanceType = params.instanceType;
-  if (params.environmentVariables !== undefined) (data as any).environmentVariables = JSON.stringify(params.environmentVariables);
+  if (params.environmentVariables !== undefined) data.environmentVariables = JSON.stringify(params.environmentVariables);
   if (params.status !== undefined) data.status = params.status;
   if (params.swarmUrl !== undefined) data.swarmUrl = params.swarmUrl;
-  if (params.repositoryName !== undefined) (data as any).repositoryName = params.repositoryName;
-  if (params.repositoryDescription !== undefined) (data as any).repositoryDescription = params.repositoryDescription;
-  if (params.repositoryUrl !== undefined) (data as any).repositoryUrl = params.repositoryUrl;
-  if (params.swarmApiKey !== undefined) (data as any).swarmApiKey = params.swarmApiKey;
-  if (params.poolName !== undefined) (data as any).poolName = params.poolName;
+  if (params.repositoryName !== undefined) data.repositoryName = params.repositoryName;
+  if (params.repositoryDescription !== undefined) data.repositoryDescription = params.repositoryDescription;
+  if (params.repositoryUrl !== undefined) data.repositoryUrl = params.repositoryUrl;
+  if (params.swarmApiKey !== undefined) data.swarmApiKey = params.swarmApiKey;
+  if (params.poolName !== undefined) data.poolName = params.poolName;
+  if (params.services !== undefined) {
+    console.log("[saveOrUpdateSwarm] Saving services:", params.services);
+    data.services = params.services;
+  }
   data.updatedAt = new Date();
 
   if (swarm) {
+    console.log("[saveOrUpdateSwarm] Update data:", data);
     swarm = await db.swarm.update({ where: { workspaceId: params.workspaceId }, data, select });
   } else {
+    const createData = {
+      workspaceId: params.workspaceId,
+      name: params.name || '',
+      instanceType: params.instanceType || '',
+      environmentVariables: params.environmentVariables ? JSON.stringify(params.environmentVariables) : '[]',
+      status: params.status || SwarmStatus.PENDING,
+      swarmUrl: params.swarmUrl || null,
+      repositoryName: params.repositoryName || '',
+      repositoryDescription: params.repositoryDescription || '',
+      repositoryUrl: params.repositoryUrl || '',
+      swarmApiKey: params.swarmApiKey || '',
+      poolName: params.poolName || '',
+      services: params.services ? params.services : [],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+    console.log("[saveOrUpdateSwarm] Create data:", createData);
     swarm = await db.swarm.create({
-      data: {
-        workspaceId: params.workspaceId,
-        name: params.name || '',
-        instanceType: params.instanceType || '',
-        environmentVariables: params.environmentVariables ? JSON.stringify(params.environmentVariables) : '[]',
-        status: params.status || SwarmStatus.PENDING,
-        swarmUrl: params.swarmUrl || null,
-        repositoryName: params.repositoryName || '',
-        repositoryDescription: params.repositoryDescription || '',
-        repositoryUrl: params.repositoryUrl || '',
-        swarmApiKey: params.swarmApiKey || '',
-        poolName: params.poolName || '',
-      } as any,
+      data: createData,
       select,
     });
   }
