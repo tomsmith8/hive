@@ -1,42 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Save, Loader2, Play, Download, Hammer, TestTube } from "lucide-react";
-import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
-import { EnvironmentVariable } from "@/types/wizard";
-import { Eye, EyeOff } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface ServiceConfig {
-  name: string;
-  port: number;
-  scripts: {
-    start: string;
-    install?: string;
-    build?: string;
-    test?: string;
-  };
-}
-
-interface StakgraphSettings {
-  name: string;
-  description: string;
-  repositoryUrl: string;
-  swarmUrl: string;
-  swarmApiKey: string;
-  poolName: string;
-  environmentVariables: EnvironmentVariable[];
-  services: ServiceConfig[];
-  status?: string;
-  lastUpdated?: string;
-}
+import {
+  ProjectInfoForm,
+  RepositoryForm,
+  SwarmForm,
+  EnvironmentForm,
+  ServicesForm,
+  StakgraphSettings,
+  ProjectInfoData,
+  RepositoryData,
+  SwarmData,
+  EnvironmentData,
+  ServicesData,
+} from "@/components/stakgraph";
+import { EnvironmentVariable } from "@/types/wizard";
 
 export default function StakgraphPage() {
   const { slug } = useWorkspace();
@@ -55,62 +40,64 @@ export default function StakgraphPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [saved, setSaved] = useState(false);
-
-  // Environment variable state using shared hook
-  const {
-    envVars,
-    handleEnvChange,
-    handleAddEnv,
-    handleRemoveEnv,
-    setEnvVars,
-  } = useEnvironmentVars();
+  
+  // Environment variables for the EnvironmentForm
+  const [envVars, setEnvVars] = useState<Array<{key: string; value: string; show: boolean}>>([]);
 
   const { toast } = useToast();
 
-  // Service management handlers
-  const handleAddService = () => {
-    setFormData(prev => ({
-      ...prev,
-      services: [
-        ...prev.services,
-        { name: "", port: 0, scripts: { start: "" } }
-      ]
-    }));
+  // Form change handlers for each section
+  const handleProjectInfoChange = useCallback((data: Partial<ProjectInfoData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
     setSaved(false);
-  };
+    // Clear errors for changed fields
+    if (data.name !== undefined && errors.name) {
+      setErrors(prev => ({ ...prev, name: "" }));
+    }
+    if (data.description !== undefined && errors.description) {
+      setErrors(prev => ({ ...prev, description: "" }));
+    }
+  }, [errors.name, errors.description]);
 
-  const handleRemoveService = (idx: number) => {
-    setFormData(prev => ({
-      ...prev,
-      services: prev.services.filter((_, i) => i !== idx)
-    }));
+  const handleRepositoryChange = useCallback((data: Partial<RepositoryData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
     setSaved(false);
-  };
+    // Clear errors for changed fields
+    if (data.repositoryUrl !== undefined && errors.repositoryUrl) {
+      setErrors(prev => ({ ...prev, repositoryUrl: "" }));
+    }
+  }, [errors.repositoryUrl]);
 
-  const handleServiceChange = (idx: number, field: keyof ServiceConfig, value: string | number) => {
-    setFormData(prev => {
-      const updatedServices = [...prev.services];
-      if (field === 'port') {
-        updatedServices[idx].port = typeof value === 'number' ? value : Number(value);
-      } else if (field === 'name') {
-        updatedServices[idx].name = value as string;
-      } else if (field === 'scripts') {
-        // handle scripts separately if needed
-      }
-      return { ...prev, services: updatedServices };
-    });
+  const handleSwarmChange = useCallback((data: Partial<SwarmData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
     setSaved(false);
-  };
+    // Clear errors for changed fields
+    if (data.swarmUrl !== undefined && errors.swarmUrl) {
+      setErrors(prev => ({ ...prev, swarmUrl: "" }));
+    }
+    if (data.swarmApiKey !== undefined && errors.swarmApiKey) {
+      setErrors(prev => ({ ...prev, swarmApiKey: "" }));
+    }
+  }, [errors.swarmUrl, errors.swarmApiKey]);
 
-  const handleServiceScriptChange = (idx: number, scriptKey: keyof ServiceConfig['scripts'], value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      services: prev.services.map((svc, i) =>
-        i === idx ? { ...svc, scripts: { ...svc.scripts, [scriptKey]: value } } : svc
-      )
-    }));
+  const handleEnvironmentChange = useCallback((data: Partial<EnvironmentData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
     setSaved(false);
-  };
+    // Clear errors for changed fields
+    if (data.poolName !== undefined && errors.poolName) {
+      setErrors(prev => ({ ...prev, poolName: "" }));
+    }
+  }, [errors.poolName]);
+
+  const handleServicesChange = useCallback((data: Partial<ServicesData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+    setSaved(false);
+  }, []);
+
+  const handleEnvVarsChange = useCallback((newEnvVars: Array<{key: string; value: string; show: boolean}>) => {
+    setEnvVars(newEnvVars);
+    setSaved(false);
+  }, []);
 
   // Load existing settings on component mount
   useEffect(() => {
@@ -138,7 +125,7 @@ export default function StakgraphPage() {
               lastUpdated: settings.lastUpdated
             });
             
-            // Also update the environment variables hook
+            // Also update the environment variables state
             if (settings.environmentVariables && Array.isArray(settings.environmentVariables)) {
               setEnvVars(settings.environmentVariables.map((env: EnvironmentVariable) => ({
                 key: env.key,
@@ -161,7 +148,7 @@ export default function StakgraphPage() {
     };
 
     loadSettings();
-  }, [slug, setEnvVars]);
+  }, [slug]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,17 +270,7 @@ export default function StakgraphPage() {
     }
   };
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
-    }
-    // Clear saved state when user modifies the form
-    if (saved) {
-      setSaved(false);
-    }
-  };
+
 
   const isValidUrl = (string: string) => {
     try {
@@ -399,288 +376,41 @@ export default function StakgraphPage() {
               </div>
             )}
 
-            {/* Section 1: Name & Description */}
-            <div className="space-y-2 mb-4">
-              <h3 className="text-lg font-semibold mb-2">Project Info</h3>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder="Project Name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                className={errors.name ? "border-destructive" : ""}
-                disabled={loading}
+            <div className="space-y-6">
+              <ProjectInfoForm
+                data={{ name: formData.name, description: formData.description }}
+                errors={errors}
+                loading={loading}
+                onChange={handleProjectInfoChange}
               />
-              {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                placeholder="Short description of the project"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                className={errors.description ? "border-destructive" : ""}
-                disabled={loading}
+
+              <RepositoryForm
+                data={{ repositoryUrl: formData.repositoryUrl }}
+                errors={errors}
+                loading={loading}
+                onChange={handleRepositoryChange}
               />
-              {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
-            </div>
 
-            {/* Section 2: Code (Repository URL) */}
-            <div className="space-y-2 mb-4">
-              <h3 className="text-lg font-semibold mb-2">Repository</h3>
-              <Label htmlFor="repositoryUrl">Repository URL</Label>
-              <Input
-                id="repositoryUrl"
-                type="url"
-                placeholder="https://github.com/username/repository"
-                value={formData.repositoryUrl}
-                onChange={(e) => handleInputChange("repositoryUrl", e.target.value)}
-                className={errors.repositoryUrl ? "border-destructive" : ""}
-                disabled={loading}
+              <SwarmForm
+                data={{ swarmUrl: formData.swarmUrl, swarmApiKey: formData.swarmApiKey }}
+                errors={errors}
+                loading={loading}
+                onChange={handleSwarmChange}
               />
-              {errors.repositoryUrl && (
-                <p className="text-sm text-destructive">{errors.repositoryUrl}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                The URL of the repository containing your project code
-              </p>
-            </div>
 
-            {/* Section 3: Swarm */}
-            <div className="space-y-2 mb-4">
-              <h3 className="text-lg font-semibold mb-2">Swarm</h3>
-              <Label htmlFor="swarmUrl">Swarm URL</Label>
-              <Input
-                id="swarmUrl"
-                type="url"
-                placeholder="https://your-swarm-instance.sphinx.chat/api"
-                value={formData.swarmUrl}
-                onChange={(e) => handleInputChange("swarmUrl", e.target.value)}
-                className={errors.swarmUrl ? "border-destructive" : ""}
-                disabled={loading}
+              <EnvironmentForm
+                data={{ poolName: formData.poolName, environmentVariables: formData.environmentVariables }}
+                errors={errors}
+                loading={loading}
+                onChange={handleEnvironmentChange}
+                onEnvVarsChange={handleEnvVarsChange}
               />
-              {errors.swarmUrl && (
-                <p className="text-sm text-destructive">{errors.swarmUrl}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                The base URL of your Swarm instance
-              </p>
 
-              <Label htmlFor="swarmApiKey">Swarm API Key</Label>
-              <Input
-                id="swarmApiKey"
-                type="text"
-                placeholder="e.g. {{SWARM_123456_API_KEY}}"
-                value={formData.swarmApiKey}
-                onChange={(e) => handleInputChange("swarmApiKey", e.target.value)}
-                className={errors.swarmApiKey ? "border-destructive" : ""}
-                disabled={loading}
+              <ServicesForm
+                data={{ services: formData.services }}
+                loading={loading}
+                onChange={handleServicesChange}
               />
-              {errors.swarmApiKey && (
-                <p className="text-sm text-destructive">{errors.swarmApiKey}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Your API key for authenticating with the Swarm service
-              </p>
-            </div>
-
-            {/* Section 4: ENV */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold mb-2">Environment</h3>
-              <Label htmlFor="poolName">Pool Name</Label>
-              <Input
-                id="poolName"
-                placeholder="Enter the pool name"
-                value={formData.poolName}
-                onChange={(e) => handleInputChange("poolName", e.target.value)}
-                className={errors.poolName ? "border-destructive" : ""}
-                disabled={loading}
-              />
-              {errors.poolName && (
-                <p className="text-sm text-destructive">{errors.poolName}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                The name of the pool to use for your Stakgraph configuration
-              </p>
-
-              <h4 className="text-md font-medium mt-2">Environment Variables</h4>
-              <p className="text-xs text-muted-foreground mb-2">
-                Add any ENV variables your Stakgraph integration needs. These will be included in your configuration.
-              </p>
-              <div className="space-y-2">
-                {envVars.map((pair, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <Input
-                      placeholder="KEY"
-                      value={pair.key}
-                      onChange={(e) => handleEnvChange(idx, 'key', e.target.value)}
-                      className="w-1/3"
-                      disabled={loading}
-                    />
-                    <div className="relative w-1/2 flex items-center">
-                      <Input
-                        placeholder="VALUE"
-                        type={pair.show ? 'text' : 'password'}
-                        value={pair.value}
-                        onChange={(e) => handleEnvChange(idx, 'value', e.target.value)}
-                        className="pr-10"
-                        disabled={loading}
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
-                        onClick={() => handleEnvChange(idx, 'show', !pair.show)}
-                        tabIndex={-1}
-                        disabled={loading}
-                      >
-                        {pair.show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleRemoveEnv(idx)}
-                      className="px-2"
-                      disabled={envVars.length === 1 || loading}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" variant="secondary" onClick={handleAddEnv} className="mt-2" disabled={loading}>
-                  Add Variable
-                </Button>
-              </div>
-            </div>
-
-            {/* Section 5: Services */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold mb-2">Services</h3>
-              <p className="text-xs text-muted-foreground mb-2">
-                Define your services, their ports, and scripts. The <b>start</b> script is required.
-              </p>
-              {formData.services.length === 0 ? (
-                <Button type="button" variant="secondary" onClick={handleAddService} disabled={loading}>
-                  Add Service
-                </Button>
-              ) : (
-                <>
-                  {formData.services.map((svc, idx) => (
-                    <Card key={idx} className="mb-2">
-                      <CardContent className="space-y-3 py-2">
-                        <div className="mb-2">
-                          <span className="text-md font-bold">Service</span>
-                        </div>
-                        <div className="flex gap-2 mb-2 items-end">
-                          <div className="w-1/3">
-                            <Label htmlFor={`service-name-${idx}`} className="mb-1">Name</Label>
-                            <Input
-                              id={`service-name-${idx}`}
-                              placeholder="e.g. api-server"
-                              value={svc.name}
-                              onChange={e => handleServiceChange(idx, "name", e.target.value)}
-                              className=""
-                              disabled={loading}
-                            />
-                          </div>
-                          <div className="w-1/4">
-                            <Label htmlFor={`service-port-${idx}`} className="mb-1">Port</Label>
-                            <Input
-                              id={`service-port-${idx}`}
-                              placeholder="e.g. 3000"
-                              type="text"
-                              value={svc.port === 0 ? '' : svc.port}
-                              onChange={e => {
-                                const val = e.target.value;
-                                if (val === '') {
-                                  handleServiceChange(idx, 'port', 0);
-                                  return;
-                                }
-                                if (/^(0|[1-9][0-9]*)$/.test(val)) {
-                                  handleServiceChange(idx, 'port', Number(val));
-                                }
-                              }}
-                              className=""
-                              disabled={loading}
-                              required
-                            />
-                          </div>
-                          <div className="flex-1 flex justify-end">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => handleRemoveService(idx)}
-                              className="px-2"
-                              disabled={loading}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="mb-2 mt-2">
-                          <span className="text-md font-bold">Scripts Configuration</span>
-                        </div>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <Play className="w-4 h-4 text-muted-foreground" />
-                            <Label htmlFor={`service-start-${idx}`}>Start</Label>
-                          </div>
-                          <Input
-                            id={`service-start-${idx}`}
-                            placeholder="npm start"
-                            value={svc.scripts.start}
-                            onChange={e => handleServiceScriptChange(idx, 'start', e.target.value)}
-                            className="font-mono"
-                            disabled={loading}
-                            required
-                          />
-
-                          <div className="flex items-center gap-2 mt-3">
-                            <Download className="w-4 h-4 text-muted-foreground" />
-                            <Label htmlFor={`service-install-${idx}`}>Install</Label>
-                          </div>
-                          <Input
-                            id={`service-install-${idx}`}
-                            placeholder="npm install"
-                            value={svc.scripts.install || ''}
-                            onChange={e => handleServiceScriptChange(idx, 'install', e.target.value)}
-                            className="font-mono"
-                            disabled={loading}
-                          />
-
-                          <div className="flex items-center gap-2 mt-3">
-                            <Hammer className="w-4 h-4 text-muted-foreground" />
-                            <Label htmlFor={`service-build-${idx}`}>Build</Label>
-                          </div>
-                          <Input
-                            id={`service-build-${idx}`}
-                            placeholder="npm run build"
-                            value={svc.scripts.build || ''}
-                            onChange={e => handleServiceScriptChange(idx, 'build', e.target.value)}
-                            className="font-mono"
-                            disabled={loading}
-                          />
-
-                          <div className="flex items-center gap-2 mt-3">
-                            <TestTube className="w-4 h-4 text-muted-foreground" />
-                            <Label htmlFor={`service-test-${idx}`}>Test</Label>
-                          </div>
-                          <Input
-                            id={`service-test-${idx}`}
-                            placeholder="npm test"
-                            value={svc.scripts.test || ''}
-                            onChange={e => handleServiceScriptChange(idx, 'test', e.target.value)}
-                            className="font-mono"
-                            disabled={loading}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  <Button type="button" variant="secondary" onClick={handleAddService} disabled={loading}>
-                    Add Service
-                  </Button>
-                </>
-              )}
             </div>
 
             <Button type="submit" disabled={loading}>
