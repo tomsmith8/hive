@@ -190,4 +190,19 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
-}; 
+};
+
+/**
+ * Fetches the GitHub username and PAT (access_token) for a given userId.
+ * Returns { username, pat } or null if not found.
+ */
+export async function getGithubUsernameAndPAT(userId: string): Promise<{ username: string; pat: string } | null> {
+  // Get GitHub username from GitHubAuth
+  const githubAuth = await db.gitHubAuth.findUnique({ where: { userId } });
+  // Get PAT from Account
+  const githubAccount = await db.account.findFirst({ where: { userId, provider: 'github' } });
+  if (githubAuth?.githubUsername && githubAccount?.access_token) {
+    return { username: githubAuth.githubUsername, pat: githubAccount.access_token };
+  }
+  return null;
+} 
