@@ -1,6 +1,5 @@
 import { BaseServiceClass } from '@/lib/base-service';
 import { ServiceConfig } from '@/types';
-import { CreateProjectRequest, StakworkProject } from '@/types';
 
 export class StakworkService extends BaseServiceClass {
   public readonly serviceName = 'stakwork';
@@ -9,12 +8,7 @@ export class StakworkService extends BaseServiceClass {
     super(config);
   }
 
-  async createProject(project: CreateProjectRequest): Promise<StakworkProject> {
-    return this.handleRequest(
-      () => this.getClient().post<StakworkProject>('/projects', project, undefined, this.serviceName),
-      'create project'
-    );
-  }
+  // Removed createProject method as stakworkRequest is now used for all requests
 
   /**
    * Generic helper to make requests to the Stakwork API with required headers and payload structure.
