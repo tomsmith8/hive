@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions, getGithubUsernameAndPAT } from '@/lib/auth/nextauth';
 import { db } from '@/lib/db';
 import { swarmApiRequest } from '@/services/swarm/api/swarm';
+import { RepositoryStatus } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +42,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Swarm is not associated with the given repo_url' }, { status: 400 });
     }
 
+    // Determine workspaceId for repository
+    const repoWorkspaceId = workspaceId || swarm.workspaceId;
+
+    // Upsert Repository record with status PENDING
+    const repository = await db.repository.upsert({
+      where: { repositoryUrl_workspaceId: { repositoryUrl: repo_url, workspaceId: repoWorkspaceId } },
+      update: { status: RepositoryStatus.PENDING },
+      create: {
+        name: repo_url.split('/').pop() || repo_url,
+        repositoryUrl: repo_url,
+        workspaceId: repoWorkspaceId,
+        status: RepositoryStatus.PENDING,
+      },
+    });
+
     // Proxy to stakgraph microservice
     const apiResult = await swarmApiRequest({
       swarmUrl: `https://stakgraph.${swarm.name}.sphinx.chat`,
@@ -56,10 +72,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // If success, update repository status to SYNCED
+    let finalStatus = repository.status;
+    if (apiResult.ok && apiResult.data && apiResult.data.status === 'success') {
+      await db.repository.update({
+        where: { id: repository.id },
+        data: { status: RepositoryStatus.SYNCED },
+      });
+      finalStatus = RepositoryStatus.SYNCED;
+    }
+
     return NextResponse.json({
       success: apiResult.ok,
       status: apiResult.status,
       data: apiResult.data,
+      repositoryStatus: finalStatus,
     }, { status: apiResult.status });
   } catch {
     return NextResponse.json({ success: false, message: 'Failed to ingest code' }, { status: 500 });
