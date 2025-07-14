@@ -4,7 +4,6 @@ import { authOptions, getGithubUsernameAndPAT } from '@/lib/auth/nextauth';
 import { db } from '@/lib/db';
 import { swarmApiRequest } from '@/services/swarm/api/swarm';
 import { RepositoryStatus } from '@prisma/client';
-import { isFakeMode } from '@/services/swarm/fake';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,22 +57,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // --- FAKE MODE LOGIC ---
-    if (isFakeMode) {
-      // Simulate a successful ingest and update status to SYNCED
-      await db.repository.update({
-        where: { id: repository.id },
-        data: { status: RepositoryStatus.SYNCED },
-      });
-      return NextResponse.json({
-        success: true,
-        status: 200,
-        data: { status: 'success', message: 'Fake ingest completed (dev mode)' },
-        repositoryStatus: RepositoryStatus.SYNCED,
-      }, { status: 200 });
-    }
-    // --- END FAKE MODE LOGIC ---
-
     // Proxy to stakgraph microservice
     const apiResult = await swarmApiRequest({
       swarmUrl: `https://stakgraph.${swarm.name}.sphinx.chat`,
@@ -91,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // If success, update repository status to SYNCED
     let finalStatus = repository.status;
-    if (apiResult.ok && apiResult.data && typeof apiResult.data === 'object' && 'status' in apiResult.data && apiResult.data.status === 'success') {
+    if (apiResult.ok && apiResult.data && apiResult.data.status === 'success') {
       await db.repository.update({
         where: { id: repository.id },
         data: { status: RepositoryStatus.SYNCED },
