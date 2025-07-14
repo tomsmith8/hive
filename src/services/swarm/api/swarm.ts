@@ -8,21 +8,40 @@ export async function createSwarmApi(
   serviceName: string
 ): Promise<Swarm> {
   return client.post<Swarm>(
-    '/super/new_swarm',
+    `${env.SWARM_SUPER_ADMIN_URL}/api/super/new_swarm`,
     swarm,
     { 'x-super-token': env.SWARM_SUPERADMIN_API_KEY as string },
     serviceName
   );
 }
 
-export async function fetchSwarmStats(swarmUrl: string): Promise<{ ok: boolean; data?: unknown; status: number }> {
-  try {
-    const response = await fetch(`${swarmUrl}/stats`, { method: 'GET' });
-    const data = await response.json();
-    return { ok: response.ok, data, status: response.status };
-  } catch {
-    return { ok: false, status: 500 };
+export async function fetchSwarmDetails(swarmId: string): Promise<{ ok: boolean; data?: unknown; status: number }> {
+  const maxRetries = 5;
+  let delay = 500; // start with 500ms
+  let lastError: { ok: boolean; data?: unknown; status: number } | undefined = undefined;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const url = `${env.SWARM_SUPER_ADMIN_URL}/api/super/details?id=${encodeURIComponent(swarmId)}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-super-token': env.SWARM_SUPERADMIN_API_KEY as string,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        return { ok: true, data, status: response.status };
+      } else {
+        lastError = { ok: false, data, status: response.status };
+      }
+    } catch {
+      lastError = { ok: false, status: 500 };
+    }
+    // Exponential backoff
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    delay *= 2;
   }
+  return lastError || { ok: false, status: 500 };
 }
 
 export async function swarmApiRequest({

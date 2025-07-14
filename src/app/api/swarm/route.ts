@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const env = SWARM_DEFAULT_ENV_VARS;
 
     // Save or update Swarm in the database (status: PENDING)
-    await saveOrUpdateSwarm({
+    const swarmRecord = await saveOrUpdateSwarm({
       workspaceId,
       name: vanity_address, // domain name used for creation
       instanceType: instance_type,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Always update the swarm with returned swarm_id, keep status PENDING
     const swarm_id = apiResponse?.swarm_id || vanity_address;
-    await saveOrUpdateSwarm({
+    const updatedSwarm = await saveOrUpdateSwarm({
       workspaceId,
       swarmUrl: `https://${swarm_id}/api`,
       status: SwarmStatus.PENDING,
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `${name}-Swarm was created successfully`,
-      data: { swarm_id },
+      data: { id: updatedSwarm.id, swarm_id },
     });
   } catch (error) {
     console.error('Error creating Swarm:', error);

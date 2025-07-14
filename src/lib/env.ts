@@ -4,6 +4,7 @@ const requiredEnvVars = {
   POOL_MANAGER_API_USERNAME: process.env.POOL_MANAGER_API_USERNAME,
   POOL_MANAGER_API_PASSWORD: process.env.POOL_MANAGER_API_PASSWORD,
   SWARM_SUPERADMIN_API_KEY: process.env.SWARM_SUPERADMIN_API_KEY,
+  SWARM_SUPER_ADMIN_URL: process.env.SWARM_SUPER_ADMIN_URL,
 } as const;
 
 // Validate environment variables
