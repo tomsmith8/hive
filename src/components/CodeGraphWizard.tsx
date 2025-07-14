@@ -198,6 +198,32 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     }
   };
 
+  const handleIngestCode = async () => {
+    setIngestStepStatus('pending');
+    try {
+      const res = await fetch('/api/swarm/stakgraph/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repo_url: selectedRepo?.name, // Use .name as repo_url for backend
+          workspaceId: swarmId ? undefined : /* TODO: get workspaceId from context or state */ undefined,
+          swarmId: swarmId || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIngestStepStatus('complete');
+        handleNext();
+      } else {
+        setIngestStepStatus('idle');
+        console.error('Ingest failed', data);
+      }
+    } catch (e) {
+      setIngestStepStatus('idle');
+      console.error('Ingest error', e);
+    }
+  };
+
   const renderCurrentStep = () => {
     switch (step) {
       case 1:
@@ -238,7 +264,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         return (
           <IngestCodeStep
             status={ingestStepStatus}
-            onStart={() => setIngestStepStatus('pending')}
+            onStart={handleIngestCode}
             onContinue={() => { setIngestStepStatus('complete'); handleNext(); }}
             onBack={() => {
               setStep(4);
