@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CodeGraphWizardProps, WizardStep, Repository } from "@/types/wizard";
 import { useRepositories } from "@/hooks/useRepositories";
 import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
@@ -109,9 +109,11 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [projectName, setProjectName] = useState("");
-  const [graphStepStatus, setGraphStepStatus] = useState<'idle' | 'pending' | 'complete'>('idle');
   const [ingestStepStatus, setIngestStepStatus] = useState<'idle' | 'pending' | 'complete'>('idle');
   const [servicesData, setServicesData] = useState<ServicesData>({ services: [] });
+  const [swarmId, setSwarmId] = useState<string | null>(null);
+  const [swarmStatus, setSwarmStatus] = useState<'idle' | 'pending' | 'active' | 'error'>('idle');
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use custom hooks
   const { repositories, loading } = useRepositories({ username: user.github?.username });
@@ -129,6 +131,56 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       setProjectName(parsed); // Default project name from repo
     }
   }, [selectedRepo]);
+
+  // Swarm polling effect
+  useEffect(() => {
+    if (swarmId && swarmStatus === 'pending') {
+      // Start polling
+      pollIntervalRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/swarm/poll?id=${swarmId}`);
+          const data = await res.json();
+          if (data.status === 'ACTIVE') {
+            setSwarmStatus('active');
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+          }
+        } catch {
+          setSwarmStatus('error');
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        }
+      }, 3000);
+      return () => {
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      };
+    }
+    // Cleanup on unmount or when swarmId/status changes
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, [swarmId, swarmStatus]);
+
+  // Handler to create swarm
+  const handleCreateSwarm = async () => {
+    setSwarmStatus('pending');
+    try {
+      const res = await fetch('/api/swarm', { method: 'POST' });
+      const data = await res.json();
+      if (data.success && data.data?.id) {
+        setSwarmId(data.data.id);
+      } else {
+        setSwarmStatus('error');
+      }
+    } catch {
+      setSwarmStatus('error');
+    }
+  };
+
+  // Handler for continue (when swarm is active)
+  const handleSwarmContinue = () => {
+    setStep(5);
+    setSwarmId(null);
+    setSwarmStatus('idle');
+  };
 
   const handleRepoSelect = (repo: Repository) => {
     setSelectedRepo(repo);
@@ -176,12 +228,9 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         return (
           <GraphInfrastructureStep
             graphDomain={sanitizeWorkspaceName(projectName)}
-            status={graphStepStatus}
-            onCreate={() => setGraphStepStatus('pending')}
-            onComplete={() => {
-              setGraphStepStatus('complete');
-              setStep(5);
-            }}
+            status={swarmStatus === 'idle' ? 'idle' : swarmStatus === 'pending' ? 'pending' : 'complete'}
+            onCreate={handleCreateSwarm}
+            onComplete={handleSwarmContinue}
             onBack={handleBack}
           />
         );
@@ -193,7 +242,8 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             onContinue={() => { setIngestStepStatus('complete'); handleNext(); }}
             onBack={() => {
               setStep(4);
-              setGraphStepStatus('idle');
+              setSwarmId(null);
+              setSwarmStatus('idle');
             }}
           />
         );

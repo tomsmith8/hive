@@ -7,8 +7,17 @@ import { config } from '@/lib/env';
 import { saveOrUpdateSwarm } from '@/services/swarm/db';
 import { SwarmStatus } from '@prisma/client';
 import { SWARM_DEFAULT_INSTANCE_TYPE, SWARM_DEFAULT_ENV_VARS, getSwarmVanityAddress } from '@/lib/constants';
+import { isFakeMode, createFakeSwarm } from '@/services/swarm/fake';
 
 export async function POST(request: NextRequest) {
+  if (isFakeMode) {
+    const { id, swarm_id } = await createFakeSwarm(request);
+    return NextResponse.json({
+      success: true,
+      message: 'Swarm (FAKE) was created successfully',
+      data: { id, swarm_id },
+    });
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

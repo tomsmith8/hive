@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { SwarmStatus } from '@prisma/client';
 import { saveOrUpdateSwarm } from '@/services/swarm/db';
 import { fetchSwarmDetails } from '@/services/swarm/api/swarm';
+import { isFakeMode, fakePollSwarm } from '@/services/swarm/fake';
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,6 +72,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  if (isFakeMode) {
+    return await fakePollSwarm(request);
+  }
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+// No hooks needed
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,20 +22,7 @@ export function GraphInfrastructureStep({
   onBack,
 }: GraphInfrastructureStepProps) {
   const isPending = status === "pending";
-  // Countdown state for pending
-  const [countdown, setCountdown] = useState(5);
-  useEffect(() => {
-    if (isPending) {
-      setCountdown(5);
-    }
-  }, [isPending]);
-  useEffect(() => {
-    if (isPending && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isPending, countdown]);
-  const canContinue = isPending && countdown === 0;
+  const isComplete = status === "complete";
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
@@ -114,17 +101,34 @@ export function GraphInfrastructureStep({
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           )}
-          {status === "pending" && (
+          {isPending && (
             <div className="flex flex-col items-end gap-2 w-full">
               <Button
-                className={`mt-2 ml-auto px-8 ${canContinue ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground'}`}
+                className={`mt-2 ml-auto px-8 bg-muted text-muted-foreground`}
                 type="button"
-                onClick={onComplete}
-                disabled={!canContinue}
+                disabled
               >
-                {canContinue ? 'Continue' : `Continue (${countdown})`}
+                Generating Swarm...
               </Button>
+              {isComplete && (
+                <Button
+                  className="mt-2 ml-auto px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                  type="button"
+                  onClick={onComplete}
+                >
+                  Continue
+                </Button>
+              )}
             </div>
+          )}
+          {isComplete && !isPending && (
+            <Button
+              className="px-8 bg-primary text-primary-foreground hover:bg-primary/90"
+              type="button"
+              onClick={onComplete}
+            >
+              Continue
+            </Button>
           )}
         </div>
       </CardContent>
