@@ -26,6 +26,7 @@ interface SaveOrUpdateSwarmParams {
   swarmApiKey?: string;
   poolName?: string;
   services?: ServiceConfig[]; // Use ServiceConfig[]
+  swarmId?: string;
 }
 
 export const select = {
@@ -59,6 +60,7 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   if (params.repositoryUrl !== undefined) data.repositoryUrl = params.repositoryUrl;
   if (params.swarmApiKey !== undefined) data.swarmApiKey = params.swarmApiKey;
   if (params.poolName !== undefined) data.poolName = params.poolName;
+  if (params.swarmId !== undefined) data.swarmId = params.swarmId;
   if (params.services !== undefined) {
     console.log("[saveOrUpdateSwarm] Saving services:", params.services);
     data.services = params.services;

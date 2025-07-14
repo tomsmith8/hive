@@ -6,6 +6,7 @@ import { ServiceConfig } from '@/types';
 import { config } from '@/lib/env';
 import { saveOrUpdateSwarm } from '@/services/swarm/db';
 import { SwarmStatus } from '@prisma/client';
+import { SWARM_DEFAULT_INSTANCE_TYPE, SWARM_DEFAULT_ENV_VARS, getSwarmVanityAddress } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,15 +16,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { workspaceId, vanity_address, name, instance_type, env } = body;
+    const { workspaceId, name } = body;
 
     // Validate required fields
-    if (!workspaceId || !vanity_address || !name || !instance_type) {
+    if (!workspaceId || !name) {
       return NextResponse.json({
         success: false,
-        message: 'Missing required fields: workspaceId, vanity_address, name, instance_type',
+        message: 'Missing required fields: workspaceId, name',
       }, { status: 400 });
     }
+
+    const vanity_address = getSwarmVanityAddress(name);
+    const instance_type = SWARM_DEFAULT_INSTANCE_TYPE;
+    const env = SWARM_DEFAULT_ENV_VARS;
 
     // Save or update Swarm in the database (status: PENDING)
     await saveOrUpdateSwarm({
@@ -38,19 +43,19 @@ export async function POST(request: NextRequest) {
     const swarmService = new SwarmService(config as unknown as ServiceConfig);
     const apiResponse = await swarmService.createSwarm({ vanity_address, name, instance_type, env });
 
-    // Optionally update the swarm with returned swarm_id
-    if (apiResponse?.swarm_id) {
-      await saveOrUpdateSwarm({
-        workspaceId,
-        swarmUrl: `https://${apiResponse.swarm_id}/api`,
-        status: SwarmStatus.ACTIVE,
-      });
-    }
+    // Always update the swarm with returned swarm_id, keep status PENDING
+    const swarm_id = apiResponse?.swarm_id || vanity_address;
+    await saveOrUpdateSwarm({
+      workspaceId,
+      swarmUrl: `https://${swarm_id}/api`,
+      status: SwarmStatus.PENDING,
+      swarmId: swarm_id,
+    });
 
     return NextResponse.json({
       success: true,
-      message: `${name} was created successfully`,
-      data: { swarm_id: apiResponse?.swarm_id },
+      message: `${name}-Swarm was created successfully`,
+      data: { swarm_id },
     });
   } catch (error) {
     console.error('Error creating Swarm:', error);

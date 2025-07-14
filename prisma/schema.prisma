@@ -182,6 +182,7 @@ model WorkspaceMember {
 model Swarm {
   id           String      @id @default(cuid())
   name         String      @unique // domain name used for creation
+  swarmId      String?     @map("swarm_id") // swarm_id from 3rd party
   swarmUrl     String?     @map("swarm_url") // https://{name}.sphinx.chat/api
   status       SwarmStatus @default(PENDING) // pending, active, failed, deleted
   instanceType String      @default("XL") @map("instance_type")

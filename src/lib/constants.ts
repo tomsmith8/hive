@@ -56,3 +56,13 @@ export const WORKSPACE_ERRORS = {
   SLUG_INVALID_LENGTH: 'Workspace name must be between 2 and 50 characters.',
   SLUG_ALREADY_EXISTS: 'A workspace with this name already exists. Please choose a different name.',
 } as const; 
+
+// Swarm creation defaults
+export const SWARM_DEFAULT_INSTANCE_TYPE = 'm5.xlarge';
+export const SWARM_DEFAULT_ENV_VARS = {
+  JARVIS_FEATURE_FLAG_WFA_SCHEMAS: 'true',
+  JARVIS_FEATURE_FLAG_CODEGRAPH_SCHEMAS: 'true',
+};
+export function getSwarmVanityAddress(name: string) {
+  return `${name}.sphinx.chat`;
+} 
