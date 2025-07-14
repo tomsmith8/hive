@@ -36,18 +36,18 @@ export default function SwarmForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="swarmApiKey">Swarm API Key</Label>
+        <Label htmlFor="swarmSecretAlias">Swarm API Key</Label>
         <Input
-          id="swarmApiKey"
+          id="swarmSecretAlias"
           type="text"
           placeholder="e.g. {{SWARM_123456_API_KEY}}"
-          value={data.swarmApiKey}
-          onChange={(e) => handleInputChange("swarmApiKey", e.target.value)}
-          className={errors.swarmApiKey ? "border-destructive" : ""}
+          value={data.swarmSecretAlias}
+          onChange={(e) => handleInputChange("swarmSecretAlias", e.target.value)}
+          className={errors.swarmSecretAlias ? "border-destructive" : ""}
           disabled={loading}
         />
-        {errors.swarmApiKey && (
-          <p className="text-sm text-destructive">{errors.swarmApiKey}</p>
+        {errors.swarmSecretAlias && (
+          <p className="text-sm text-destructive">{errors.swarmSecretAlias}</p>
         )}
         <p className="text-xs text-muted-foreground">
           Your API key for authenticating with the Swarm service

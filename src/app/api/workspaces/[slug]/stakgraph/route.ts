@@ -16,7 +16,7 @@ const stakgraphSettingsSchema = z.object({
   description: z.string().min(1, "Description is required"),
   repositoryUrl: z.string().url("Invalid repository URL"),
   swarmUrl: z.string().url("Invalid swarm URL"),
-  swarmApiKey: z.string().min(1, "Swarm API key is required"),
+  swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   poolName: z.string().min(1, "Pool name is required"),
   environmentVariables: z.array(z.object({
     key: z.string(),
@@ -99,7 +99,7 @@ export async function GET(
         description: swarm.repositoryDescription || "",
         repositoryUrl: swarm.repositoryUrl || "",
         swarmUrl: swarm.swarmUrl || "",
-        swarmApiKey: swarm.swarmApiKey || "",
+        swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.poolName || "",
         environmentVariables,
         services: typeof swarm.services === 'string' ? JSON.parse(swarm.services) : (swarm.services || []),
@@ -175,7 +175,7 @@ export async function PUT(
       repositoryDescription: settings.description,
       repositoryUrl: settings.repositoryUrl,
       swarmUrl: settings.swarmUrl,
-      swarmApiKey: settings.swarmApiKey,
+      swarmSecretAlias: settings.swarmSecretAlias,
       poolName: settings.poolName,
       services: settings.services,
     });

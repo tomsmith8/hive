@@ -48,10 +48,16 @@ export async function POST(request: NextRequest) {
     ) {
       const details = statsResult.data as { data?: { x_api_key?: string } };
       const xApiKey = details.data?.x_api_key;
+      const swarm_id = (swarm as { swarmId?: string; id: string }).swarmId || swarm.id;
+      // Extract the numeric part from swarm_id using regex
+      const match = typeof swarm_id === 'string' ? swarm_id.match(/(\d+)/) : null;
+      const swarm_id_num = match ? match[1] : swarm_id;
+      const swarmSecretAlias = `{{SWARM_${swarm_id_num}_API_KEY}}`;
       await saveOrUpdateSwarm({
         workspaceId: swarm.workspaceId,
         status: SwarmStatus.ACTIVE,
         swarmApiKey: xApiKey,
+        swarmSecretAlias,
       });
       return NextResponse.json({
         success: true,

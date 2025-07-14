@@ -35,7 +35,7 @@ export interface SwarmSelectResult {
   repositoryName: string;
   repositoryDescription: string;
   repositoryUrl: string;
-  swarmApiKey: string;
+  swarmSecretAlias: string;
   poolName: string;
   services: ServiceConfig[] | string; // string if not parsed yet
 }

@@ -27,6 +27,7 @@ interface SaveOrUpdateSwarmParams {
   poolName?: string;
   services?: ServiceConfig[]; // Use ServiceConfig[]
   swarmId?: string;
+  swarmSecretAlias?: string;
 }
 
 export const select = {
@@ -61,6 +62,7 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   if (params.swarmApiKey !== undefined) data.swarmApiKey = params.swarmApiKey;
   if (params.poolName !== undefined) data.poolName = params.poolName;
   if (params.swarmId !== undefined) data.swarmId = params.swarmId;
+  if (params.swarmSecretAlias !== undefined) data.swarmSecretAlias = params.swarmSecretAlias;
   if (params.services !== undefined) {
     console.log("[saveOrUpdateSwarm] Saving services:", params.services);
     data.services = params.services;
@@ -83,7 +85,8 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
         repositoryUrl: params.repositoryUrl || '',
         swarmApiKey: params.swarmApiKey || '',
         poolName: params.poolName || '',
-      services: params.services ? params.services : [],
+        services: params.services ? params.services : [],
+        swarmSecretAlias: params.swarmSecretAlias || ''
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
     console.log("[saveOrUpdateSwarm] Create data:", createData);
