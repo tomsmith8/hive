@@ -18,6 +18,7 @@ import { ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ServicesForm from "@/components/stakgraph/forms/ServicesForm";
 import { ServicesData } from "@/components/stakgraph/types";
+import ReviewPoolEnvironmentStep from "@/components/wizard/ReviewPoolEnvironmentStep";
 
 function IngestCodeStep({ status, onStart, onContinue, onBack }: { status: 'idle' | 'pending' | 'complete'; onStart: () => void; onContinue: () => void; onBack: () => void }) {
   const isPending = status === 'pending';
@@ -187,7 +188,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleNext = () => {
-    if (step < 8) {
+    if (step < 9) {
       setStep((step + 1) as WizardStep);
     }
   };
@@ -292,6 +293,13 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
         );
       case 8:
         return (
+          <ReviewPoolEnvironmentStep
+            onConfirm={handleNext}
+            onBack={handleBack}
+          />
+        );
+      case 9:
+        return (
           <StakworkSetupStep
             workspaceName={projectName}
             onFinish={handleNext}
@@ -305,7 +313,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
 
   return (
     <div className="space-y-6">
-      <WizardProgress currentStep={step} totalSteps={8} />
+      <WizardProgress currentStep={step} totalSteps={9} />
       {renderCurrentStep()}
     </div>
   );
