@@ -18,6 +18,7 @@ const stakgraphSettingsSchema = z.object({
   swarmUrl: z.string().url("Invalid swarm URL"),
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   poolName: z.string().min(1, "Pool name is required"),
+  poolApiKey: z.string().min(1, "Pool API Key is required"),
   environmentVariables: z.array(z.object({
     key: z.string(),
     value: z.string()
@@ -101,6 +102,7 @@ export async function GET(
         swarmUrl: swarm.swarmUrl || "",
         swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.poolName || "",
+        poolApiKey: swarm.poolApiKey || "",
         environmentVariables,
         services: typeof swarm.services === 'string' ? JSON.parse(swarm.services) : (swarm.services || []),
         status: swarm.status,
@@ -177,6 +179,7 @@ export async function PUT(
       swarmUrl: settings.swarmUrl,
       swarmSecretAlias: settings.swarmSecretAlias,
       poolName: settings.poolName,
+      poolApiKey: settings.poolApiKey,
       services: settings.services,
     });
 
@@ -194,7 +197,7 @@ export async function PUT(
       }
     }
 
-    const typedSwarm = swarm as SwarmSelectResult;
+    const typedSwarm = swarm as SwarmSelectResult & { poolApiKey?: string };
     return NextResponse.json({
       success: true,
       message: "Stakgraph settings saved successfully",
@@ -205,6 +208,8 @@ export async function PUT(
         repositoryUrl: typedSwarm.repositoryUrl,
         swarmUrl: typedSwarm.swarmUrl,
         poolName: typedSwarm.poolName,
+        poolApiKey: typedSwarm.poolApiKey || "",
+        swarmSecretAlias: typedSwarm.swarmSecretAlias || "",
         services: typeof typedSwarm.services === 'string' ? JSON.parse(typedSwarm.services) : (typedSwarm.services || []),
         status: typedSwarm.status,
         updatedAt: typedSwarm.updatedAt

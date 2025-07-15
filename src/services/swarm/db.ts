@@ -25,6 +25,7 @@ interface SaveOrUpdateSwarmParams {
   repositoryUrl?: string;
   swarmApiKey?: string;
   poolName?: string;
+  poolApiKey?: string; // NEW FIELD
   services?: ServiceConfig[]; // Use ServiceConfig[]
   swarmId?: string;
   swarmSecretAlias?: string;
@@ -44,7 +45,9 @@ export const select = {
   repositoryUrl: true,
   swarmApiKey: true,
   poolName: true,
+  poolApiKey: true, // NEW FIELD
   services: true,
+  swarmSecretAlias: true,
 };
 
 export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
@@ -61,6 +64,7 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   if (params.repositoryUrl !== undefined) data.repositoryUrl = params.repositoryUrl;
   if (params.swarmApiKey !== undefined) data.swarmApiKey = params.swarmApiKey;
   if (params.poolName !== undefined) data.poolName = params.poolName;
+  if (params.poolApiKey !== undefined) data.poolApiKey = params.poolApiKey;
   if (params.swarmId !== undefined) data.swarmId = params.swarmId;
   if (params.swarmSecretAlias !== undefined) data.swarmSecretAlias = params.swarmSecretAlias;
   if (params.services !== undefined) {
@@ -85,6 +89,7 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
         repositoryUrl: params.repositoryUrl || '',
         swarmApiKey: params.swarmApiKey || '',
         poolName: params.poolName || '',
+        poolApiKey: params.poolApiKey || '', // NEW FIELD
         services: params.services ? params.services : [],
         swarmSecretAlias: params.swarmSecretAlias || ''
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

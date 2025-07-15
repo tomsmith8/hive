@@ -32,6 +32,7 @@ export default function StakgraphPage() {
     swarmUrl: "",
     swarmSecretAlias: "",
     poolName: "",
+    poolApiKey: "",
     environmentVariables: [],
     services: [],
   });
@@ -78,7 +79,10 @@ export default function StakgraphPage() {
     if (data.swarmSecretAlias !== undefined && errors.swarmSecretAlias) {
       setErrors(prev => ({ ...prev, swarmSecretAlias: "" }));
     }
-  }, [errors.swarmUrl, errors.swarmSecretAlias]);
+    if (data.poolApiKey !== undefined && errors.poolApiKey) {
+      setErrors(prev => ({ ...prev, poolApiKey: "" }));
+    }
+  }, [errors.swarmUrl, errors.swarmSecretAlias, errors.poolApiKey]);
 
   const handleEnvironmentChange = useCallback((data: Partial<EnvironmentData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -87,7 +91,10 @@ export default function StakgraphPage() {
     if (data.poolName !== undefined && errors.poolName) {
       setErrors(prev => ({ ...prev, poolName: "" }));
     }
-  }, [errors.poolName]);
+    if (data.poolApiKey !== undefined && errors.poolApiKey) {
+      setErrors(prev => ({ ...prev, poolApiKey: "" }));
+    }
+  }, [errors.poolName, errors.poolApiKey]);
 
   const handleServicesChange = useCallback((data: Partial<ServicesData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -119,6 +126,7 @@ export default function StakgraphPage() {
               swarmUrl: settings.swarmUrl || "",
               swarmSecretAlias: settings.swarmSecretAlias || "",
               poolName: settings.poolName || "",
+              poolApiKey: settings.poolApiKey || "",
               environmentVariables: settings.environmentVariables || [],
               services: settings.services || [],
               status: settings.status,
@@ -194,6 +202,9 @@ export default function StakgraphPage() {
     if (!formData.poolName.trim()) {
       newErrors.poolName = "Pool Name is required";
     }
+    if (!formData.poolApiKey.trim()) {
+      newErrors.poolApiKey = "Pool API Key is required";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -210,6 +221,7 @@ export default function StakgraphPage() {
         swarmUrl: formData.swarmUrl.trim(),
         swarmSecretAlias: formData.swarmSecretAlias.trim(),
         poolName: formData.poolName.trim(),
+        poolApiKey: formData.poolApiKey.trim(),
         environmentVariables: envVars.map(env => ({
           key: env.key,
           value: env.value
@@ -392,14 +404,14 @@ export default function StakgraphPage() {
               />
 
               <SwarmForm
-                data={{ swarmUrl: formData.swarmUrl, swarmSecretAlias: formData.swarmSecretAlias }}
+                data={{ swarmUrl: formData.swarmUrl, swarmSecretAlias: formData.swarmSecretAlias, poolApiKey: formData.poolApiKey }}
                 errors={errors}
                 loading={loading}
                 onChange={handleSwarmChange}
               />
 
               <EnvironmentForm
-                data={{ poolName: formData.poolName, environmentVariables: formData.environmentVariables }}
+                data={{ poolName: formData.poolName, poolApiKey: formData.poolApiKey, environmentVariables: formData.environmentVariables }}
                 errors={errors}
                 loading={loading}
                 onChange={handleEnvironmentChange}

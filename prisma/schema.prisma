@@ -194,10 +194,11 @@ model Swarm {
   repositoryName        String? @map("repository_name")
   repositoryDescription String? @map("repository_description")
   repositoryUrl         String? @map("repository_url")
-  swarmApiKey          String? @map("swarm_api_key")
-  swarmSecretAlias     String? @map("swarm_secret_alias") // e.g., {{SWARM_{regex_swarm_id_number}_API_KEY}}
-  environmentVariables Json    @default("[]") @map("environment_variables")
-  services             Json    @default("[]") @map("services")
+  swarmApiKey           String? @map("swarm_api_key")
+  swarmSecretAlias      String? @map("swarm_secret_alias") // e.g., {{SWARM_{regex_swarm_id_number}_API_KEY}}
+  poolApiKey            String? @map("pool_api_key") // NEW: Pool API Key for Pool Manager
+  environmentVariables  Json    @default("[]") @map("environment_variables")
+  services              Json    @default("[]") @map("services")
   
   // One-to-one relationship with workspace
   workspaceId String @unique @map("workspace_id")

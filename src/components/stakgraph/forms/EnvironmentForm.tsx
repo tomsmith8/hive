@@ -67,6 +67,26 @@ export default function EnvironmentForm({
         </p>
       </div>
 
+      {/* NEW: Pool API Key field */}
+      <div className="space-y-2">
+        <Label htmlFor="poolApiKey">Pool API Key</Label>
+        <Input
+          id="poolApiKey"
+          type="text"
+          placeholder="Enter your Pool API Key"
+          value={data.poolApiKey}
+          onChange={(e) => onChange({ poolApiKey: e.target.value })}
+          className={errors.poolApiKey ? "border-destructive" : ""}
+          disabled={loading}
+        />
+        {errors.poolApiKey && (
+          <p className="text-sm text-destructive">{errors.poolApiKey}</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Your API key for authenticating with the Pool Manager
+        </p>
+      </div>
+
       <div className="space-y-3">
         <h4 className="text-md font-medium">Environment Variables</h4>
         <p className="text-xs text-muted-foreground">
