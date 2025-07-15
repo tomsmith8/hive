@@ -1,13 +1,11 @@
 import { config } from '@/lib/env';
-import { getPoolManagerApiKey } from './auth';
 
-export async function fetchPoolEnvVars(poolName: string): Promise<Array<{ key: string; value: string }>> {
-  const token = await getPoolManagerApiKey();
+export async function fetchPoolEnvVars(poolName: string, poolApiKey: string): Promise<Array<{ key: string; value: string }>> {
   const url = `${config.POOL_MANAGER_BASE_URL}/pools/${encodeURIComponent(poolName)}`;
   const response = await fetch(url, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${poolApiKey}`,
       'Content-Type': 'application/json',
     },
   });
@@ -26,10 +24,10 @@ export async function fetchPoolEnvVars(poolName: string): Promise<Array<{ key: s
 
 export async function updatePoolEnvVarsApi(
   poolName: string,
+  poolApiKey: string,
   envVars: Array<{ key: string; value: string }>,
   currentEnvVars: Array<{ key: string; value: string; masked?: boolean }>
 ): Promise<unknown> {
-  const token = await getPoolManagerApiKey();
   const url = `${config.POOL_MANAGER_BASE_URL}/pools/${encodeURIComponent(poolName)}`;
   const currentMap = new Map(currentEnvVars.map(env => [env.key, env.value]));
   const envVarsForApi = envVars.map(({ key, value }) => {
@@ -46,7 +44,7 @@ export async function updatePoolEnvVarsApi(
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${poolApiKey}`,
       'Content-Type': 'application/json',
     },
     body,

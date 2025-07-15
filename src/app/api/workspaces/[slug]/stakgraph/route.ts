@@ -80,12 +80,12 @@ export async function GET(
       );
     }
 
-    // Fetch environment variables from Pool Manager using poolName
+    // Fetch environment variables from Pool Manager using poolName and poolApiKey
     let environmentVariables: Array<{ key: string; value: string }> = [];
-    if (swarm.poolName) {
+    if (swarm.poolName && swarm.poolApiKey) {
       try {
         const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
-        environmentVariables = await poolManager.getPoolEnvVars(swarm.poolName);
+        environmentVariables = await poolManager.getPoolEnvVars(swarm.poolName, swarm.poolApiKey);
       } catch (err) {
         console.error('Failed to fetch env vars from Pool Manager:', err);
         // Optionally, you can return an error or fallback to empty array
@@ -183,14 +183,14 @@ export async function PUT(
       services: settings.services,
     });
 
-    // After updating/creating the swarm, update environment variables in Pool Manager if poolName and environmentVariables are present
-    if (settings.poolName && Array.isArray(settings.environmentVariables)) {
+    // After updating/creating the swarm, update environment variables in Pool Manager if poolName, poolApiKey, and environmentVariables are present
+    if (settings.poolName && settings.poolApiKey && Array.isArray(settings.environmentVariables)) {
       try {
         const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
         // Fetch current env vars from Pool Manager
-        const currentEnvVars = await poolManager.getPoolEnvVars(settings.poolName);
+        const currentEnvVars = await poolManager.getPoolEnvVars(settings.poolName, settings.poolApiKey);
         // Always send all vars, with correct masked/changed status
-        await poolManager.updatePoolEnvVars(settings.poolName, settings.environmentVariables, currentEnvVars);
+        await poolManager.updatePoolEnvVars(settings.poolName, settings.poolApiKey, settings.environmentVariables, currentEnvVars);
       } catch (err) {
         console.error('Failed to update env vars in Pool Manager:', err);
         // Optionally, return error or continue

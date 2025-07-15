@@ -1,7 +1,6 @@
 import { BaseServiceClass } from '@/lib/base-service';
 import { ServiceConfig } from '@/types';
 import { CreatePoolRequest, Pool } from '@/types';
-import { getPoolManagerApiKey } from './api/auth';
 import { fetchPoolEnvVars, updatePoolEnvVarsApi } from '@/services/pool-manager/api/envVars';
 import { createPoolApi } from '@/services/pool-manager/api/pool';
 
@@ -16,19 +15,16 @@ export class PoolManagerService extends BaseServiceClass {
     return createPoolApi(this.getClient(), pool, this.serviceName);
   }
 
-  async getPoolManagerApiKey(): Promise<string> {
-    return getPoolManagerApiKey();
-  }
-
-  async getPoolEnvVars(poolName: string): Promise<Array<{ key: string; value: string }>> {
-    return fetchPoolEnvVars(poolName);
+  async getPoolEnvVars(poolName: string, poolApiKey: string) {
+    return fetchPoolEnvVars(poolName, poolApiKey);
   }
 
   async updatePoolEnvVars(
     poolName: string,
+    poolApiKey: string,
     envVars: Array<{ key: string; value: string }>,
     currentEnvVars: Array<{ key: string; value: string; masked?: boolean }>
-  ): Promise<unknown> {
-    return updatePoolEnvVarsApi(poolName, envVars, currentEnvVars);
+  ) {
+    return updatePoolEnvVarsApi(poolName, poolApiKey, envVars, currentEnvVars);
   }
 } 
