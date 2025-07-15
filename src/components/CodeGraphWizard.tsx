@@ -294,6 +294,9 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       case 8:
         return (
           <ReviewPoolEnvironmentStep
+            projectName={projectName}
+            servicesData={servicesData}
+            envVars={envVars}
             onConfirm={handleNext}
             onBack={handleBack}
           />
