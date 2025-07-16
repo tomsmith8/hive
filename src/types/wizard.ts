@@ -46,11 +46,24 @@ export interface WizardState {
 
 export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
+// Canonical wizard step keys for backend/frontend sync
+export type WizardStepKey =
+  | 'WELCOME'
+  | 'REPOSITORY_SELECT'
+  | 'PROJECT_NAME'
+  | 'GRAPH_INFRASTRUCTURE'
+  | 'INGEST_CODE'
+  | 'ADD_SERVICES'
+  | 'ENVIRONMENT_SETUP'
+  | 'REVIEW_POOL_ENVIRONMENT'
+  | 'STAKWORK_SETUP';
+
 // API Response Types
 export interface WizardStateResponse {
   success: boolean;
   data: {
     wizardStep: string;
+    stepStatus: string;
     wizardData: Record<string, unknown>;
     swarmId?: string;
     swarmStatus?: string;

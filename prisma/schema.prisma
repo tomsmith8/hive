@@ -201,7 +201,7 @@ model Swarm {
   services              Json    @default("[]") @map("services")
 
   // Wizard progress tracking
-  wizardStep   SwarmWizardStep @default(DOMAIN_SETUP)
+  wizardStep   SwarmWizardStep @default(WELCOME)
   stepStatus   StepStatus      @default(PENDING)
   wizardData   Json     @default("{}")
   
@@ -595,11 +595,15 @@ enum CommentEntity {
 }
 
 enum SwarmWizardStep {
-  DOMAIN_SETUP
+  WELCOME
   REPOSITORY_SELECT
-  SWARM_CONFIG
-  DEPLOYMENT
-  COMPLETED
+  PROJECT_NAME
+  GRAPH_INFRASTRUCTURE
+  INGEST_CODE
+  ADD_SERVICES
+  ENVIRONMENT_SETUP
+  REVIEW_POOL_ENVIRONMENT
+  STAKWORK_SETUP
 }
 
 enum StepStatus {

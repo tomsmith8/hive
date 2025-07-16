@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth/nextauth';
 import { db } from '@/lib/db';
 import { validateUserWorkspaceAccess } from '@/lib/auth/workspace-resolver';
 import { WizardStateResponse, WizardStateError } from '@/types/wizard';
-import { SwarmStatus, SwarmWizardStep } from '@prisma/client';
+import { SwarmStatus, SwarmWizardStep, StepStatus } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
         swarmId: true,
         status: true,
         wizardStep: true,
+        stepStatus: true,
         wizardData: true,
       },
     });
@@ -80,7 +81,8 @@ export async function GET(request: NextRequest) {
           workspaceId: workspace.id,
           name: `${workspace.slug}-swarm`,
           status: SwarmStatus.PENDING,
-          wizardStep: SwarmWizardStep.WELCOME,
+          wizardStep: 'WELCOME' as SwarmWizardStep,
+          stepStatus: 'PENDING' as StepStatus,
           wizardData: {},
           environmentVariables: [],
           services: [],
@@ -90,6 +92,7 @@ export async function GET(request: NextRequest) {
           swarmId: true,
           status: true,
           wizardStep: true,
+          stepStatus: true,
           wizardData: true,
         },
       });
@@ -113,6 +116,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         wizardStep: swarm.wizardStep,
+        stepStatus: swarm.stepStatus || ('PENDING' as StepStatus),
         wizardData,
         swarmId: swarm.swarmId || undefined,
         swarmStatus: swarm.status,
