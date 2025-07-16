@@ -43,6 +43,7 @@ interface WizardStepRendererProps {
   onNext: () => void;
   onBack: () => void;
   onStepChange: (step: WizardStep) => void;
+  stepStatus?: string;
 }
 
 function IngestCodeStep({ 
@@ -175,7 +176,8 @@ export function WizardStepRenderer({
   onRemoveEnv,
   onNext,
   onBack,
-  onStepChange
+  onStepChange,
+  stepStatus,
 }: WizardStepRendererProps) {
   
   const handleBackToStep = (targetStep: WizardStep) => {
