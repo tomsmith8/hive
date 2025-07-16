@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useWizardState } from "@/hooks/useWizardState";
+import { useWizardFlow } from "@/hooks/useWizardFlow";
 import { useRepositories } from "@/hooks/useRepositories";
 import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
 import { WizardStep, Repository } from "@/types/wizard";
@@ -28,27 +28,27 @@ export default function CodeGraphPage() {
     github: (session?.user as { github?: { username?: string; publicRepos?: number; followers?: number } })?.github,
   };
 
-  // Wizard state management
+  // Wizard flow management
   const { 
-    wizardStep, 
-    stepStatus, 
-    wizardData, 
     loading: wizardLoading,
     error: wizardError,
+    hasSwarm,
+    swarmId,
+    swarmStatus: _swarmStatus,
+    wizardStep, 
+    stepStatus, 
+    wizardData,
+    localState,
+    updateLocalState,
+    resetLocalState,
+    createSwarm,
     updateWizardProgress,
     refresh: refreshWizardState
-  } = useWizardState({ workspaceSlug: workspace?.slug || '' });
-  
-  // Local component state
-  const [step, setStep] = useState<WizardStep>(1);
-  const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [projectName, setProjectName] = useState("");
-  const [repoName, setRepoName] = useState("");
+  } = useWizardFlow({ workspaceSlug: workspace?.slug || '' });
+
+  // Additional local state for swarm operations
   const [ingestStepStatus, setIngestStepStatus] = useState<'idle' | 'pending' | 'complete'>('idle');
-  const [servicesData, setServicesData] = useState<ServicesData>({ services: [] });
-  const [swarmId, setSwarmId] = useState<string | null>(null);
-  const [swarmStatus, setSwarmStatus] = useState<'idle' | 'pending' | 'active' | 'error'>('idle');
+  const [swarmCreationStatus, setSwarmCreationStatus] = useState<'idle' | 'pending' | 'active' | 'error'>('idle');
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // External data hooks
@@ -85,49 +85,69 @@ export default function CodeGraphPage() {
     9: 'STAKWORK_SETUP',
   }), []);
 
-  // Sync wizard state with local state
-  useEffect(() => {
-    if (wizardStep && stepMapping[wizardStep as keyof typeof stepMapping]) {
-      setStep(stepMapping[wizardStep as keyof typeof stepMapping]);
+  // Determine current step based on swarm state or local state
+  const currentStep = useMemo(() => {
+    if (hasSwarm && wizardStep && stepMapping[wizardStep as keyof typeof stepMapping]) {
+      return stepMapping[wizardStep as keyof typeof stepMapping];
     }
-    if (wizardData) {
+    return localState.step;
+  }, [hasSwarm, wizardStep, stepMapping, localState.step]);
+
+  // Sync wizard data with local state when swarm exists
+  useEffect(() => {
+    if (hasSwarm && wizardData) {
+      const updates: Partial<typeof localState> = {};
+      
       if (wizardData.selectedRepo) {
-        setSelectedRepo(wizardData.selectedRepo as Repository);
+        updates.selectedRepo = wizardData.selectedRepo as Repository;
       }
       if (wizardData.projectName) {
-        setProjectName(wizardData.projectName as string);
+        updates.projectName = wizardData.projectName as string;
       }
       if (wizardData.repoName) {
-        setRepoName(wizardData.repoName as string);
+        updates.repoName = wizardData.repoName as string;
       }
       if (wizardData.servicesData) {
-        setServicesData(wizardData.servicesData as ServicesData);
+        updates.servicesData = wizardData.servicesData as ServicesData;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        updateLocalState(updates);
       }
     }
-  }, [wizardStep, wizardData, stepMapping]);
+  }, [hasSwarm, wizardData, updateLocalState]);
+
+  // Reset local state on page load if no swarm exists
+  useEffect(() => {
+    if (!wizardLoading && !hasSwarm) {
+      resetLocalState();
+    }
+  }, [wizardLoading, hasSwarm, resetLocalState]);
   
   // Parse repository name using regex when selected
   useEffect(() => {
-    if (selectedRepo) {
-      const parsed = parseRepositoryName(selectedRepo.name);
-      setProjectName(parsed);
-      setRepoName(selectedRepo.name);
+    if (localState.selectedRepo) {
+      const parsed = parseRepositoryName(localState.selectedRepo.name);
+      updateLocalState({
+        projectName: parsed,
+        repoName: localState.selectedRepo.name,
+      });
     }
-  }, [selectedRepo]);
+  }, [localState.selectedRepo, updateLocalState]);
 
   // Swarm polling effect
   useEffect(() => {
-    if (swarmId && swarmStatus === 'pending') {
+    if (swarmId && swarmCreationStatus === 'pending') {
       pollIntervalRef.current = setInterval(async () => {
         try {
           const res = await fetch(`/api/swarm/poll?id=${swarmId}`);
           const data = await res.json();
           if (data.status === 'ACTIVE') {
-            setSwarmStatus('active');
+            setSwarmCreationStatus('active');
             if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
           }
         } catch {
-          setSwarmStatus('error');
+          setSwarmCreationStatus('error');
           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
         }
       }, 3000);
@@ -138,125 +158,157 @@ export default function CodeGraphPage() {
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
-  }, [swarmId, swarmStatus]);
+  }, [swarmId, swarmCreationStatus]);
 
   // Navigation handlers
   const handleNext = useCallback(async () => {
-    if (step < 9) {
-      const newStep = (step + 1) as WizardStep;
-      const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
+    if (currentStep < 9) {
+      const newStep = (currentStep + 1) as WizardStep;
       
-      try {
-        await updateWizardProgress({
-          wizardStep: newWizardStep,
-          stepStatus: 'PENDING',
-          wizardData: {
-            selectedRepo,
-            projectName,
-            repoName,
-            servicesData,
-            step: newStep,
-          }
-        });
-        setStep(newStep);
-      } catch (error) {
-        console.error('Failed to update wizard progress:', error);
+      if (hasSwarm) {
+        // Update persisted state
+        const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
+        try {
+          await updateWizardProgress({
+            wizardStep: newWizardStep,
+            stepStatus: 'PENDING',
+            wizardData: {
+              selectedRepo: localState.selectedRepo,
+              projectName: localState.projectName,
+              repoName: localState.repoName,
+              servicesData: localState.servicesData,
+              step: newStep,
+            }
+          });
+        } catch (error) {
+          console.error('Failed to update wizard progress:', error);
+        }
+      } else {
+        // Update local state only
+        updateLocalState({ step: newStep });
       }
     }
-  }, [step, updateWizardProgress, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
+  }, [currentStep, hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
 
   const handleBack = useCallback(async () => {
-    if (step > 1) {
-      const newStep = (step - 1) as WizardStep;
-      const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
+    if (currentStep > 1) {
+      const newStep = (currentStep - 1) as WizardStep;
       
+      if (hasSwarm) {
+        // Update persisted state
+        const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
+        try {
+          await updateWizardProgress({
+            wizardStep: newWizardStep,
+            stepStatus: 'PENDING',
+            wizardData: {
+              selectedRepo: localState.selectedRepo,
+              projectName: localState.projectName,
+              repoName: localState.repoName,
+              servicesData: localState.servicesData,
+              step: newStep,
+            }
+          });
+        } catch (error) {
+          console.error('Failed to update wizard progress:', error);
+        }
+      } else {
+        // Update local state only
+        updateLocalState({ step: newStep });
+      }
+    }
+  }, [currentStep, hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
+
+  const handleStepChange = useCallback(async (newStep: WizardStep) => {
+    if (hasSwarm) {
+      // Update persisted state
+      const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
       try {
         await updateWizardProgress({
           wizardStep: newWizardStep,
           stepStatus: 'PENDING',
           wizardData: {
-            selectedRepo,
-            projectName,
-            repoName,
-            servicesData,
+            selectedRepo: localState.selectedRepo,
+            projectName: localState.projectName,
+            repoName: localState.repoName,
+            servicesData: localState.servicesData,
             step: newStep,
           }
         });
-        setStep(newStep);
       } catch (error) {
         console.error('Failed to update wizard progress:', error);
       }
+    } else {
+      // Update local state only
+      updateLocalState({ step: newStep });
     }
-  }, [step, updateWizardProgress, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
-
-  const handleStepChange = useCallback(async (newStep: WizardStep) => {
-    const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
-    
-    try {
-      await updateWizardProgress({
-        wizardStep: newWizardStep,
-        stepStatus: 'PENDING',
-        wizardData: {
-          selectedRepo,
-          projectName,
-          repoName,
-          servicesData,
-          step: newStep,
-        }
-      });
-      setStep(newStep);
-      
-      if (newStep === 4) {
-        setSwarmId(null);
-        setSwarmStatus('idle');
-      }
-    } catch (error) {
-      console.error('Failed to update wizard progress:', error);
-    }
-  }, [updateWizardProgress, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
+  }, [hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
   
   const handleStatusChange = useCallback(async (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => {
-    try {
-      await updateWizardProgress({
-        stepStatus: status,
-        wizardData: {
-          selectedRepo,
-          projectName,
-          repoName,
-          servicesData,
-          step,
-        }
-      });
-    } catch (error) {
-      console.error('Failed to update step status:', error);
+    if (hasSwarm) {
+      try {
+        await updateWizardProgress({
+          stepStatus: status,
+          wizardData: {
+            selectedRepo: localState.selectedRepo,
+            projectName: localState.projectName,
+            repoName: localState.repoName,
+            servicesData: localState.servicesData,
+            step: currentStep,
+          }
+        });
+      } catch (error) {
+        console.error('Failed to update step status:', error);
+      }
     }
-  }, [updateWizardProgress, selectedRepo, projectName, repoName, servicesData, step]);
+    // For local state, status changes are not persisted
+  }, [hasSwarm, updateWizardProgress, localState, currentStep]);
 
-  // Swarm handlers
+  // Swarm creation handler - this is the trigger point for persistence
   const handleCreateSwarm = async () => {
-    setSwarmStatus('pending');
+    setSwarmCreationStatus('pending');
     try {
+      const swarmData = {
+        selectedRepo: localState.selectedRepo,
+        projectName: localState.projectName,
+        repoName: localState.repoName,
+        servicesData: localState.servicesData,
+        envVars: envVars,
+        step: currentStep,
+      };
+
+      await createSwarm(swarmData);
+      
+      // Call the actual swarm creation API
       const res = await fetch('/api/swarm', { method: 'POST' });
       const data = await res.json();
       if (data.success && data.data?.id) {
-        setSwarmId(data.data.id);
+        setSwarmCreationStatus('active');
       } else {
-        setSwarmStatus('error');
+        setSwarmCreationStatus('error');
       }
-    } catch {
-      setSwarmStatus('error');
+    } catch (error) {
+      console.error('Failed to create swarm:', error);
+      setSwarmCreationStatus('error');
     }
   };
 
   const handleSwarmContinue = () => {
-    setStep(5);
-    setSwarmId(null);
-    setSwarmStatus('idle');
+    updateLocalState({ step: 5 });
+    setSwarmCreationStatus('idle');
   };
 
   // Other handlers
   const handleRepoSelect = (repo: Repository) => {
-    setSelectedRepo(repo);
+    updateLocalState({ selectedRepo: repo });
+  };
+
+  const handleProjectNameChange = (name: string) => {
+    updateLocalState({ projectName: name });
+  };
+
+  const handleSearchChange = (term: string) => {
+    updateLocalState({ searchTerm: term });
   };
 
   const handleIngestStart = () => {
@@ -269,7 +321,8 @@ export default function CodeGraphPage() {
   };
 
   const handleServicesChange = (data: Partial<ServicesData>) => {
-    setServicesData(prev => ({ ...prev, ...data, services: data.services ?? prev.services }));
+    const newServicesData = { ...localState.servicesData, ...data, services: data.services ?? localState.servicesData.services };
+    updateLocalState({ servicesData: newServicesData });
   };
 
   // Helper function to get step status icon
@@ -332,7 +385,7 @@ export default function CodeGraphPage() {
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
             </div>
             <CardTitle>Loading Wizard</CardTitle>
-            <CardDescription>Fetching your wizard progress...</CardDescription>
+            <CardDescription>Checking your wizard progress...</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -362,6 +415,9 @@ export default function CodeGraphPage() {
     );
   }
 
+  // Get current step status for display
+  const currentStepStatus = hasSwarm ? stepStatus : undefined;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation/Breadcrumb Header */}
@@ -372,14 +428,14 @@ export default function CodeGraphPage() {
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-bold text-foreground">Code Graph Setup</h1>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">Step {step} of 9:</span>
-                  <span className="text-sm font-medium">{getStepName(step)}</span>
+                  <span className="text-sm text-muted-foreground">Step {currentStep} of 9:</span>
+                  <span className="text-sm font-medium">{getStepName(currentStep)}</span>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <Badge variant="outline" className={`${getStepStatusColor(stepStatus)} border`}>
-                  {getStepStatusIcon(stepStatus)}
-                  <span className="ml-2 capitalize">{stepStatus?.toLowerCase() || 'Ready'}</span>
+                <Badge variant="outline" className={`${getStepStatusColor(currentStepStatus)} border`}>
+                  {getStepStatusIcon(currentStepStatus)}
+                  <span className="ml-2 capitalize">{currentStepStatus?.toLowerCase() || (hasSwarm ? 'Saved' : 'Local')}</span>
                 </Badge>
                 {workspace && (
                   <Badge variant="secondary">
@@ -396,24 +452,24 @@ export default function CodeGraphPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
           {/* Progress Indicator */}
-          <WizardProgress currentStep={step} totalSteps={9} stepStatus={stepStatus} />
+          <WizardProgress currentStep={currentStep} totalSteps={9} stepStatus={currentStepStatus} />
 
           {/* Step Renderer */}
           <WizardStepRenderer
-            step={step}
+            step={currentStep}
             repositories={repositories}
-            selectedRepo={selectedRepo}
-            searchTerm={searchTerm}
+            selectedRepo={localState.selectedRepo}
+            searchTerm={localState.searchTerm}
             loading={repositoriesLoading}
-            projectName={projectName}
-            repoName={repoName}
+            projectName={localState.projectName}
+            repoName={localState.repoName}
             ingestStepStatus={ingestStepStatus}
-            servicesData={servicesData}
-            swarmStatus={swarmStatus}
-            envVars={envVars}
-            onSearchChange={setSearchTerm}
+            servicesData={localState.servicesData}
+            swarmStatus={swarmCreationStatus}
+            envVars={localState.envVars}
+            onSearchChange={handleSearchChange}
             onRepoSelect={handleRepoSelect}
-            onProjectNameChange={setProjectName}
+            onProjectNameChange={handleProjectNameChange}
             onIngestStart={handleIngestStart}
             onIngestContinue={handleIngestContinue}
             onCreateSwarm={handleCreateSwarm}
@@ -425,7 +481,7 @@ export default function CodeGraphPage() {
             onNext={handleNext}
             onBack={handleBack}
             onStepChange={handleStepChange}
-            stepStatus={stepStatus as 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED'}
+            stepStatus={currentStepStatus as 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED'}
             onStatusChange={handleStatusChange}
           />
         </div>

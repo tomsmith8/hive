@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface GraphInfrastructureStepProps {
   graphDomain: string;
   status: "idle" | "pending" | "complete";
-  onCreate: () => void;
+  onCreate: () => Promise<void>;
   onComplete: () => void;
   onBack: () => void;
   stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
@@ -28,9 +28,15 @@ export function GraphInfrastructureStep({
   const isPending = status === "pending";
   const isComplete = status === "complete";
   
-  const handleCreate = () => {
+  const handleCreate = async () => {
     onStatusChange?.('PROCESSING');
-    onCreate();
+    try {
+      await onCreate();
+      onStatusChange?.('COMPLETED');
+    } catch (error) {
+      onStatusChange?.('FAILED');
+      throw error;
+    }
   };
   
   const handleComplete = () => {

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth/nextauth';
 import { db } from '@/lib/db';
 import { validateUserWorkspaceAccess } from '@/lib/auth/workspace-resolver';
 import { WizardStateResponse, WizardStateError } from '@/types/wizard';
-import { SwarmStatus, SwarmWizardStep, StepStatus } from '@prisma/client';
+import { StepStatus } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
       } as WizardStateError, { status: 404 });
     }
 
-    // Get or create swarm for this workspace
-    let swarm = await db.swarm.findFirst({
+    // Get swarm for this workspace
+    const swarm = await db.swarm.findFirst({
       where: {
         workspaceId: workspace.id,
       },
@@ -74,28 +74,12 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // If no swarm exists, create a new one with default values
+    // If no swarm exists, return empty response
     if (!swarm) {
-      swarm = await db.swarm.create({
-        data: {
-          workspaceId: workspace.id,
-          name: `${workspace.slug}`,
-          status: SwarmStatus.PENDING,
-          wizardStep: 'WELCOME' as SwarmWizardStep,
-          stepStatus: 'PENDING' as StepStatus,
-          wizardData: {},
-          environmentVariables: [],
-          services: [],
-        },
-        select: {
-          id: true,
-          swarmId: true,
-          status: true,
-          wizardStep: true,
-          stepStatus: true,
-          wizardData: true,
-        },
-      });
+      return NextResponse.json({
+        success: false,
+        message: 'No swarm found for workspace',
+      } as WizardStateError, { status: 404 });
     }
 
     // Parse wizard data if it's a string
