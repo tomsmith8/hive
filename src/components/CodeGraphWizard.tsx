@@ -110,6 +110,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [repoName, setRepoName] = useState("");
   const [ingestStepStatus, setIngestStepStatus] = useState<'idle' | 'pending' | 'complete'>('idle');
   const [servicesData, setServicesData] = useState<ServicesData>({ services: [] });
   const [swarmId, setSwarmId] = useState<string | null>(null);
@@ -130,6 +131,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     if (selectedRepo) {
       const parsed = parseRepositoryName(selectedRepo.name);
       setProjectName(parsed); // Default project name from repo
+      setRepoName(selectedRepo.name);
     }
   }, [selectedRepo]);
 
@@ -294,6 +296,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       case 8:
         return (
           <ReviewPoolEnvironmentStep
+            repoName={repoName}
             projectName={projectName}
             servicesData={servicesData}
             envVars={envVars}

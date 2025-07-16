@@ -41,13 +41,13 @@ const formatContainerEnv = (containerEnv: Record<string, string>) => {
 };
 
 // Helper function to generate PM2 apps from services data
-const generatePM2Apps = (projectName: string, servicesData: ServicesData) => {
+const generatePM2Apps = (repoName: string, servicesData: ServicesData) => {
   if (!servicesData || !servicesData.services || servicesData.services.length === 0) {
     // Return default configuration if no services
     return [{
       name: "default-service",
       script: "npm start",
-      cwd: `/workspaces/${projectName.toLowerCase()}`,
+      cwd: `/workspaces/${repoName}`,
       instances: 1,
       autorestart: true,
       watch: false,
@@ -64,7 +64,7 @@ const generatePM2Apps = (projectName: string, servicesData: ServicesData) => {
   return servicesData.services.map(service => ({
     name: service.name,
     script: service.scripts?.start || "",
-    cwd: `/workspaces/${projectName.toLowerCase()}`,
+    cwd: `/workspaces/${repoName}`,
     instances: 1,
     autorestart: true,
     watch: false,
@@ -102,9 +102,9 @@ ${envEntries}
   return `[\n${formattedApps.join(',\n')}\n  ]`;
 };
 
-const getFiles = (projectName: string, servicesData: ServicesData, envVars: EnvironmentVariable[]) => {
+const getFiles = (repoName: string, projectName: string, servicesData: ServicesData, envVars: EnvironmentVariable[]) => {
   const containerEnv = generateContainerEnv(envVars);
-  const pm2Apps = generatePM2Apps(projectName, servicesData);
+  const pm2Apps = generatePM2Apps(repoName, servicesData);
   
   return [
     {
@@ -221,6 +221,7 @@ const formatBytes = (bytes: number) => {
 };
 
 interface ReviewPoolEnvironmentStepProps {
+  repoName: string;
   projectName: string;
   servicesData: ServicesData;
   envVars: EnvironmentVariable[];
@@ -229,13 +230,14 @@ interface ReviewPoolEnvironmentStepProps {
 }
 
 export default function ReviewPoolEnvironmentStep({ 
+  repoName,
   projectName,
   servicesData,
   envVars,
   onConfirm, 
   onBack 
 }: ReviewPoolEnvironmentStepProps) {
-  const FILES = getFiles(projectName, servicesData, envVars);
+  const FILES = getFiles(repoName, projectName, servicesData, envVars);
   
   const [activeFile, setActiveFile] = useState(FILES[0].name);
   const [fileContents, setFileContents] = useState(
@@ -248,10 +250,10 @@ export default function ReviewPoolEnvironmentStep({
 
   // Update file contents when envVars change
   useEffect(() => {
-    const newFiles = getFiles(projectName, servicesData, envVars);
+    const newFiles = getFiles(repoName, projectName, servicesData, envVars);
     const newContents = Object.fromEntries(newFiles.map(f => [f.name, f.content]));
     setFileContents(newContents);
-  }, [projectName, servicesData, envVars]);
+  }, [repoName, projectName, servicesData, envVars]);
 
   const validateFile = useCallback((fileName: string, content: string) => {
     const file = FILES.find(f => f.name === fileName);
@@ -310,38 +312,6 @@ export default function ReviewPoolEnvironmentStep({
         <CardDescription>
           Review and edit your environment files. Your services and environment variables have been automatically populated.
         </CardDescription>
-        
-        <div className="flex flex-col gap-4 mt-4">
-          {/* Show services summary */}
-          {servicesData && servicesData.services && servicesData.services.length > 0 && (
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-medium mb-2">Services ({servicesData.services.length}):</p>
-              <div className="flex flex-wrap gap-1">
-                {servicesData.services.map((service, index) => (
-                  <Badge key={index} variant="default" className="text-xs">
-                    {service.name}:{service.port || 3000}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Show environment variables summary */}
-          {envVars.length > 0 && (
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-medium mb-2">Environment Variables ({envVars.length}):</p>
-              <div className="flex flex-wrap gap-1">
-                {envVars.map((envVar, index) => (
-                  envVar.key && (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {envVar.key}
-                    </Badge>
-                  )
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <Tabs value={activeFile} onValueChange={setActiveFile} className="w-full">
