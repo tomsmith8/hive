@@ -84,4 +84,39 @@ export interface WizardStateError {
   success: false;
   message: string;
   error?: string;
+}
+
+// Wizard Progress API Types
+export interface WizardProgressRequest {
+  workspaceSlug: string;
+  wizardStep?: WizardStepKey;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  wizardData?: Record<string, unknown>;
+}
+
+export interface WizardProgressResponse {
+  success: boolean;
+  data?: {
+    wizardStep: WizardStepKey;
+    stepStatus: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    wizardData: Record<string, unknown>;
+  };
+  message?: string;
+  error?: string;
+}
+
+// Wizard Reset API Types
+export interface WizardResetRequest {
+  workspaceSlug: string;
+}
+
+export interface WizardResetResponse {
+  success: boolean;
+  data?: {
+    wizardStep: WizardStepKey;
+    stepStatus: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    wizardData: Record<string, unknown>;
+  };
+  message?: string;
+  error?: string;
 } 
