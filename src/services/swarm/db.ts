@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { SwarmStatus } from '@prisma/client';
+import { SwarmStatus, SwarmWizardStep, StepStatus } from '@prisma/client';
 
 // Add ServiceConfig interface for the services array
 export interface ServiceConfig {
@@ -29,6 +29,9 @@ interface SaveOrUpdateSwarmParams {
   services?: ServiceConfig[]; // Use ServiceConfig[]
   swarmId?: string;
   swarmSecretAlias?: string;
+  wizardStep?: SwarmWizardStep;
+  stepStatus?: StepStatus;
+  wizardData?: unknown;
 }
 
 export const select = {
@@ -48,6 +51,11 @@ export const select = {
   poolApiKey: true, // NEW FIELD
   services: true,
   swarmSecretAlias: true,
+  wizardStep: true,
+  stepStatus: true,
+  wizardData: true,
+  swarmId: true,
+  environmentVariables: true,
 };
 
 export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
@@ -67,6 +75,9 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   if (params.poolApiKey !== undefined) data.poolApiKey = params.poolApiKey;
   if (params.swarmId !== undefined) data.swarmId = params.swarmId;
   if (params.swarmSecretAlias !== undefined) data.swarmSecretAlias = params.swarmSecretAlias;
+  if (params.wizardStep !== undefined) data.wizardStep = params.wizardStep;
+  if (params.stepStatus !== undefined) data.stepStatus = params.stepStatus;
+  if (params.wizardData !== undefined) data.wizardData = params.wizardData;
   if (params.services !== undefined) {
     console.log("[saveOrUpdateSwarm] Saving services:", params.services);
     data.services = params.services;
@@ -91,7 +102,10 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
         poolName: params.poolName || '',
         poolApiKey: params.poolApiKey || '', // NEW FIELD
         services: params.services ? params.services : [],
-        swarmSecretAlias: params.swarmSecretAlias || ''
+        swarmSecretAlias: params.swarmSecretAlias || '',
+        wizardStep: params.wizardStep,
+        stepStatus: params.stepStatus,
+        wizardData: params.wizardData,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
     console.log("[saveOrUpdateSwarm] Create data:", createData);
