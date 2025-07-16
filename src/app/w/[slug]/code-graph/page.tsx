@@ -265,9 +265,15 @@ export default function CodeGraphPage() {
 
   // Swarm creation handler - this is the trigger point for persistence
   const handleCreateSwarm = async () => {
+    if (!localState.projectName || !localState.projectName.trim()) {
+      console.error('Project name is required to create a swarm.');
+      setSwarmCreationStatus('error');
+      return;
+    }
     setSwarmCreationStatus('pending');
     try {
       const swarmData = {
+        name: localState.projectName,
         selectedRepo: localState.selectedRepo,
         projectName: localState.projectName,
         repoName: localState.repoName,
@@ -276,10 +282,10 @@ export default function CodeGraphPage() {
         step: currentStep,
       };
 
-      // First create the wizard record
+      // First create the wizard record (PUT /api/code-graph/wizard-progress)
       await createSwarm(swarmData);
       
-      // Then call your existing swarm creation API
+      // Then call your existing swarm creation API (POST /api/swarm)
       const res = await fetch('/api/swarm', { 
         method: 'POST',
         headers: {
@@ -287,7 +293,7 @@ export default function CodeGraphPage() {
         },
         body: JSON.stringify({
           workspaceId: workspace?.id,
-          name: localState.projectName || localState.repoName,
+          name: localState.projectName,
         }),
       });
       

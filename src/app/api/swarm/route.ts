@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const swarm_id = apiResponse?.swarm_id || vanity_address;
     const updatedSwarm = await saveOrUpdateSwarm({
       workspaceId,
-      swarmUrl: `https://${swarm_id}/api`,
+      swarmUrl: `https://${vanity_address}/api`,
       status: SwarmStatus.PENDING,
       swarmId: swarm_id,
     });

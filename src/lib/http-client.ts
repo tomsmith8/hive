@@ -24,7 +24,7 @@ export class HttpClient {
     service: string = 'unknown'
   ): Promise<T> {
     const url = `${this.config.baseURL}${endpoint}`;
-    
+    console.log("[HttpClient] Requesting:", url);
     const config: RequestInit = {
       ...options,
       headers: {
