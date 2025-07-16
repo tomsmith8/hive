@@ -13,8 +13,7 @@ import { WizardProgress } from "@/components/wizard/WizardProgress";
 import { WizardStepRenderer } from "@/components/wizard/WizardStepRenderer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, AlertCircle, CheckCircle, Clock, Play } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export default function CodeGraphPage() {
   // Get user info from session
@@ -336,55 +335,6 @@ export default function CodeGraphPage() {
     updateLocalState({ servicesData: newServicesData });
   };
 
-  // Helper function to get step status icon
-  const getStepStatusIcon = (status: string | undefined) => {
-    switch (status) {
-      case 'PENDING':
-        return <Clock className="w-4 h-4 text-gray-500" />;
-      case 'STARTED':
-      case 'PROCESSING':
-        return <Loader2 className="w-4 h-4 animate-spin text-blue-500" />;
-      case 'COMPLETED':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'FAILED':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <Play className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  // Helper function to get step status color
-  const getStepStatusColor = (status: string | undefined) => {
-    switch (status) {
-      case 'PENDING':
-        return 'bg-gray-100 text-gray-700 border-gray-300';
-      case 'STARTED':
-      case 'PROCESSING':
-        return 'bg-blue-100 text-blue-700 border-blue-300';
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-700 border-green-300';
-      case 'FAILED':
-        return 'bg-red-100 text-red-700 border-red-300';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-300';
-    }
-  };
-
-  // Helper function to get step names
-  const getStepName = (stepNumber: WizardStep) => {
-    const stepNames = {
-      1: 'Welcome',
-      2: 'Repository Selection',
-      3: 'Project Name',
-      4: 'Graph Infrastructure',
-      5: 'Ingest Code',
-      6: 'Add Services',
-      7: 'Environment Setup',
-      8: 'Review Pool Environment',
-      9: 'Stakwork Setup',
-    };
-    return stepNames[stepNumber] || 'Unknown Step';
-  };
 
   // Loading state
   if (wizardLoading) {
@@ -431,37 +381,13 @@ export default function CodeGraphPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation/Breadcrumb Header */}
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-bold text-foreground">Code Graph Setup</h1>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">Step {currentStep} of 9:</span>
-                  <span className="text-sm font-medium">{getStepName(currentStep)}</span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Badge variant="outline" className={`${getStepStatusColor(currentStepStatus)} border`}>
-                  {getStepStatusIcon(currentStepStatus)}
-                  <span className="ml-2 capitalize">{currentStepStatus?.toLowerCase() || (hasSwarm ? 'Saved' : 'Local')}</span>
-                </Badge>
-                {workspace && (
-                  <Badge variant="secondary">
-                    {workspace.name}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-foreground">Setting up CodeGraph</h1>
+          </div>
+
           {/* Progress Indicator */}
           <WizardProgress currentStep={currentStep} totalSteps={9} stepStatus={currentStepStatus} />
 
