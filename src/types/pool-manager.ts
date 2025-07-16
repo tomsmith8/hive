@@ -6,6 +6,20 @@ export interface CreatePoolRequest {
   members?: string[];
 }
 
+export interface GetPoolRequest {
+  name: string;
+}
+
+export interface DeletePoolRequest {
+  name: string;
+}
+
+export interface UpdatePoolRequest {
+  name: string;
+  description?: string;
+  members?: string[];
+}
+
 export interface Pool {
   id: string;
   name: string;

@@ -1,4 +1,4 @@
-import { CreatePoolRequest, Pool } from '@/types';
+import { CreatePoolRequest, GetPoolRequest, DeletePoolRequest, UpdatePoolRequest, Pool } from '@/types';
 import { HttpClient } from '@/lib/http-client';
 
 export async function createPoolApi(
@@ -7,4 +7,28 @@ export async function createPoolApi(
   serviceName: string
 ): Promise<Pool> {
   return client.post<Pool>('/workspaces', pool, undefined, serviceName);
+} 
+
+export async function getPoolApi(
+  client: HttpClient,
+  pool: GetPoolRequest,
+  serviceName: string
+): Promise<Pool> {
+  return client.get<Pool>(`/workspaces/${pool.name}`, undefined, serviceName);
+} 
+
+export async function updatePoolApi(
+  client: HttpClient,
+  pool: UpdatePoolRequest,
+  serviceName: string
+): Promise<Pool> {
+  return client.put<Pool>(`/workspaces/${pool.name}`, pool, undefined, serviceName);
+} 
+
+export async function deletePoolApi(
+  client: HttpClient,
+  pool: DeletePoolRequest,
+  serviceName: string
+): Promise<Pool> {
+  return client.delete<Pool>(`/workspaces/${pool.name}`, undefined, serviceName);
 } 
