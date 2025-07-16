@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       swarm = await db.swarm.create({
         data: {
           workspaceId: workspace.id,
-          name: `${workspace.slug}-swarm`,
+          name: `${workspace.slug}`,
           status: SwarmStatus.PENDING,
           wizardStep: 'WELCOME' as SwarmWizardStep,
           stepStatus: 'PENDING' as StepStatus,
