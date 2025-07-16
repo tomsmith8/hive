@@ -115,8 +115,9 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
   // Create swarm and start persisting state
   const createSwarm = useCallback(async (swarmData: Record<string, unknown>) => {
     try {
-      const createResponse = await fetch('/api/code-graph/wizard-create', {
-        method: 'POST',
+      // First update the wizard progress to create the swarm record
+      const progressResponse = await fetch('/api/code-graph/wizard-progress', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -128,18 +129,12 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
         }),
       });
 
-      if (!createResponse.ok) {
-        throw new Error('Failed to create swarm');
+      if (!progressResponse.ok) {
+        throw new Error('Failed to update wizard progress');
       }
 
-      const result = await createResponse.json();
-      
-      if (result.success) {
-        // Refresh to get the new swarm state
-        await checkSwarmExists();
-      } else {
-        throw new Error(result.message || 'Failed to create swarm');
-      }
+      // Refresh to get the new swarm state
+      await checkSwarmExists();
     } catch (error) {
       console.error('Error creating swarm:', error);
       throw error;

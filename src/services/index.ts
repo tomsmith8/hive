@@ -7,6 +7,7 @@ export {
   ServiceFactory, 
   stakworkService, 
   poolManagerService,
+  wizardService,
   type ServiceName 
 } from '@/lib/service-factory';
 

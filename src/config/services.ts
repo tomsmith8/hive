@@ -18,6 +18,14 @@ export const serviceConfigs: Record<string, ServiceConfig> = {
       'Content-Type': 'application/json',
     },
   },
+  wizard: {
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '',
+    apiKey: '', // Not needed for internal API calls
+    timeout: 30000, // Longer timeout for wizard operations
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  },
 } as const;
 
 // Service endpoints

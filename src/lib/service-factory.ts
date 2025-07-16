@@ -1,10 +1,11 @@
 import { BaseServiceClass } from './base-service';
 import { StakworkService } from '@/services/stakwork';
 import { PoolManagerService } from '@/services/pool-manager';
+import { WizardService } from '@/services/wizard';
 import { getServiceConfig } from '@/config/services';
 
 // Service registry type
-export type ServiceName = 'stakwork' | 'poolManager';
+export type ServiceName = 'stakwork' | 'poolManager' | 'wizard';
 
 // Service factory class
 export class ServiceFactory {
@@ -20,6 +21,9 @@ export class ServiceFactory {
           break;
         case 'poolManager':
           this.instances.set(serviceName, new PoolManagerService(config));
+          break;
+        case 'wizard':
+          this.instances.set(serviceName, new WizardService(config));
           break;
         default:
           throw new Error(`Unknown service: ${serviceName}`);
@@ -37,6 +41,10 @@ export class ServiceFactory {
     return this.getService<PoolManagerService>('poolManager');
   }
 
+  static getWizardService(): WizardService {
+    return this.getService<WizardService>('wizard');
+  }
+
   static updateServiceApiKey(serviceName: ServiceName, apiKey: string): void {
     const service = this.getService(serviceName);
     service.updateApiKey(apiKey);
@@ -50,10 +58,12 @@ export class ServiceFactory {
     return {
       stakwork: this.getStakworkService(),
       poolManager: this.getPoolManagerService(),
+      wizard: this.getWizardService(),
     };
   }
 }
 
 // Convenience exports
 export const stakworkService = () => ServiceFactory.getStakworkService();
-export const poolManagerService = () => ServiceFactory.getPoolManagerService(); 
+export const poolManagerService = () => ServiceFactory.getPoolManagerService();
+export const wizardService = () => ServiceFactory.getWizardService(); 
