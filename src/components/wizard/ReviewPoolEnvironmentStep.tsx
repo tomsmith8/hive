@@ -13,67 +13,184 @@ import {
   RotateCcw,
   ArrowRight
 } from "lucide-react";
+import { EnvironmentVariable } from "@/types/wizard";
+import { ServicesData } from "@/components/stakgraph/types";
 
-const FILES = [
-  {
-    name: "devcontainer.json",
-    content: `{
-  "name": "My Dev Container",
-  "dockerFile": "Dockerfile",
-  "settings": {
-    "terminal.integrated.shell.linux": "/bin/bash"
-  },
-  "extensions": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
-  ]
-}`,
-    type: "json"
-  },
-  {
-    name: "pm2.config.js",
-    content: `module.exports = {
-  apps: [
-    {
-      name: "app",
-      script: "npm",
-      args: "start",
-      env: {
-        NODE_ENV: "development"
-      }
+// Helper function to generate containerEnv from environment variables
+const generateContainerEnv = (envVars: EnvironmentVariable[]) => {
+  const containerEnv: Record<string, string> = {};
+  
+  envVars.forEach(envVar => {
+    if (envVar.key && envVar.value) {
+      containerEnv[envVar.key] = envVar.value;
     }
-  ]
-};`,
-    type: "javascript"
+  });
+  
+  return containerEnv;
+};
+
+// Helper function to format containerEnv object as JSON string with proper indentation
+const formatContainerEnv = (containerEnv: Record<string, string>) => {
+  if (Object.keys(containerEnv).length === 0) {
+    return '{}';
+  }
+  
+  const entries = Object.entries(containerEnv);
+  const formattedEntries = entries.map(([key, value]) => `    "${key}": "${value}"`);
+  return `{\n${formattedEntries.join(',\n')}\n  }`;
+};
+
+// Helper function to generate PM2 apps from services data
+const generatePM2Apps = (repoName: string, servicesData: ServicesData) => {
+  if (!servicesData || !servicesData.services || servicesData.services.length === 0) {
+    // Return default configuration if no services
+    return [{
+      name: "default-service",
+      script: "npm start",
+      cwd: `/workspaces/${repoName}`,
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "1G",
+      env: {
+        INSTALL_COMMAND: "npm install",
+        TEST_COMMAND: "npm test",
+        BUILD_COMMAND: "npm run build",
+        PORT: "3000"
+      }
+    }];
+  }
+
+  return servicesData.services.map(service => ({
+    name: service.name,
+    script: service.scripts?.start || "",
+    cwd: `/workspaces/${repoName}`,
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: "1G",
+    env: {
+      INSTALL_COMMAND: service.scripts?.install || "",
+      TEST_COMMAND: service.scripts?.test || "",
+      BUILD_COMMAND: service.scripts?.build || "",
+      PORT: service.port?.toString() || ""
+    }
+  }));
+};
+
+// Helper function to format PM2 apps as JavaScript string
+const formatPM2Apps = (apps: any[]) => {
+  const formattedApps = apps.map(app => {
+    const envEntries = Object.entries(app.env)
+      .map(([key, value]) => `        ${key}: "${value}"`)
+      .join(',\n');
+    
+    return `    {
+      name: "${app.name}",
+      script: "${app.script}",
+      cwd: "${app.cwd}",
+      instances: ${app.instances},
+      autorestart: ${app.autorestart},
+      watch: ${app.watch},
+      max_memory_restart: "${app.max_memory_restart}",
+      env: {
+${envEntries}
+      }
+    }`;
+  });
+
+  return `[\n${formattedApps.join(',\n')}\n  ]`;
+};
+
+const getFiles = (repoName: string, projectName: string, servicesData: ServicesData, envVars: EnvironmentVariable[]) => {
+  const containerEnv = generateContainerEnv(envVars);
+  const pm2Apps = generatePM2Apps(repoName, servicesData);
+  
+  return [
+    {
+      name: "devcontainer.json",
+      content: `{
+  "name": "${projectName}",
+  "dockerComposeFile": "./docker-compose.yml",
+  "workspaceFolder": "/workspaces",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker": {}
   },
-  {
-    name: "docker-compose.yml",
-    content: `version: '3.8'
+  "containerEnv": ${formatContainerEnv(containerEnv)},
+  "customizations": {
+    "vscode": {
+        "settings": {
+          "git.autofetch": true,
+          "editor.formatOnSave": true
+        },
+        "extensions": [
+            "stakwork.staklink"
+        ]
+    }
+  }
+}`,
+      type: "json"
+    },
+    {
+      name: "pm2.config.js",
+      content: `module.exports = {
+  apps: ${formatPM2Apps(pm2Apps)},
+};
+`,
+      type: "javascript"
+    },
+    {
+      name: "docker-compose.yml",
+      content: `version: '3.8'
+volumes:
+networks:
+  app_network:
+    driver: bridge
 services:
   app:
-    build: .
-    ports:
-      - "3000:3000"
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
-      - .:/app
-    environment:
-      - NODE_ENV=development`,
-    type: "yaml"
-  },
-  {
-    name: "Dockerfile",
-    content: `FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 3000
-CMD ["npm", "run", "dev"]`,
-    type: "dockerfile"
-  }
-];
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    networks:
+      - app_network
+    extra_hosts:
+      - "localhost:172.17.0.1"
+      - "host.docker.internal:host-gateway"
+`,
+      type: "yaml"
+    },
+    {
+      name: "Dockerfile",
+      content: `FROM mcr.microsoft.com/devcontainers/universal
 
-const getFileIcon = (type) => {
+# [Optional] Uncomment this section to install additional OS packages.
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends wget sed
+
+RUN sudo mkdir -p -m 755 /etc/apt/keyrings \
+        && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+        && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && sudo apt update -y \
+    && sudo apt install gh -y
+
+# Install PM2 globally and ensure it's accessible
+RUN npm install -g pm2 && \
+    # Create symlink in /usr/local/bin to ensure it's always in PATH
+    ln -sf /usr/local/node/bin/pm2 /usr/local/bin/pm2 && \
+    # Verify installation
+    pm2 --version
+`,
+      type: "dockerfile"
+    }
+  ];
+};
+
+const getFileIcon = (type: string) => {
   switch (type) {
     case "json":
       return <Settings className="w-3 h-3" />;
@@ -88,14 +205,14 @@ const getFileIcon = (type) => {
   }
 };
 
-const getFileStats = (content) => {
+const getFileStats = (content: string) => {
   const lines = content.split('\n').length;
   const chars = content.length;
   const bytes = new Blob([content]).size;
   return { lines, chars, bytes };
 };
 
-const formatBytes = (bytes) => {
+const formatBytes = (bytes: number) => {
   if (bytes === 0) return '0 B';
   const k = 1024;
   const sizes = ['B', 'KB', 'MB'];
@@ -103,10 +220,25 @@ const formatBytes = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
 
+interface ReviewPoolEnvironmentStepProps {
+  repoName: string;
+  projectName: string;
+  servicesData: ServicesData;
+  envVars: EnvironmentVariable[];
+  onConfirm: () => void;
+  onBack: () => void;
+}
+
 export default function ReviewPoolEnvironmentStep({ 
+  repoName,
+  projectName,
+  servicesData,
+  envVars,
   onConfirm, 
   onBack 
-}) {
+}: ReviewPoolEnvironmentStepProps) {
+  const FILES = getFiles(repoName, projectName, servicesData, envVars);
+  
   const [activeFile, setActiveFile] = useState(FILES[0].name);
   const [fileContents, setFileContents] = useState(
     Object.fromEntries(FILES.map(f => [f.name, f.content]))
@@ -114,9 +246,16 @@ export default function ReviewPoolEnvironmentStep({
   const [originalContents] = useState(
     Object.fromEntries(FILES.map(f => [f.name, f.content]))
   );
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateFile = useCallback((fileName, content) => {
+  // Update file contents when envVars change
+  useEffect(() => {
+    const newFiles = getFiles(repoName, projectName, servicesData, envVars);
+    const newContents = Object.fromEntries(newFiles.map(f => [f.name, f.content]));
+    setFileContents(newContents);
+  }, [repoName, projectName, servicesData, envVars]);
+
+  const validateFile = useCallback((fileName: string, content: string) => {
     const file = FILES.find(f => f.name === fileName);
     if (!file) return;
     try {
@@ -130,14 +269,14 @@ export default function ReviewPoolEnvironmentStep({
         [fileName]: file.type === "json" ? "Invalid JSON format" : "Invalid file format" 
       }));
     }
-  }, []);
+  }, [FILES]);
 
-  const handleContentChange = (fileName, value) => {
+  const handleContentChange = (fileName: string, value: string) => {
     setFileContents(prev => ({ ...prev, [fileName]: value }));
     validateFile(fileName, value);
   };
 
-  const isFileModified = (fileName) => fileContents[fileName] !== originalContents[fileName];
+  const isFileModified = (fileName: string) => fileContents[fileName] !== originalContents[fileName];
   const hasErrors = Object.values(errors).some(error => error !== '');
   const resetFiles = () => {
     setFileContents(originalContents);
@@ -145,7 +284,7 @@ export default function ReviewPoolEnvironmentStep({
   };
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'Tab') {
         e.preventDefault();
         const currentIndex = FILES.findIndex(f => f.name === activeFile);
@@ -155,11 +294,11 @@ export default function ReviewPoolEnvironmentStep({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeFile]);
+  }, [activeFile, FILES]);
 
   useEffect(() => {
     FILES.forEach(file => validateFile(file.name, fileContents[file.name]));
-  }, [validateFile, fileContents]);
+  }, [validateFile, fileContents, FILES]);
 
   const currentFileStats = getFileStats(fileContents[activeFile]);
 
@@ -171,7 +310,7 @@ export default function ReviewPoolEnvironmentStep({
         </div>
         <CardTitle className="text-2xl">Review Pool Environment</CardTitle>
         <CardDescription>
-          Review and edit your environment files. Switch between files, make changes if needed, and confirm when ready.
+          Review and edit your environment files. Your services and environment variables have been automatically populated.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -219,6 +358,14 @@ export default function ReviewPoolEnvironmentStep({
                   </Badge>
                 )}
               </div>
+
+              {/* Show error message if any */}
+              {errors[file.name] && (
+                <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors[file.name]}
+                </div>
+              )}
 
               {/* Code Editor */}
               <div className="relative">

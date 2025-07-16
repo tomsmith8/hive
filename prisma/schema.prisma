@@ -199,6 +199,10 @@ model Swarm {
   poolApiKey            String? @map("pool_api_key") // NEW: Pool API Key for Pool Manager
   environmentVariables  Json    @default("[]") @map("environment_variables")
   services              Json    @default("[]") @map("services")
+
+  // Wizard progress tracking
+  wizardStep   SwarmWizardStep @default(DOMAIN_SETUP) @map("wizard_step")
+  wizardData   Json            @default("{}") @map("wizard_data") // Store wizard form data
   
   // One-to-one relationship with workspace
   workspaceId String @unique @map("workspace_id")
@@ -587,4 +591,16 @@ enum CommentEntity {
   USER_STORY
   TASK
   REQUIREMENT
+}
+
+enum SwarmWizardStep {
+  WELCOME
+  REPOSITORY_SELECTION
+  PROJECT_NAME
+  GRAPH_INFRASTRUCTURE
+  INGEST_CODE
+  ADD_SERVICES
+  ENVIRONMENT_SETUP
+  REVIEW_POOL_ENVIRONMENT
+  STAKWORK_SETUP
 }
