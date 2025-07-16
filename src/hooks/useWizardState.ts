@@ -9,6 +9,7 @@ interface UseWizardStateResult {
   loading: boolean;
   error: string | null;
   wizardStep: string | null;
+  stepStatus?: string;
   wizardData: Record<string, unknown>;
   swarmId?: string;
   swarmStatus?: string;
@@ -71,6 +72,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
     if (!response?.success || !response.data) {
       return {
         wizardStep: null,
+        stepStatus: undefined,
         wizardData: {},
         swarmId: undefined,
         swarmStatus: undefined,
@@ -82,6 +84,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
     }
     return {
       wizardStep: response.data.wizardStep,
+      stepStatus: response.data.stepStatus,
       wizardData: response.data.wizardData,
       swarmId: response.data.swarmId,
       swarmStatus: response.data.swarmStatus,
