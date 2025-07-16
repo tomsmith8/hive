@@ -53,7 +53,10 @@ export async function POST(request: NextRequest) {
     // Trigger the 3rd party request
     const swarmConfig = getServiceConfig('swarm');
     const swarmService = new SwarmService(swarmConfig);
-    const apiResponse = await swarmService.createSwarm({ vanity_address, name, instance_type, env });
+    
+    // Append '-swarm' to the name for the 3rd party request
+    const thirdPartyName = `${name}-swarm`;
+    const apiResponse = await swarmService.createSwarm({ vanity_address, name: thirdPartyName, instance_type, env });
 
     // Always update the swarm with returned swarm_id, keep status PENDING
     const swarm_id = apiResponse?.swarm_id || vanity_address;
