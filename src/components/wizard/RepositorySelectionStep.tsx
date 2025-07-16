@@ -14,6 +14,7 @@ interface RepositorySelectionStepProps {
   onRepoSelect: (repo: Repository) => void;
   onNext: () => void;
   onBack: () => void;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
 export function RepositorySelectionStep({
@@ -25,6 +26,7 @@ export function RepositorySelectionStep({
   onRepoSelect,
   onNext,
   onBack,
+  stepStatus: _stepStatus,
 }: RepositorySelectionStepProps) {
   const filteredRepositories = repositories.filter(repo =>
     repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

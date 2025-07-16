@@ -23,7 +23,11 @@ interface UseWizardStateResult {
     image?: string | null;
   };
   refresh: () => void;
-  updateWizardProgress: (data: Partial<Record<string, unknown>>) => Promise<void>;
+  updateWizardProgress: (data: {
+    wizardStep?: string;
+    stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    wizardData?: Record<string, unknown>;
+  }) => Promise<void>;
 }
 
 export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWizardStateResult {
@@ -53,20 +57,46 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
 
   useEffect(() => {
     fetchState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchState]);
 
   const refresh = useCallback(() => {
     fetchState();
   }, [fetchState]);
 
-  // Placeholder for update method (API only supports GET for now)
-  const updateWizardProgress = useCallback(async () => {
-    // TODO: Implement update logic when API supports it
-    // Example: await fetch('/api/code-graph/wizard-state', { method: 'PATCH', body: JSON.stringify(data) })
-    // For now, just refresh
-    refresh();
-  }, [refresh]);
+  const updateWizardProgress = useCallback(async (data: {
+    wizardStep?: string;
+    stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+    wizardData?: Record<string, unknown>;
+  }) => {
+    try {
+      const response = await fetch('/api/code-graph/wizard-progress', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workspaceSlug,
+          ...data,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update wizard progress');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Refresh the state to get the updated data
+        refresh();
+      } else {
+        throw new Error(result.message || 'Failed to update wizard progress');
+      }
+    } catch (error) {
+      console.error('Error updating wizard progress:', error);
+      throw error;
+    }
+  }, [workspaceSlug, refresh]);
 
   const memoized = useMemo(() => {
     if (!response?.success || !response.data) {

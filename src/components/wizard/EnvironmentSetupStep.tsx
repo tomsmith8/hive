@@ -11,6 +11,7 @@ interface EnvironmentSetupStepProps {
   onRemoveEnv: (index: number) => void;
   onNext: () => void;
   onBack: () => void;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
 export function EnvironmentSetupStep({
@@ -20,6 +21,7 @@ export function EnvironmentSetupStep({
   onRemoveEnv,
   onNext,
   onBack,
+  stepStatus: _stepStatus,
 }: EnvironmentSetupStepProps) {
   return (
     <Card className="max-w-2xl mx-auto">

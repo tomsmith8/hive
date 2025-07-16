@@ -79,7 +79,16 @@ const generatePM2Apps = (repoName: string, servicesData: ServicesData) => {
 };
 
 // Helper function to format PM2 apps as JavaScript string
-const formatPM2Apps = (apps: any[]) => {
+const formatPM2Apps = (apps: Array<{
+  name: string;
+  script: string;
+  cwd: string;
+  instances: number;
+  autorestart: boolean;
+  watch: boolean;
+  max_memory_restart: string;
+  env: Record<string, string>;
+}>) => {
   const formattedApps = apps.map(app => {
     const envEntries = Object.entries(app.env)
       .map(([key, value]) => `        ${key}: "${value}"`)
@@ -227,6 +236,7 @@ interface ReviewPoolEnvironmentStepProps {
   envVars: EnvironmentVariable[];
   onConfirm: () => void;
   onBack: () => void;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
 export default function ReviewPoolEnvironmentStep({ 
@@ -235,7 +245,8 @@ export default function ReviewPoolEnvironmentStep({
   servicesData,
   envVars,
   onConfirm, 
-  onBack 
+  onBack,
+  stepStatus: _stepStatus
 }: ReviewPoolEnvironmentStepProps) {
   const FILES = getFiles(repoName, projectName, servicesData, envVars);
   
@@ -263,7 +274,7 @@ export default function ReviewPoolEnvironmentStep({
         JSON.parse(content);
       }
       setErrors(prev => ({ ...prev, [fileName]: '' }));
-    } catch (e) {
+    } catch {
       setErrors(prev => ({ 
         ...prev, 
         [fileName]: file.type === "json" ? "Invalid JSON format" : "Invalid file format" 

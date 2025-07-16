@@ -12,6 +12,8 @@ interface GraphInfrastructureStepProps {
   onCreate: () => void;
   onComplete: () => void;
   onBack: () => void;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  onStatusChange?: (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => void;
 }
 
 export function GraphInfrastructureStep({
@@ -20,9 +22,21 @@ export function GraphInfrastructureStep({
   onCreate,
   onComplete,
   onBack,
+  stepStatus: _stepStatus,
+  onStatusChange,
 }: GraphInfrastructureStepProps) {
   const isPending = status === "pending";
   const isComplete = status === "complete";
+  
+  const handleCreate = () => {
+    onStatusChange?.('PROCESSING');
+    onCreate();
+  };
+  
+  const handleComplete = () => {
+    onStatusChange?.('COMPLETED');
+    onComplete();
+  };
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
@@ -96,7 +110,7 @@ export function GraphInfrastructureStep({
             </Button>
           )}
           {status === "idle" && (
-            <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={onCreate}>
+            <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleCreate}>
               Create
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -114,7 +128,7 @@ export function GraphInfrastructureStep({
                 <Button
                   className="mt-2 ml-auto px-8 bg-primary text-primary-foreground hover:bg-primary/90"
                   type="button"
-                  onClick={onComplete}
+                  onClick={handleComplete}
                 >
                   Continue
                 </Button>
@@ -125,7 +139,7 @@ export function GraphInfrastructureStep({
             <Button
               className="px-8 bg-primary text-primary-foreground hover:bg-primary/90"
               type="button"
-              onClick={onComplete}
+              onClick={handleComplete}
             >
               Continue
             </Button>

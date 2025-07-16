@@ -44,21 +44,34 @@ interface WizardStepRendererProps {
   onBack: () => void;
   onStepChange: (step: WizardStep) => void;
   stepStatus?: string;
+  onStatusChange?: (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => void;
 }
 
 function IngestCodeStep({ 
   status, 
   onStart, 
   onContinue, 
-  onBack 
+  onBack,
+  onStatusChange 
 }: { 
   status: 'idle' | 'pending' | 'complete'; 
   onStart: () => void; 
   onContinue: () => void; 
   onBack: () => void; 
+  onStatusChange?: (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => void;
 }) {
   const isPending = status === 'pending';
   const [countdown, setCountdown] = useState(5);
+  
+  const handleStart = () => {
+    onStatusChange?.('PROCESSING');
+    onStart();
+  };
+  
+  const handleContinue = () => {
+    onStatusChange?.('COMPLETED');
+    onContinue();
+  };
   
   useEffect(() => { 
     if (isPending) setCountdown(5); 
@@ -130,7 +143,7 @@ function IngestCodeStep({
             <Button variant="outline" type="button" onClick={onBack}>Back</Button>
           )}
           {status === 'idle' && (
-            <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={onStart}>
+            <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleStart}>
               Start Ingest
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -139,7 +152,7 @@ function IngestCodeStep({
             <Button
               className={`ml-auto px-8 ${canContinue ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground'}`}
               type="button"
-              onClick={onContinue}
+              onClick={handleContinue}
               disabled={!canContinue}
             >
               {canContinue ? 'Continue' : `Continue (${countdown})`}
@@ -178,6 +191,7 @@ export function WizardStepRenderer({
   onBack,
   onStepChange,
   stepStatus,
+  onStatusChange,
 }: WizardStepRendererProps) {
   
   const handleBackToStep = (targetStep: WizardStep) => {
@@ -186,7 +200,7 @@ export function WizardStepRenderer({
 
   switch (step) {
     case 1:
-      return <WelcomeStep onNext={onNext} />;
+      return <WelcomeStep onNext={onNext} stepStatus={stepStatus as any} onStatusChange={onStatusChange} />;
       
     case 2:
       return (
@@ -199,6 +213,7 @@ export function WizardStepRenderer({
           onRepoSelect={onRepoSelect}
           onNext={onNext}
           onBack={onBack}
+          stepStatus={stepStatus as any}
         />
       );
       
@@ -209,6 +224,7 @@ export function WizardStepRenderer({
           onProjectNameChange={onProjectNameChange}
           onNext={onNext}
           onBack={onBack}
+          stepStatus={stepStatus as any}
         />
       );
       
@@ -220,6 +236,8 @@ export function WizardStepRenderer({
           onCreate={onCreateSwarm}
           onComplete={onSwarmContinue}
           onBack={onBack}
+          stepStatus={stepStatus as any}
+          onStatusChange={onStatusChange}
         />
       );
       
@@ -230,6 +248,7 @@ export function WizardStepRenderer({
           onStart={onIngestStart}
           onContinue={onIngestContinue}
           onBack={() => handleBackToStep(4)}
+          onStatusChange={onStatusChange}
         />
       );
       
@@ -274,6 +293,7 @@ export function WizardStepRenderer({
           onRemoveEnv={onRemoveEnv}
           onNext={onNext}
           onBack={onBack}
+          stepStatus={stepStatus as any}
         />
       );
       
@@ -286,6 +306,7 @@ export function WizardStepRenderer({
           envVars={envVars}
           onConfirm={onNext}
           onBack={onBack}
+          stepStatus={stepStatus as any}
         />
       );
       
@@ -295,6 +316,7 @@ export function WizardStepRenderer({
           workspaceName={projectName}
           onFinish={onNext}
           onBack={onBack}
+          stepStatus={stepStatus as any}
         />
       );
       

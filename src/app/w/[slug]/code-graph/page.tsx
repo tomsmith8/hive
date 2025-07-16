@@ -13,8 +13,5 @@ export default function CodeGraphPage() {
     github: (session?.user as { github?: { username?: string; publicRepos?: number; followers?: number } })?.github,
   };
 
-  // Optionally, you can use workspace context if needed
-  // const { workspace } = useWorkspace();
-
   return <CodeGraphWizard user={user} />;
 } 

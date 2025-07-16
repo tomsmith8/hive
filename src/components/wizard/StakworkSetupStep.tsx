@@ -8,12 +8,14 @@ interface StakworkSetupStepProps {
   workspaceName: string;
   onFinish: () => void;
   onBack: () => void;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
 export function StakworkSetupStep({
   workspaceName,
   onFinish,
   onBack,
+  stepStatus: _stepStatus,
 }: StakworkSetupStepProps) {
   return (
     <Card className="max-w-2xl mx-auto">

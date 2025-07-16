@@ -9,6 +9,7 @@ interface ProjectNameStepProps {
   onProjectNameChange: (name: string) => void;
   onNext: () => void;
   onBack: () => void;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
 export function ProjectNameStep({
@@ -16,6 +17,7 @@ export function ProjectNameStep({
   onProjectNameChange,
   onNext,
   onBack,
+  stepStatus: _stepStatus,
 }: ProjectNameStepProps) {
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">

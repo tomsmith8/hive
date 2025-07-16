@@ -4,9 +4,15 @@ import { Github, TrendingUp, BarChart3, GitBranch, ArrowRight } from "lucide-rea
 
 interface WelcomeStepProps {
   onNext: () => void;
+  stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  onStatusChange?: (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => void;
 }
 
-export function WelcomeStep({ onNext }: WelcomeStepProps) {
+export function WelcomeStep({ onNext, stepStatus: _stepStatus, onStatusChange }: WelcomeStepProps) {
+  const handleNext = () => {
+    onStatusChange?.('COMPLETED');
+    onNext();
+  };
   return (
     <Card className="max-w-4xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
@@ -58,7 +64,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
         </div>
 
         <div className="flex justify-center">
-          <Button onClick={onNext} className="px-8 py-3">
+          <Button onClick={handleNext} className="px-8 py-3">
             Get Started
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
