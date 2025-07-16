@@ -45,3 +45,8 @@ export interface BaseService {
   getConfig(): ServiceConfig;
   updateApiKey(apiKey: string): void;
 } 
+
+export interface SwarmService {
+  readonly serviceName: string;
+  getConfig(): ServiceConfig;
+} 

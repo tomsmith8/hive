@@ -8,7 +8,7 @@ export async function createSwarmApi(
   serviceName: string
 ): Promise<Swarm> {
   return client.post<Swarm>(
-    `${env.SWARM_SUPER_ADMIN_URL}/api/super/new_swarm`,
+    `/api/super/new_swarm`,
     swarm,
     { 'x-super-token': env.SWARM_SUPERADMIN_API_KEY as string },
     serviceName

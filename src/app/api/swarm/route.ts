@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
 import { SwarmService } from '@/services/swarm';
 import { ServiceConfig } from '@/types';
+import { getServiceConfig } from '@/config/services';
 import { config } from '@/lib/env';
 import { saveOrUpdateSwarm } from '@/services/swarm/db';
 import { SwarmStatus } from '@prisma/client';
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
     const { workspaceId, name } = body;
 
     // Validate required fields
@@ -49,7 +51,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Trigger the 3rd party request
-    const swarmService = new SwarmService(config as unknown as ServiceConfig);
+    const swarmConfig = getServiceConfig('swarm');
+    const swarmService = new SwarmService(swarmConfig);
+    
     // Append '-swarm' to the name for the 3rd party request
     const thirdPartyName = `${name}-swarm`;
     const apiResponse = await swarmService.createSwarm({ vanity_address, name: thirdPartyName, instance_type, env });

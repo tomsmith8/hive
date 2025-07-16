@@ -1,7 +1,7 @@
-import { BaseServiceClass } from '@/lib/base-service';
 import { ServiceConfig } from '@/types';
 import { CreateSwarmRequest, Swarm } from '@/types';
 import { createSwarmApi } from './api/swarm';
+import { BaseServiceClass } from '@/lib/base-service';
 
 export class SwarmService extends BaseServiceClass {
   public readonly serviceName = 'swarm';
