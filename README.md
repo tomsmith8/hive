@@ -131,7 +131,7 @@ The Code Graph feature requires GitHub OAuth integration for repository access:
 3. Fill in the application details:
    - **Application name**: Hive Platform
    - **Homepage URL**: `http://localhost:3000` (development) or your production URL
-   - **Authorization callback URL**: `http://localhost:3000/api/auth/github/callback` (development) or `https://yourdomain.com/api/auth/github/callback` (production)
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github` (development) or `https://yourdomain.com/api/auth/callback/github` (production)
 4. Click "Register application"
 5. Copy the **Client ID** and **Client Secret**
 

@@ -1,8 +1,8 @@
 import { BaseServiceClass } from '@/lib/base-service';
 import { ServiceConfig } from '@/types';
-import { CreatePoolRequest, Pool } from '@/types';
+import { CreatePoolRequest, GetPoolRequest, DeletePoolRequest, UpdatePoolRequest, Pool } from '@/types';
 import { fetchPoolEnvVars, updatePoolEnvVarsApi } from '@/services/pool-manager/api/envVars';
-import { createPoolApi } from '@/services/pool-manager/api/pool';
+import { createPoolApi, getPoolApi, deletePoolApi, updatePoolApi } from '@/services/pool-manager/api/pool';
 
 export class PoolManagerService extends BaseServiceClass {
   public readonly serviceName = 'poolManager';
@@ -13,6 +13,18 @@ export class PoolManagerService extends BaseServiceClass {
 
   async createPool(pool: CreatePoolRequest): Promise<Pool> {
     return createPoolApi(this.getClient(), pool, this.serviceName);
+  }
+
+  async getPool(pool: GetPoolRequest): Promise<Pool> {
+    return getPoolApi(this.getClient(), pool, this.serviceName);
+  }
+
+  async updatePool(pool: UpdatePoolRequest): Promise<Pool> {
+    return updatePoolApi(this.getClient(), pool, this.serviceName);
+  }
+
+  async deletePool(pool: DeletePoolRequest): Promise<Pool> {
+    return deletePoolApi(this.getClient(), pool, this.serviceName);
   }
 
   async getPoolEnvVars(poolName: string, poolApiKey: string) {
