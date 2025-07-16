@@ -44,4 +44,31 @@ export interface WizardState {
   envVars: EnvironmentVariable[];
 }
 
-export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9; 
+export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+// API Response Types
+export interface WizardStateResponse {
+  success: boolean;
+  data: {
+    wizardStep: string;
+    wizardData: Record<string, unknown>;
+    swarmId?: string;
+    swarmStatus?: string;
+    workspaceId: string;
+    workspaceSlug: string;
+    workspaceName: string;
+    user: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  };
+  message?: string;
+}
+
+export interface WizardStateError {
+  success: false;
+  message: string;
+  error?: string;
+} 

@@ -201,8 +201,8 @@ model Swarm {
   services              Json    @default("[]") @map("services")
 
   // Wizard progress tracking
-  wizardStep   SwarmWizardStep @default(DOMAIN_SETUP) @map("wizard_step")
-  wizardData   Json            @default("{}") @map("wizard_data") // Store wizard form data
+  wizardStep   String   @default("WELCOME")
+  wizardData   Json     @default("{}")
   
   // One-to-one relationship with workspace
   workspaceId String @unique @map("workspace_id")
@@ -591,16 +591,4 @@ enum CommentEntity {
   USER_STORY
   TASK
   REQUIREMENT
-}
-
-enum SwarmWizardStep {
-  WELCOME
-  REPOSITORY_SELECTION
-  PROJECT_NAME
-  GRAPH_INFRASTRUCTURE
-  INGEST_CODE
-  ADD_SERVICES
-  ENVIRONMENT_SETUP
-  REVIEW_POOL_ENVIRONMENT
-  STAKWORK_SETUP
 }
