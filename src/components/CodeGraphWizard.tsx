@@ -1,26 +1,25 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { CodeGraphWizardProps, WizardStep, Repository } from "@/types/wizard";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { CodeGraphWizardProps, WizardStep, Repository, WizardStepKey } from "@/types/wizard";
 import { useRepositories } from "@/hooks/useRepositories";
 import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWizardState } from "@/hooks/useWizardState";
+import { useWizardOperations } from "@/hooks/useWizardOperations";
 import { parseRepositoryName } from "@/utils/repositoryParser";
 import { WizardProgress } from "@/components/wizard/WizardProgress";
 import { WizardStepRenderer } from "@/components/wizard/WizardStepRenderer";
 import { ServicesData } from "@/components/stakgraph/types";
 
-
 export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const { workspace } = useWorkspace();
-  const { 
-    wizardStep, 
-    stepStatus, 
-    wizardData, 
-    updateWizardProgress 
-  } = useWizardState({ workspaceSlug: workspace?.slug || '' });
-  
+  const {
+    wizardStep,
+    stepStatus,
+    wizardData,
+  } = useWizardState({ workspaceSlug: workspace?.slug || "" });
+
   const [step, setStep] = useState<WizardStep>(1);
   const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,46 +29,59 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const [servicesData, setServicesData] = useState<ServicesData>({ services: [] });
   const [swarmId, setSwarmId] = useState<string | null>(null);
   const [swarmStatus, setSwarmStatus] = useState<'idle' | 'pending' | 'active' | 'error'>('idle');
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Use new wizard operations hook
+  const {
+    createSwarm,
+    startPolling,
+    stopPolling,
+    updateWizardProgress: updateWizardProgressUnified,
+  } = useWizardOperations({ workspaceSlug: workspace?.slug || "" });
 
   // Use custom hooks
   const { repositories, loading } = useRepositories({ username: user.github?.username });
-  const { 
-    envVars, 
-    handleEnvChange, 
-    handleAddEnv, 
-    handleRemoveEnv 
+  const {
+    envVars,
+    handleEnvChange,
+    handleAddEnv,
+    handleRemoveEnv,
   } = useEnvironmentVars();
-  
+
   // Step mapping from wizard step keys to numbers
-  const stepMapping = useMemo(() => ({
-    'WELCOME': 1,
-    'REPOSITORY_SELECT': 2,
-    'PROJECT_NAME': 3,
-    'GRAPH_INFRASTRUCTURE': 4,
-    'INGEST_CODE': 5,
-    'ADD_SERVICES': 6,
-    'ENVIRONMENT_SETUP': 7,
-    'REVIEW_POOL_ENVIRONMENT': 8,
-    'STAKWORK_SETUP': 9,
-  }), []);
-  
-  const reverseStepMapping = useMemo(() => ({
-    1: 'WELCOME',
-    2: 'REPOSITORY_SELECT',
-    3: 'PROJECT_NAME',
-    4: 'GRAPH_INFRASTRUCTURE',
-    5: 'INGEST_CODE',
-    6: 'ADD_SERVICES',
-    7: 'ENVIRONMENT_SETUP',
-    8: 'REVIEW_POOL_ENVIRONMENT',
-    9: 'STAKWORK_SETUP',
-  }), []);
+  const stepMapping = useMemo(
+    () => ({
+      WELCOME: 1,
+      REPOSITORY_SELECT: 2,
+      PROJECT_NAME: 3,
+      GRAPH_INFRASTRUCTURE: 4,
+      INGEST_CODE: 5,
+      ADD_SERVICES: 6,
+      ENVIRONMENT_SETUP: 7,
+      REVIEW_POOL_ENVIRONMENT: 8,
+      STAKWORK_SETUP: 9,
+    }),
+    []
+  );
+
+  const reverseStepMapping = useMemo(
+    () => ({
+      1: "WELCOME",
+      2: "REPOSITORY_SELECT",
+      3: "PROJECT_NAME",
+      4: "GRAPH_INFRASTRUCTURE",
+      5: "INGEST_CODE",
+      6: "ADD_SERVICES",
+      7: "ENVIRONMENT_SETUP",
+      8: "REVIEW_POOL_ENVIRONMENT",
+      9: "STAKWORK_SETUP",
+    }) as Record<WizardStep, WizardStepKey>,
+    []
+  );
 
   // Sync wizard state with local state
   useEffect(() => {
     if (wizardStep && stepMapping[wizardStep as keyof typeof stepMapping]) {
-      setStep(stepMapping[wizardStep as keyof typeof stepMapping]);
+      setStep(stepMapping[wizardStep as keyof typeof stepMapping] as WizardStep);
     }
     if (wizardData) {
       if (wizardData.selectedRepo) {
@@ -86,7 +98,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       }
     }
   }, [wizardStep, wizardData, stepMapping]);
-  
+
   // Parse repository name using regex when selected
   useEffect(() => {
     if (selectedRepo) {
@@ -96,41 +108,28 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     }
   }, [selectedRepo]);
 
-  // Swarm polling effect
+  // Swarm polling effect (replaced with hook)
   useEffect(() => {
     if (swarmId && swarmStatus === 'pending') {
-      // Start polling
-      pollIntervalRef.current = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/swarm/poll?id=${swarmId}`);
-          const data = await res.json();
-          if (data.status === 'ACTIVE') {
-            setSwarmStatus('active');
-            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-          }
-        } catch {
-          setSwarmStatus('error');
-          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        }
-      }, 3000);
+      startPolling(swarmId, () => {
+        setSwarmStatus('active');
+      });
       return () => {
-        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        stopPolling();
       };
     }
-    // Cleanup on unmount or when swarmId/status changes
     return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      stopPolling();
     };
-  }, [swarmId, swarmStatus]);
+  }, [swarmId, swarmStatus, startPolling, stopPolling]);
 
-  // Handler to create swarm
+  // Handler to create swarm (use hook)
   const handleCreateSwarm = async () => {
     setSwarmStatus('pending');
     try {
-      const res = await fetch('/api/swarm', { method: 'POST' });
-      const data = await res.json();
-      if (data.success && data.data?.id) {
-        setSwarmId(data.data.id);
+      const result = await createSwarm();
+      if (result && result.success && result.data?.id) {
+        setSwarmId(result.data.id);
       } else {
         setSwarmStatus('error');
       }
@@ -141,7 +140,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
 
   // Handler for continue (when swarm is active)
   const handleSwarmContinue = () => {
-    setStep(5);
+    setStep(5 as WizardStep);
     setSwarmId(null);
     setSwarmStatus('idle');
   };
@@ -153,10 +152,9 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   const handleNext = useCallback(async () => {
     if (step < 9) {
       const newStep = (step + 1) as WizardStep;
-      const newWizardStep = reverseStepMapping[newStep];
-      
+      const newWizardStep = reverseStepMapping[newStep] as WizardStepKey;
       try {
-        await updateWizardProgress({
+        await updateWizardProgressUnified({
           wizardStep: newWizardStep,
           stepStatus: 'PENDING',
           wizardData: {
@@ -165,22 +163,21 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             repoName,
             servicesData,
             step: newStep,
-          }
+          },
         });
         setStep(newStep);
       } catch (error) {
         console.error('Failed to update wizard progress:', error);
       }
     }
-  }, [step, updateWizardProgress, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
+  }, [step, updateWizardProgressUnified, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
 
   const handleBack = useCallback(async () => {
     if (step > 1) {
       const newStep = (step - 1) as WizardStep;
-      const newWizardStep = reverseStepMapping[newStep];
-      
+      const newWizardStep = reverseStepMapping[newStep] as WizardStepKey;
       try {
-        await updateWizardProgress({
+        await updateWizardProgressUnified({
           wizardStep: newWizardStep,
           stepStatus: 'PENDING',
           wizardData: {
@@ -189,14 +186,14 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
             repoName,
             servicesData,
             step: newStep,
-          }
+          },
         });
         setStep(newStep);
       } catch (error) {
         console.error('Failed to update wizard progress:', error);
       }
     }
-  }, [step, updateWizardProgress, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
+  }, [step, updateWizardProgressUnified, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
 
   const handleIngestStart = () => {
     setIngestStepStatus('pending');
@@ -212,10 +209,9 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleStepChange = useCallback(async (newStep: WizardStep) => {
-    const newWizardStep = reverseStepMapping[newStep];
-    
+    const newWizardStep = reverseStepMapping[newStep] as WizardStepKey;
     try {
-      await updateWizardProgress({
+      await updateWizardProgressUnified({
         wizardStep: newWizardStep,
         stepStatus: 'PENDING',
         wizardData: {
@@ -224,10 +220,9 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
           repoName,
           servicesData,
           step: newStep,
-        }
+        },
       });
       setStep(newStep);
-      
       if (newStep === 4) {
         setSwarmId(null);
         setSwarmStatus('idle');
@@ -235,11 +230,11 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     } catch (error) {
       console.error('Failed to update wizard progress:', error);
     }
-  }, [updateWizardProgress, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
-  
+  }, [updateWizardProgressUnified, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
+
   const handleStatusChange = useCallback(async (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => {
     try {
-      await updateWizardProgress({
+      await updateWizardProgressUnified({
         stepStatus: status,
         wizardData: {
           selectedRepo,
@@ -247,13 +242,12 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
           repoName,
           servicesData,
           step,
-        }
+        },
       });
     } catch (error) {
       console.error('Failed to update step status:', error);
     }
-  }, [updateWizardProgress, selectedRepo, projectName, repoName, servicesData, step]);
-
+  }, [updateWizardProgressUnified, selectedRepo, projectName, repoName, servicesData, step]);
 
   return (
     <div className="space-y-6">

@@ -309,3 +309,81 @@ The hooks work seamlessly with the existing workspace infrastructure:
 - **API routes**: Hooks automatically call `/api/workspaces/*` endpoints
 - **Authentication**: Integrates with NextAuth.js sessions
 - **URL routing**: Automatically detects workspace from `/w/[slug]/*` paths 
+
+# Wizard Operations & API Architecture
+
+## Overview
+
+The wizard flow is now powered by a dedicated service and hook architecture for maximum reusability and maintainability. All wizard-related API calls (wizard state, progress, reset, swarm creation, polling, and code ingestion) are centralized and exposed via a single ergonomic hook: `useWizardOperations`.
+
+## WizardService
+- Centralizes all API requests for wizard steps and swarm operations
+- Located at `src/services/wizard/WizardService.ts`
+- Integrated into the ServiceFactory for easy access
+
+## useWizardOperations Hook
+- Located at `src/hooks/useWizardOperations.ts`
+- Provides a unified interface for all wizard operations, including polling and error handling
+- Handles all backend communication for wizard steps, progress, swarm creation, and polling
+
+### API
+```typescript
+const {
+  loading,
+  error,
+  getWizardState,
+  updateWizardProgress,
+  resetWizard,
+  createSwarm,
+  pollSwarm,
+  startPolling,
+  stopPolling,
+} = useWizardOperations({ workspaceSlug, pollInterval });
+```
+
+- `getWizardState()`: Fetches the current wizard state for the workspace
+- `updateWizardProgress(data)`: Updates the wizard step, status, or data
+- `resetWizard()`: Resets the wizard to the initial state
+- `createSwarm()`: Triggers swarm creation for the workspace
+- `pollSwarm()`: Polls the status of the swarm
+- `startPolling()`, `stopPolling()`: Control polling for swarm status
+
+### Usage Example
+```typescript
+import { useWizardOperations } from '@/hooks/useWizardOperations';
+
+function WizardContainer({ workspaceSlug }) {
+  const {
+    loading,
+    error,
+    getWizardState,
+    updateWizardProgress,
+    createSwarm,
+    pollSwarm,
+    startPolling,
+    stopPolling,
+  } = useWizardOperations({ workspaceSlug, pollInterval: 3000 });
+
+  // Use these methods in your wizard step handlers
+}
+```
+
+## Wizard API Endpoints
+
+All wizard-related backend endpoints are consistently organized:
+- `GET    /api/code-graph/wizard-state`   — Get wizard state
+- `PUT    /api/code-graph/wizard-progress` — Update wizard progress
+- `POST   /api/code-graph/wizard-reset`    — Reset wizard
+- `POST   /api/swarm`                     — Create swarm
+- `POST   /api/swarm/poll`                — Poll swarm status
+- `GET    /api/swarm/poll`                — Get swarm status
+- `POST   /api/swarm/stakgraph/ingest`    — Ingest code for a swarm
+
+## Migration Notes
+- All direct API calls and polling logic have been removed from components and are now handled by the hook/service.
+- To add new wizard steps or backend operations, extend the WizardService and update the hook as needed.
+
+## Best Practices
+- Use the hook in your top-level wizard component and pass handlers down as needed.
+- Avoid direct fetch/axios calls for wizard operations in components—always use the hook.
+- For new step-specific API needs, add methods to WizardService and expose them via the hook. 
