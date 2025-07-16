@@ -94,8 +94,8 @@ export async function PUT(request: NextRequest) {
       } as WizardProgressResponse, { status: 404 });
     }
 
-    // Get current swarm state
-    const currentSwarm = await db.swarm.findFirst({
+    // Get current swarm state or create one if it doesn't exist
+    let currentSwarm = await db.swarm.findFirst({
       where: {
         workspaceId: workspace.id,
       },
@@ -107,11 +107,24 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    // Create swarm if it doesn't exist
     if (!currentSwarm) {
-      return NextResponse.json({
-        success: false,
-        message: 'No swarm found for workspace',
-      } as WizardProgressResponse, { status: 404 });
+      currentSwarm = await db.swarm.create({
+        data: {
+          workspaceId: workspace.id,
+          name: workspaceSlug,
+          status: 'PENDING',
+          wizardStep: prismaWizardStep || 'WELCOME',
+          stepStatus: prismaStepStatus || 'PENDING',
+          wizardData: wizardData || {},
+        },
+        select: {
+          id: true,
+          wizardStep: true,
+          stepStatus: true,
+          wizardData: true,
+        },
+      });
     }
 
     // Validate step transition if wizardStep is provided

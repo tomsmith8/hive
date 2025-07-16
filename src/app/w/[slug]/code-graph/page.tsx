@@ -277,10 +277,21 @@ export default function CodeGraphPage() {
         step: currentStep,
       };
 
+      // First create the wizard record
       await createSwarm(swarmData);
       
-      // Call the actual swarm creation API
-      const res = await fetch('/api/swarm', { method: 'POST' });
+      // Then call your existing swarm creation API
+      const res = await fetch('/api/swarm', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          workspaceId: workspace?.id,
+          name: localState.projectName || localState.repoName,
+        }),
+      });
+      
       const data = await res.json();
       if (data.success && data.data?.id) {
         setSwarmCreationStatus('active');
