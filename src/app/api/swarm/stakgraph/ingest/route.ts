@@ -83,9 +83,13 @@ export async function POST(request: NextRequest) {
 
     console.log("dataApi", dataApi)
 
+    const stakgraphUrl = `https://stakgraph.${swarm.name}`
+
+    console.log(">>>>>>>>.stakgraphUrl", stakgraphUrl)
+
     // Proxy to stakgraph microservice
     const apiResult = await swarmApiRequest({
-      swarmUrl: `https://stakgraph.${swarm.name}.sphinx.chat`,
+      swarmUrl: stakgraphUrl,
       endpoint: '/ingest',
       method: 'POST',
       apiKey: swarm.swarmApiKey,
