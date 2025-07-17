@@ -140,9 +140,9 @@ function IngestCodeStep({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex justify-between pt-4">
-          {!isPending && (
+          {/* {!isPending && (
             <Button variant="outline" type="button" onClick={onBack}>Back</Button>
-          )}
+          )} */}
           {status === 'idle' && (
             <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleStart}>
               Start Ingest
@@ -231,7 +231,6 @@ export function WizardStepRenderer({
       );
       
     case 4:
-      console.log("swarmStatus>>>>>>>", swarmStatus)
       return (
         <GraphInfrastructureStep
           swarmName={swarmName}
@@ -246,6 +245,7 @@ export function WizardStepRenderer({
       );
       
     case 5:
+      console.log("STEP INGEST CODE STEP")
       return (
         <IngestCodeStep
           status={ingestStepStatus}

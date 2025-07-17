@@ -6,6 +6,7 @@ import { swarmApiRequest } from '@/services/swarm/api/swarm';
 import { RepositoryStatus } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
+  console.log("..............INGEST API BEING CALLED............")
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

@@ -96,6 +96,8 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
       if (wizardData.servicesData) {
         setServicesData(wizardData.servicesData as ServicesData);
       }
+
+      setSwarmStatus(wizardData.swarmStatus);
     }
   }, [wizardStep, wizardData, stepMapping]);
 
@@ -110,6 +112,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
 
   // Swarm polling effect (replaced with hook)
   useEffect(() => {
+    console.log("swarmStatus++++++++++++++++++++++++++", swarmStatus)
     if (swarmId && swarmStatus === 'pending') {
       startPolling(swarmId, () => {
         setSwarmStatus('active');
@@ -150,6 +153,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleNext = useCallback(async () => {
+    console.log("HANDLE NEXT CALLED!!")
     if (step < 9) {
       const newStep = (step + 1) as WizardStep;
       const newWizardStep = reverseStepMapping[newStep] as WizardStepKey;
@@ -196,6 +200,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   }, [step, updateWizardProgressUnified, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
 
   const handleIngestStart = () => {
+    console.log("HANDLE INGEST START")
     setIngestStepStatus('pending');
   };
 
@@ -209,6 +214,7 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
   };
 
   const handleStepChange = useCallback(async (newStep: WizardStep) => {
+    //FIXME: ADD LOGIC FOR NOT DOING ANYTHING IF STEP IS COMPLETED
     const newWizardStep = reverseStepMapping[newStep] as WizardStepKey;
     try {
       await updateWizardProgressUnified({

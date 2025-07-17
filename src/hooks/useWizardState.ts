@@ -110,7 +110,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
         workspaceId: undefined,
         workspaceSlug: undefined,
         workspaceName: undefined,
-        user: undefined,
+        user: undefined
       };
     }
     return {
@@ -122,7 +122,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
       workspaceId: response.data.workspaceId,
       workspaceSlug: response.data.workspaceSlug,
       workspaceName: response.data.workspaceName,
-      user: response.data.user,
+      user: response.data.user
     };
   }, [response]);
 

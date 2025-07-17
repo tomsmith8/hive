@@ -155,6 +155,8 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
       throw new Error('Cannot update progress without existing swarm');
     }
 
+    console.log("updateWizardProgress>>>>>>", data)
+
     try {
       const progressResponse = await fetch('/api/code-graph/wizard-progress', {
         method: 'PUT',
@@ -193,9 +195,6 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
   const computed = useMemo(() => {
     const hasSwarm = response?.success && response.data;
 
-    console.log("COMPUTED - response:", response);
-    console.log("COMPUTED - hasSwarm:", hasSwarm);
-    
     if (!hasSwarm) {
       return {
         hasSwarm: false,
@@ -211,9 +210,6 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
         user: undefined,
       };
     }
-
-    console.log("COMPUTED - response.data:", response.data);
-    console.log("COMPUTED - swarmId:", response.data.swarmId);
 
     return {
       hasSwarm: true,

@@ -87,12 +87,12 @@ export default function CodeGraphPage() {
 
   // Determine current step based on swarm state or local state
   const currentStep = useMemo(() => {
-    // console.log("hasSwarm", hasSwarm)
-    // console.log("wizardStep", wizardStep)
-    // console.log(":stepMapping", stepMapping)
-    // console.log("localState.step", localState.step)
+    console.log("hasSwarm", hasSwarm)
+    console.log("wizardStep", wizardStep)
+    console.log(":stepMapping", stepMapping)
+    console.log("localState.step", localState.step)
     if (hasSwarm && wizardStep && stepMapping[wizardStep as keyof typeof stepMapping]) {
-      // console.log("RESULT CURRENT STEP: ", stepMapping[wizardStep as keyof typeof stepMapping])
+      console.log("RESULT CURRENT STEP: ", stepMapping[wizardStep as keyof typeof stepMapping])
       return stepMapping[wizardStep as keyof typeof stepMapping];
     }
     return localState.step;
@@ -115,6 +115,11 @@ export default function CodeGraphPage() {
 
       if (wizardData.servicesData) {
         updates.servicesData = wizardData.servicesData as ServicesData;
+      }
+
+      //FIXME: set proper creation status based on swarm status in the DB
+      if (_swarmStatus == 'ACTIVE') {
+        setSwarmCreationStatus("active")
       }
       
       if (Object.keys(updates).length > 0) {
@@ -142,18 +147,19 @@ export default function CodeGraphPage() {
   }, [localState.selectedRepo, updateLocalState]);
 
   useEffect(() => {
-    if (hasSwarm && swarmId && _swarmStatus === 'PENDING' && swarmCreationStatus === 'idle') {
-      // This is a loaded swarm that's still pending, start polling
-      setSwarmCreationStatus('pending');
+    if (hasSwarm && swarmId) {
+      console.log("current _swarmStatus", _swarmStatus)
+      if (_swarmStatus === 'PENDING' && swarmCreationStatus === 'idle') {
+        // This is a loaded swarm that's still pending, start polling
+        setSwarmCreationStatus('pending');
+      } else if (_swarmStatus === 'ACTIVE') {
+        setSwarmCreationStatus('active');
+      }
     }
   }, [hasSwarm, swarmId, _swarmStatus, swarmCreationStatus]);
 
   // Swarm polling effect
   useEffect(() => {
-    console.log("POLLING EFFECT - swarmId:", swarmId);
-    console.log("POLLING EFFECT - swarmCreationStatus:", swarmCreationStatus);
-    console.log("POLLING EFFECT - hasSwarm:", hasSwarm);
-
     if (swarmId && swarmCreationStatus === 'pending') {
       pollIntervalRef.current = setInterval(async () => {
         try {
@@ -179,6 +185,7 @@ export default function CodeGraphPage() {
 
   // Navigation handlers
   const handleNext = useCallback(async () => {
+    console.log("CALLED handleNext")
     if (currentStep < 9) {
       const newStep = (currentStep + 1) as WizardStep;
       
@@ -208,6 +215,8 @@ export default function CodeGraphPage() {
   }, [currentStep, hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
 
   const handleBack = useCallback(async () => {
+    console.log("CALLED handleBACK")
+    
     if (currentStep > 1) {
       const newStep = (currentStep - 1) as WizardStep;
       
@@ -237,6 +246,8 @@ export default function CodeGraphPage() {
   }, [currentStep, hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
 
   const handleStepChange = useCallback(async (newStep: WizardStep) => {
+    console.log("CALLED handleStepChange")
+
     if (hasSwarm) {
       // Update persisted state
       const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
@@ -262,9 +273,15 @@ export default function CodeGraphPage() {
   }, [hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
   
   const handleStatusChange = useCallback(async (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => {
+    console.log("CALLED handleStatusChange")
+
     if (hasSwarm) {
       try {
+        const newStep = (currentStep + 1) as WizardStep;
+        const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
+
         await updateWizardProgress({
+          wizardStep: newWizardStep,
           stepStatus: status,
           wizardData: {
             selectedRepo: localState.selectedRepo,
@@ -402,8 +419,6 @@ export default function CodeGraphPage() {
 
   // Get current step status for display
   const currentStepStatus = hasSwarm ? stepStatus : undefined;
-
-  console.log("SWARM NAME", swarmName)
 
   return (
     <div className="min-h-screen bg-background">
