@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       workspaceId,
       name: vanity_address, // domain name used for creation
       instanceType: instance_type,
-      environmentVariables: env,
+      environmentVariables: {},
       status: SwarmStatus.PENDING,
     });
 
@@ -55,11 +55,11 @@ export async function POST(request: NextRequest) {
     const swarmService = new SwarmService(swarmConfig);
     
     // Append '-swarm' to the name for the 3rd party request
-    const thirdPartyName = `${name}-swarm`;
+    const thirdPartyName = `${name.toLowerCase()}-Swarm`;
     const apiResponse = await swarmService.createSwarm({ vanity_address, name: thirdPartyName, instance_type, env });
 
     // Always update the swarm with returned swarm_id, keep status PENDING
-    const swarm_id = apiResponse?.swarm_id || vanity_address;
+    const swarm_id = apiResponse?.data?.swarm_id;
     const updatedSwarm = await saveOrUpdateSwarm({
       workspaceId,
       swarmUrl: `https://${vanity_address}/api`,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { WizardStateResponse, WizardStep, Repository } from '@/types/wizard';
+import { WizardStateResponse, WizardStep, Repository, REVERSE_STEP_MAPPING } from '@/types/wizard';
 import { ServicesData } from '@/components/stakgraph/types';
 import { EnvironmentVariable } from '@/types/wizard';
 
@@ -25,6 +25,7 @@ interface UseWizardFlowResult {
   // Swarm state (null if no swarm exists)
   hasSwarm: boolean;
   swarmId?: string;
+  swarmName?: string;
   swarmStatus?: string;
   
   // Wizard state
@@ -50,6 +51,7 @@ interface UseWizardFlowResult {
   
   // Swarm management
   createSwarm: (swarmData: Record<string, unknown>) => Promise<void>;
+  ingestCode: () => Promise<void>;
   updateWizardProgress: (data: {
     wizardStep?: string;
     stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
@@ -81,8 +83,11 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
     setLoading(true);
     setError(null);
     try {
+      console.log("-------------------")
       const res = await fetch(`/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`);
       const data = await res.json();
+
+      console.log("API Response:", data);
       
       if (res.ok && data.success) {
         setResponse(data);
@@ -141,6 +146,33 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
     }
   }, [workspaceSlug, checkSwarmExists]);
 
+  // Ingest code and start persisting state
+  const ingestCode = useCallback(async () => {
+    console.log("ingestCode endpoint being called......")
+    try {
+      // First update the wizard progress to create the swarm record
+      const progressResponse = await fetch('/api/swarm/stakgraph/ingest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          
+        }),
+      });
+
+      if (!progressResponse.ok) {
+        throw new Error('Failed to update wizard progress');
+      }
+
+      // Refresh to get the new swarm state
+      await checkSwarmExists();
+    } catch (error) {
+      console.error('Error creating swarm:', error);
+      throw error;
+    }
+  }, [workspaceSlug, checkSwarmExists]);
+
   // Update wizard progress (only works if swarm exists)
   const updateWizardProgress = useCallback(async (data: {
     wizardStep?: string;
@@ -150,6 +182,8 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
     if (!response?.success) {
       throw new Error('Cannot update progress without existing swarm');
     }
+
+    console.log("updateWizardProgress>>>>>>", data)
 
     try {
       const progressResponse = await fetch('/api/code-graph/wizard-progress', {
@@ -188,7 +222,7 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
   // Memoized computed values
   const computed = useMemo(() => {
     const hasSwarm = response?.success && response.data;
-    
+
     if (!hasSwarm) {
       return {
         hasSwarm: false,
@@ -196,6 +230,7 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
         stepStatus: undefined,
         wizardData: {},
         swarmId: undefined,
+        swarmName: undefined,
         swarmStatus: undefined,
         workspaceId: undefined,
         workspaceSlug: undefined,
@@ -210,6 +245,7 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
       stepStatus: response.data.stepStatus,
       wizardData: response.data.wizardData,
       swarmId: response.data.swarmId,
+      swarmName: response.data.swarmName,
       swarmStatus: response.data.swarmStatus,
       workspaceId: response.data.workspaceId,
       workspaceSlug: response.data.workspaceSlug,

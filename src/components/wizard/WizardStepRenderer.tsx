@@ -28,6 +28,7 @@ interface WizardStepRendererProps {
   ingestStepStatus: 'idle' | 'pending' | 'complete';
   servicesData: ServicesData;
   swarmStatus: 'idle' | 'pending' | 'active' | 'error';
+  swarmName: string;
   envVars: EnvironmentVariable[];
   onSearchChange: (term: string) => void;
   onRepoSelect: (repo: Repository) => void;
@@ -64,7 +65,9 @@ function IngestCodeStep({
   const [countdown, setCountdown] = useState(5);
   
   const handleStart = () => {
+    console.log("CALLED handleStart")
     onStatusChange?.('PROCESSING');
+    console.log("CALLING onStart()")
     onStart();
   };
   
@@ -73,18 +76,7 @@ function IngestCodeStep({
     onContinue();
   };
   
-  useEffect(() => { 
-    if (isPending) setCountdown(5); 
-  }, [isPending]);
-  
-  useEffect(() => { 
-    if (isPending && countdown > 0) { 
-      const t = setTimeout(() => setCountdown(countdown - 1), 1000); 
-      return () => clearTimeout(t); 
-    } 
-  }, [isPending, countdown]);
-  
-  const canContinue = isPending && countdown === 0;
+  const canContinue = isPending;
   
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
@@ -139,9 +131,9 @@ function IngestCodeStep({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex justify-between pt-4">
-          {!isPending && (
+          {/* {!isPending && (
             <Button variant="outline" type="button" onClick={onBack}>Back</Button>
-          )}
+          )} */}
           {status === 'idle' && (
             <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleStart}>
               Start Ingest
@@ -175,6 +167,7 @@ export function WizardStepRenderer({
   ingestStepStatus,
   servicesData,
   swarmStatus,
+  swarmName,
   envVars,
   onSearchChange,
   onRepoSelect,
@@ -231,6 +224,7 @@ export function WizardStepRenderer({
     case 4:
       return (
         <GraphInfrastructureStep
+          swarmName={swarmName}
           graphDomain={sanitizeWorkspaceName(projectName)}
           status={swarmStatus === 'idle' ? 'idle' : swarmStatus === 'pending' ? 'pending' : 'complete'}
           onCreate={onCreateSwarm}
@@ -242,6 +236,7 @@ export function WizardStepRenderer({
       );
       
     case 5:
+      console.log("STEP INGEST CODE STEP")
       return (
         <IngestCodeStep
           status={ingestStepStatus}

@@ -7,6 +7,7 @@ export class WizardService extends BaseServiceClass {
   // Get wizard state
   async getWizardState(workspaceSlug: string): Promise<WizardStateResponse> {
     return this.handleRequest(async () => {
+      console.log("/*/**//**/*/*/*/*/*/*/*/-*-/*-//*--*/-*/")
       const response: { data: WizardStateResponse } = await this.client.get(`/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`);
       return response.data;
     }, 'getWizardState');

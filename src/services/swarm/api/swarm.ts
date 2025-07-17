@@ -1,4 +1,4 @@
-import { CreateSwarmRequest, Swarm } from '@/types';
+import { CreateSwarmRequest, CreateSwarmResponse } from '@/types';
 import { HttpClient } from '@/lib/http-client';
 import { env } from '@/lib/env';
 
@@ -6,8 +6,8 @@ export async function createSwarmApi(
   client: HttpClient,
   swarm: CreateSwarmRequest,
   serviceName: string
-): Promise<Swarm> {
-  return client.post<Swarm>(
+): Promise<CreateSwarmResponse> {
+  return client.post<CreateSwarmResponse>(
     `/api/super/new_swarm`,
     swarm,
     { 'x-super-token': env.SWARM_SUPERADMIN_API_KEY as string },
@@ -22,6 +22,9 @@ export async function fetchSwarmDetails(swarmId: string): Promise<{ ok: boolean;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const url = `${env.SWARM_SUPER_ADMIN_URL}/api/super/details?id=${encodeURIComponent(swarmId)}`;
+
+      console.log("fetch searm details url", url)
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -29,6 +32,9 @@ export async function fetchSwarmDetails(swarmId: string): Promise<{ ok: boolean;
         },
       });
       const data = await response.json();
+
+      console.log("fetch swarm details data", data)
+
       if (response.ok) {
         return { ok: true, data, status: response.status };
       } else {
@@ -60,7 +66,7 @@ export async function swarmApiRequest({
   try {
     const url = `${swarmUrl.replace(/\/$/, '')}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
     const headers: Record<string, string> = {
-      'x-api-token': apiKey,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     };
     const response = await fetch(url, {

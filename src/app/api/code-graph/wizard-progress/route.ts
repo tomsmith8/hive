@@ -57,6 +57,8 @@ export async function PUT(request: NextRequest) {
     // Parse request body
     const body: WizardProgressRequest = await request.json();
     const { workspaceSlug, wizardStep, stepStatus, wizardData } = body;
+
+    console.log("BODY wizardStep", wizardStep)
     
     // Convert types to Prisma enums if provided
     const prismaWizardStep = enumFromString(SwarmWizardStep, wizardStep, SwarmWizardStep.WELCOME);
@@ -108,6 +110,10 @@ export async function PUT(request: NextRequest) {
         wizardData: true,
       },
     });
+
+    console.log("currentSwarm", currentSwarm)
+    console.log("wizardStep:", prismaWizardStep)
+    console.log("stepStatus:", prismaStepStatus)
 
     // Use saveOrUpdateSwarm to create or update the swarm
     const swarm = await saveOrUpdateSwarm({

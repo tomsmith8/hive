@@ -209,6 +209,7 @@ model Swarm {
   workspaceId String @unique @map("workspace_id")
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
+  @@index([swarmId])
   @@map("swarms")
 }
 

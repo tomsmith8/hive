@@ -39,6 +39,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
     setLoading(true);
     setError(null);
     try {
+      console.log("*************************")
       const res = await fetch(`/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`);
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -109,7 +110,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
         workspaceId: undefined,
         workspaceSlug: undefined,
         workspaceName: undefined,
-        user: undefined,
+        user: undefined
       };
     }
     return {
@@ -121,7 +122,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
       workspaceId: response.data.workspaceId,
       workspaceSlug: response.data.workspaceSlug,
       workspaceName: response.data.workspaceName,
-      user: response.data.user,
+      user: response.data.user
     };
   }, [response]);
 

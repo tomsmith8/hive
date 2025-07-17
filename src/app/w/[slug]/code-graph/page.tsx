@@ -33,6 +33,7 @@ export default function CodeGraphPage() {
     error: wizardError,
     hasSwarm,
     swarmId,
+    swarmName,
     swarmStatus: _swarmStatus,
     wizardStep, 
     stepStatus, 
@@ -41,6 +42,7 @@ export default function CodeGraphPage() {
     updateLocalState,
     resetLocalState,
     createSwarm,
+    ingestCode,
     updateWizardProgress,
     refresh: refreshWizardState
   } = useWizardFlow({ workspaceSlug: workspace?.slug || '' });
@@ -86,7 +88,12 @@ export default function CodeGraphPage() {
 
   // Determine current step based on swarm state or local state
   const currentStep = useMemo(() => {
+    console.log("hasSwarm", hasSwarm)
+    console.log("wizardStep", wizardStep)
+    console.log(":stepMapping", stepMapping)
+    console.log("localState.step", localState.step)
     if (hasSwarm && wizardStep && stepMapping[wizardStep as keyof typeof stepMapping]) {
+      console.log("RESULT CURRENT STEP: ", stepMapping[wizardStep as keyof typeof stepMapping])
       return stepMapping[wizardStep as keyof typeof stepMapping];
     }
     return localState.step;
@@ -106,8 +113,14 @@ export default function CodeGraphPage() {
       if (wizardData.repoName) {
         updates.repoName = wizardData.repoName as string;
       }
+
       if (wizardData.servicesData) {
         updates.servicesData = wizardData.servicesData as ServicesData;
+      }
+
+      //FIXME: set proper creation status based on swarm status in the DB
+      if (_swarmStatus == 'ACTIVE') {
+        setSwarmCreationStatus("active")
       }
       
       if (Object.keys(updates).length > 0) {
@@ -133,6 +146,18 @@ export default function CodeGraphPage() {
       });
     }
   }, [localState.selectedRepo, updateLocalState]);
+
+  useEffect(() => {
+    if (hasSwarm && swarmId) {
+      console.log("current _swarmStatus", _swarmStatus)
+      if (_swarmStatus === 'PENDING' && swarmCreationStatus === 'idle') {
+        // This is a loaded swarm that's still pending, start polling
+        setSwarmCreationStatus('pending');
+      } else if (_swarmStatus === 'ACTIVE') {
+        setSwarmCreationStatus('active');
+      }
+    }
+  }, [hasSwarm, swarmId, _swarmStatus, swarmCreationStatus]);
 
   // Swarm polling effect
   useEffect(() => {
@@ -161,6 +186,7 @@ export default function CodeGraphPage() {
 
   // Navigation handlers
   const handleNext = useCallback(async () => {
+    console.log("CALLED handleNext")
     if (currentStep < 9) {
       const newStep = (currentStep + 1) as WizardStep;
       
@@ -190,6 +216,8 @@ export default function CodeGraphPage() {
   }, [currentStep, hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
 
   const handleBack = useCallback(async () => {
+    console.log("CALLED handleBACK")
+    
     if (currentStep > 1) {
       const newStep = (currentStep - 1) as WizardStep;
       
@@ -219,6 +247,8 @@ export default function CodeGraphPage() {
   }, [currentStep, hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
 
   const handleStepChange = useCallback(async (newStep: WizardStep) => {
+    console.log("CALLED handleStepChange")
+
     if (hasSwarm) {
       // Update persisted state
       const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
@@ -244,9 +274,15 @@ export default function CodeGraphPage() {
   }, [hasSwarm, updateWizardProgress, localState, reverseStepMapping, updateLocalState]);
   
   const handleStatusChange = useCallback(async (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => {
+    console.log("CALLED handleStatusChange")
+
     if (hasSwarm) {
       try {
+        const newStep = (currentStep) as WizardStep;
+        const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
+
         await updateWizardProgress({
+          wizardStep: newWizardStep,
           stepStatus: status,
           wizardData: {
             selectedRepo: localState.selectedRepo,
@@ -327,9 +363,33 @@ export default function CodeGraphPage() {
     updateLocalState({ searchTerm: term });
   };
 
-  const handleIngestStart = () => {
+  const handleIngestStart = useCallback(async () => {
+    console.log("handleIngestStart called - setting ingestStepStatus to pending from page");
     setIngestStepStatus('pending');
-  };
+
+    try {
+      const res = await fetch('/api/swarm/stakgraph/ingest', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          swarmId: swarmId
+        }),
+      });
+      
+      const data = await res.json();
+      console.log("response from handleIngestStart", data)
+      // if (data.success && data.data?.id) {
+      //   setSwarmCreationStatus('active');
+      // } else {
+      //   setSwarmCreationStatus('error');
+      // }
+    } catch (error) {
+      console.error('Failed to ingest code:', error);
+      // setSwarmCreationStatus('error');
+    }
+  }, [swarmId]);
 
   const handleIngestContinue = () => {
     setIngestStepStatus('complete');
@@ -409,6 +469,7 @@ export default function CodeGraphPage() {
             ingestStepStatus={ingestStepStatus}
             servicesData={localState.servicesData}
             swarmStatus={swarmCreationStatus}
+            swarmName={swarmName}
             envVars={localState.envVars}
             onSearchChange={handleSearchChange}
             onRepoSelect={handleRepoSelect}

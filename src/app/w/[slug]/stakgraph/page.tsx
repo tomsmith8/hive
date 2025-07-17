@@ -344,7 +344,8 @@ export default function StakgraphPage() {
 
       {/* Subtle: Create Stakgraph section (only if all fields are empty, with smooth animation) */}
       <AnimatePresence>
-        {!hasAnyField && (
+        {/* FIXME: CHECK FOR WIZARD STATE IF COMPLETED OR NOT */}
+        {(
           <motion.div
             key="create-stakgraph-prompt"
             initial={{ opacity: 0, y: -10 }}
