@@ -12,7 +12,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useToast } from "@/components/ui/use-toast";
-import { ChatMessage, ChatRole, ChatStatus, Option } from "@/lib/chat";
+import {
+  ChatMessage,
+  ChatRole,
+  ChatStatus,
+  Option,
+  createChatMessage,
+} from "@/lib/chat";
 import { assistantMessage, codeMessage } from "./mockmsgs";
 import {
   FormArtifact,
@@ -99,18 +105,13 @@ export default function TaskChatPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const newMessage: ChatMessage = {
+    const newMessage: ChatMessage = createChatMessage({
       id: Date.now().toString(),
       message: input,
-      role: "USER" as ChatRole,
-      timestamp: new Date().toISOString(),
-      status: "SENDING" as ChatStatus,
+      role: ChatRole.USER,
+      status: ChatStatus.SENDING,
       workspaceUUID: workspace?.id,
-      contextTags: [],
-      artifacts: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    });
 
     setMessages((msgs) => [...msgs, newMessage]);
     const messageText = input;
@@ -145,9 +146,7 @@ export default function TaskChatPage() {
       // Update message status to SENT
       setMessages((msgs) =>
         msgs.map((msg) =>
-          msg.id === newMessage.id
-            ? { ...msg, status: "SENT" as ChatStatus }
-            : msg
+          msg.id === newMessage.id ? { ...msg, status: ChatStatus.SENT } : msg
         )
       );
 
@@ -161,9 +160,7 @@ export default function TaskChatPage() {
       // Update message status to ERROR
       setMessages((msgs) =>
         msgs.map((msg) =>
-          msg.id === newMessage.id
-            ? { ...msg, status: "ERROR" as ChatStatus }
-            : msg
+          msg.id === newMessage.id ? { ...msg, status: ChatStatus.ERROR } : msg
         )
       );
 
@@ -179,18 +176,13 @@ export default function TaskChatPage() {
 
   const handleStart = (task: string) => {
     setStarted(true);
-    const userMessage: ChatMessage = {
+    const userMessage: ChatMessage = createChatMessage({
       id: Date.now().toString(),
       message: task,
-      role: "USER" as ChatRole,
-      timestamp: new Date().toISOString(),
-      status: "SENT" as ChatStatus,
+      role: ChatRole.USER,
+      status: ChatStatus.SENT,
       workspaceUUID: workspace?.id,
-      contextTags: [],
-      artifacts: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    });
     setMessages([userMessage]);
 
     // Auto-reply after a short delay

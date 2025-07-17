@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { db } from "@/lib/db";
-import { ChatRole, ChatStatus, ArtifactType } from "@prisma/client";
+import {
+  ChatRole,
+  ChatStatus,
+  ArtifactType,
+  type ContextTag,
+  type Artifact,
+  type ChatMessage,
+} from "@/lib/chat";
 
 interface ArtifactRequest {
   type: ArtifactType;
@@ -28,10 +35,10 @@ export async function POST(request: NextRequest) {
     const {
       taskId,
       message,
-      contextTags = [],
+      contextTags = [] as ContextTag[],
       sourceWebsocketID,
       workspaceUUID,
-      artifacts = [],
+      artifacts = [] as ArtifactRequest[],
     } = body;
 
     // Validate required fields
@@ -132,24 +139,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Convert to client-side type
+    const clientMessage: ChatMessage = {
+      ...chatMessage,
+      contextTags: JSON.parse(
+        chatMessage.contextTags as string
+      ) as ContextTag[],
+      artifacts: chatMessage.artifacts.map((artifact) => ({
+        ...artifact,
+        content: artifact.content as unknown,
+      })) as Artifact[],
+    };
+
     return NextResponse.json(
       {
         success: true,
-        data: {
-          id: chatMessage.id,
-          taskId: chatMessage.taskId,
-          message: chatMessage.message,
-          role: chatMessage.role,
-          timestamp: chatMessage.timestamp,
-          contextTags: JSON.parse(chatMessage.contextTags as string),
-          status: chatMessage.status,
-          sourceWebsocketID: chatMessage.sourceWebsocketID,
-          workspaceUUID: chatMessage.workspaceUUID,
-          artifacts: chatMessage.artifacts,
-          task: chatMessage.task,
-          createdAt: chatMessage.createdAt,
-          updatedAt: chatMessage.updatedAt,
-        },
+        data: clientMessage,
       },
       { status: 201 }
     );

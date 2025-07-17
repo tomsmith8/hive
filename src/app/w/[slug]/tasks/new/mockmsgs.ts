@@ -6,25 +6,27 @@ import {
   CodeContent,
   BrowserContent,
   FormContent,
+  createChatMessage,
+  createArtifact,
 } from "@/lib/chat";
 
 export function codeMessage(workspaceUUID: string | undefined): ChatMessage {
-  return {
+  const baseMessage = createChatMessage({
     id: (Date.now() + 2).toString(),
     message:
       "Perfect! I've created the connection leak monitor implementation. Here's what I've built:",
-    role: "ASSISTANT" as ChatRole,
-    timestamp: new Date().toISOString(),
-    status: "SENT" as ChatStatus,
-    workspaceUUID: workspaceUUID,
-    contextTags: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    role: ChatRole.ASSISTANT,
+    status: ChatStatus.SENT,
+    workspaceUUID,
+  });
+
+  return {
+    ...baseMessage,
     artifacts: [
-      {
+      createArtifact({
         id: "550e8400-e29b-41d4-a716-446655440123",
         messageId: "msg_123456",
-        type: "CODE" as ArtifactType,
+        type: ArtifactType.CODE,
         content: {
           file: "stakwork/senza-lnd/lib/connection_leak_monitor.rb",
           content: `class ConnectionLeakMonitor
@@ -82,13 +84,11 @@ end`,
             "Create main connection leak monitor class that tracks Aurora Postgres connection pool metrics and detects leaks",
           action: "create",
         } as CodeContent,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
+      }),
+      createArtifact({
         id: "550e8400-e29b-41d4-a716-446655440124",
         messageId: "msg_123457",
-        type: "CODE" as ArtifactType,
+        type: ArtifactType.CODE,
         content: {
           file: "stakwork/senza-lnd/config/database.json",
           content: `{
@@ -121,19 +121,15 @@ end`,
             "Add Aurora Postgres database configuration with connection leak monitoring settings",
           action: "create",
         } as CodeContent,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
+      }),
+      createArtifact({
         id: "preview-1",
         messageId: "msg_123458",
-        type: "BROWSER" as ArtifactType,
+        type: ArtifactType.BROWSER,
         content: {
           url: "https://community.sphinx.chat",
         } as BrowserContent,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
+      }),
     ],
   };
 }
@@ -141,22 +137,23 @@ end`,
 export function assistantMessage(
   workspaceUUID: string | undefined
 ): ChatMessage {
-  return {
-    id: (Date.now() + 1).toString(),
+  const messageId = (Date.now() + 1).toString();
+  const baseMessage = createChatMessage({
+    id: messageId,
     message:
       "I'll help you build a connection leak monitor for your Aurora Postgres database. Let me create the necessary files and configuration.",
-    role: "ASSISTANT" as ChatRole,
-    timestamp: new Date().toISOString(),
-    status: "SENT" as ChatStatus,
+    role: ChatRole.ASSISTANT,
+    status: ChatStatus.SENT,
     workspaceUUID,
-    contextTags: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+  });
+
+  return {
+    ...baseMessage,
     artifacts: [
-      {
+      createArtifact({
         id: "action-confirm",
-        messageId: (Date.now() + 1).toString(),
-        type: "FORM" as ArtifactType,
+        messageId,
+        type: ArtifactType.FORM,
         content: {
           actionText:
             "Here's my plan to implement the connection leak monitor:",
@@ -175,9 +172,7 @@ export function assistantMessage(
             },
           ],
         } as FormContent,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
+      }),
     ],
   };
 }
