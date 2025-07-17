@@ -59,10 +59,10 @@ export async function POST(request: NextRequest) {
     const apiResponse = await swarmService.createSwarm({ vanity_address, name: thirdPartyName, instance_type, env });
 
     // Always update the swarm with returned swarm_id, keep status PENDING
-    const swarm_id = apiResponse?.swarm_id || vanity_address;
+    const swarm_id = apiResponse?.data?.swarm_id || vanity_address;
     const updatedSwarm = await saveOrUpdateSwarm({
       workspaceId,
-      swarmUrl: `https://${swarm_id}/api`,
+      swarmUrl: `https://${swarm_id}.sphinx.chat/api`,
       status: SwarmStatus.PENDING,
       swarmId: swarm_id,
     });
