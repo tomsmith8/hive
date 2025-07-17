@@ -60,7 +60,6 @@ export function createChatMessage(data: {
   role: ChatRole;
   status: ChatStatus;
   taskId?: string;
-  workspaceUUID?: string;
   contextTags?: ContextTag[];
   artifacts?: Artifact[];
   sourceWebsocketID?: string;
@@ -74,7 +73,6 @@ export function createChatMessage(data: {
     contextTags: data.contextTags || [],
     status: data.status,
     sourceWebsocketID: data.sourceWebsocketID || null,
-    workspaceUUID: data.workspaceUUID || null,
     artifacts: data.artifacts || [],
     createdAt: new Date(),
     updatedAt: new Date(),

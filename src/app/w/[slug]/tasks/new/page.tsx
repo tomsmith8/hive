@@ -10,7 +10,6 @@ import { useRef, useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { useToast } from "@/components/ui/use-toast";
 import {
   ChatMessage,
@@ -84,7 +83,6 @@ function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
 export default function TaskChatPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: session } = useSession(); // TODO: Use for authentication when creating tasks
-  const { workspace } = useWorkspace();
   const { toast } = useToast();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -110,7 +108,6 @@ export default function TaskChatPage() {
       message: input,
       role: ChatRole.USER,
       status: ChatStatus.SENDING,
-      workspaceUUID: workspace?.id,
     });
 
     setMessages((msgs) => [...msgs, newMessage]);
@@ -128,7 +125,6 @@ export default function TaskChatPage() {
         body: JSON.stringify({
           taskId: currentTaskId,
           message: messageText,
-          workspaceUUID: workspace?.id,
           contextTags: [],
           artifacts: [],
         }),
@@ -181,13 +177,12 @@ export default function TaskChatPage() {
       message: task,
       role: ChatRole.USER,
       status: ChatStatus.SENT,
-      workspaceUUID: workspace?.id,
     });
     setMessages([userMessage]);
 
     // Auto-reply after a short delay
     setTimeout(() => {
-      const msg = assistantMessage(workspace?.id);
+      const msg = assistantMessage();
       setMessages((prev) => [...prev, msg]);
     }, 1000);
   };
@@ -212,7 +207,7 @@ export default function TaskChatPage() {
 
       // Add new message with artifacts after a short delay
       setTimeout(() => {
-        const codemsg = codeMessage(workspace?.id);
+        const codemsg = codeMessage();
         setMessages((prev) => [...prev, codemsg]);
       }, 800);
     }

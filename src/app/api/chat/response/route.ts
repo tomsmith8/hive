@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
       message,
       contextTags = [] as ContextTag[],
       sourceWebsocketID,
-      workspaceUUID,
       artifacts = [] as ArtifactRequest[],
     } = body;
 
@@ -60,7 +59,6 @@ export async function POST(request: NextRequest) {
         contextTags: JSON.stringify(contextTags),
         status: ChatStatus.SENT,
         sourceWebsocketID,
-        workspaceUUID,
         artifacts: {
           create: artifacts.map((artifact: ArtifactRequest) => ({
             type: artifact.type,
@@ -118,13 +116,13 @@ export async function POST(request: NextRequest) {
 // GET endpoint for Server-Sent Events connection (simplified for now)
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const workspaceUUID = searchParams.get("workspace");
+  const workspaceId = searchParams.get("workspace");
 
   // TODO: Implement proper SSE/WebSocket connection
   // For now, return a simple response indicating the endpoint is available
   return NextResponse.json({
     message: "Real-time endpoint available",
-    workspaceUUID,
+    workspaceId,
     timestamp: new Date().toISOString(),
   });
 }

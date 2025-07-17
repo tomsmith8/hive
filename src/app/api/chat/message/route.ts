@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
       message,
       contextTags = [] as ContextTag[],
       sourceWebsocketID,
-      workspaceUUID,
       artifacts = [] as ArtifactRequest[],
     } = body;
 
@@ -51,46 +50,14 @@ export async function POST(request: NextRequest) {
 
     // Validate task exists and user has access (if taskId provided)
     if (taskId) {
+      // Find the task and get its workspace
       const task = await db.task.findFirst({
         where: {
           id: taskId,
           deleted: false,
         },
-        include: {
-          feature: {
-            include: {
-              product: {
-                include: {
-                  workspace: {
-                    include: {
-                      members: {
-                        where: { userId },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          userStory: {
-            include: {
-              feature: {
-                include: {
-                  product: {
-                    include: {
-                      workspace: {
-                        include: {
-                          members: {
-                            where: { userId },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
+        select: {
+          workspaceId: true,
         },
       });
 
@@ -98,15 +65,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Task not found" }, { status: 404 });
       }
 
-      // Check if user has access to the workspace containing this task
-      const workspace =
-        task.feature?.product?.workspace ||
-        task.userStory?.feature?.product?.workspace;
+      // Check if user is a member of this workspace
+      const isMember = await db.workspaceMember.findFirst({
+        where: {
+          workspaceId: task.workspaceId,
+          userId,
+        },
+      });
 
-      if (
-        !workspace ||
-        (workspace.ownerId !== userId && workspace.members.length === 0)
-      ) {
+      if (!isMember) {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     }
@@ -120,7 +87,6 @@ export async function POST(request: NextRequest) {
         contextTags: JSON.stringify(contextTags),
         status: ChatStatus.SENT,
         sourceWebsocketID,
-        workspaceUUID,
         artifacts: {
           create: artifacts.map((artifact: ArtifactRequest) => ({
             type: artifact.type,

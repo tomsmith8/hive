@@ -153,6 +153,7 @@ model Workspace {
   
   // PM Structure
   products Product[]
+  tasks    Task[]
 
   @@index([ownerId])
   @@index([deleted])
@@ -291,7 +292,6 @@ model Feature {
   
   userStories  UserStory[]
   requirements Requirement[]
-  tasks        Task[]
   roadmapItems RoadmapItem[]
   comments     Comment[]     @relation("FeatureComments")
   
@@ -327,7 +327,6 @@ model UserStory {
   createdAt           DateTime    @default(now()) @map("created_at")
   updatedAt           DateTime    @updatedAt @map("updated_at")
   
-  tasks               Task[]
   comments            Comment[]   @relation("UserStoryComments")
   
   @@index([featureId])
@@ -369,11 +368,9 @@ model Task {
   title         String
   description   String?
   
-  // Flexible assignment - can be to user story OR directly to feature
-  userStoryId   String?     @map("user_story_id")
-  userStory     UserStory?  @relation(fields: [userStoryId], references: [id], onDelete: Cascade)
-  featureId     String?     @map("feature_id")
-  feature       Feature?    @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  // Direct workspace relationship
+  workspaceId   String      @map("workspace_id")
+  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   
   // Assignment and repository linking
   assigneeId    String?     @map("assignee_id")
@@ -400,8 +397,7 @@ model Task {
   comments      Comment[]   @relation("TaskComments")
   chatMessages  ChatMessage[] 
 
-  @@index([userStoryId])
-  @@index([featureId])
+  @@index([workspaceId])
   @@index([assigneeId])
   @@index([status])
   @@index([deleted])
@@ -422,7 +418,6 @@ model ChatMessage {
   contextTags         Json        @default("[]") // stores ContextTag[]
   status              ChatStatus  @default(SENDING)
   sourceWebsocketID   String?     @map("source_websocket_id")
-  workspaceUUID       String?     @map("workspace_uuid")
   
   artifacts           Artifact[]
   

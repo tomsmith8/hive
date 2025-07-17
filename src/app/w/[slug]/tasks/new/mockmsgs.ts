@@ -10,14 +10,13 @@ import {
   createArtifact,
 } from "@/lib/chat";
 
-export function codeMessage(workspaceUUID: string | undefined): ChatMessage {
+export function codeMessage(): ChatMessage {
   const baseMessage = createChatMessage({
     id: (Date.now() + 2).toString(),
     message:
       "Perfect! I've created the connection leak monitor implementation. Here's what I've built:",
     role: ChatRole.ASSISTANT,
     status: ChatStatus.SENT,
-    workspaceUUID,
   });
 
   return {
@@ -134,9 +133,7 @@ end`,
   };
 }
 
-export function assistantMessage(
-  workspaceUUID: string | undefined
-): ChatMessage {
+export function assistantMessage(): ChatMessage {
   const messageId = (Date.now() + 1).toString();
   const baseMessage = createChatMessage({
     id: messageId,
@@ -144,7 +141,6 @@ export function assistantMessage(
       "I'll help you build a connection leak monitor for your Aurora Postgres database. Let me create the necessary files and configuration.",
     role: ChatRole.ASSISTANT,
     status: ChatStatus.SENT,
-    workspaceUUID,
   });
 
   return {
