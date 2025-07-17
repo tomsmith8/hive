@@ -11,12 +11,12 @@ interface StakworkSetupStepProps {
   stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
-export function StakworkSetupStep({
+const StakworkSetupStep = ({
   workspaceName,
   onFinish,
   onBack,
   stepStatus: _stepStatus,
-}: StakworkSetupStepProps) {
+}: StakworkSetupStepProps) => {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center">
@@ -77,4 +77,6 @@ export function StakworkSetupStep({
       </CardContent>
     </Card>
   );
-} 
+};
+
+export default StakworkSetupStep;
