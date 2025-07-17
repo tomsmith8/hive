@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const swarm_id = apiResponse?.data?.swarm_id || vanity_address;
     const updatedSwarm = await saveOrUpdateSwarm({
       workspaceId,
-      swarmUrl: `https://${swarm_id}.sphinx.chat/api`,
+      swarmUrl: `https://${vanity_address}/api`,
       status: SwarmStatus.PENDING,
       swarmId: swarm_id,
     });
