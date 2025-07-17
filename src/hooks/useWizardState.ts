@@ -39,6 +39,7 @@ export function useWizardState({ workspaceSlug }: UseWizardStateOptions): UseWiz
     setLoading(true);
     setError(null);
     try {
+      console.log("*************************")
       const res = await fetch(`/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`);
       const data = await res.json();
       if (!res.ok || !data.success) {

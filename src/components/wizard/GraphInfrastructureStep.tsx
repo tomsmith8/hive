@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GraphInfrastructureStepProps {
+  swarmName: string;
   graphDomain: string;
   status: "idle" | "pending" | "complete";
   onCreate: () => Promise<void>;
@@ -17,6 +18,7 @@ interface GraphInfrastructureStepProps {
 }
 
 export function GraphInfrastructureStep({
+  swarmName,
   graphDomain,
   status,
   onCreate,
@@ -102,7 +104,7 @@ export function GraphInfrastructureStep({
           </Label>
           <Input
             id="graphDomain"
-            value={`${graphDomain}.sphinx.chat`}
+            value={swarmName || `${graphDomain}.sphinx.chat`}
             readOnly
             tabIndex={-1}
             className="mt-2 bg-muted cursor-not-allowed select-all focus:outline-none focus:ring-0 hover:bg-muted"

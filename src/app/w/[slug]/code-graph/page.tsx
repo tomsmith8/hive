@@ -33,6 +33,7 @@ export default function CodeGraphPage() {
     error: wizardError,
     hasSwarm,
     swarmId,
+    swarmName,
     swarmStatus: _swarmStatus,
     wizardStep, 
     stepStatus, 
@@ -86,7 +87,12 @@ export default function CodeGraphPage() {
 
   // Determine current step based on swarm state or local state
   const currentStep = useMemo(() => {
+    // console.log("hasSwarm", hasSwarm)
+    // console.log("wizardStep", wizardStep)
+    // console.log(":stepMapping", stepMapping)
+    // console.log("localState.step", localState.step)
     if (hasSwarm && wizardStep && stepMapping[wizardStep as keyof typeof stepMapping]) {
+      // console.log("RESULT CURRENT STEP: ", stepMapping[wizardStep as keyof typeof stepMapping])
       return stepMapping[wizardStep as keyof typeof stepMapping];
     }
     return localState.step;
@@ -106,6 +112,7 @@ export default function CodeGraphPage() {
       if (wizardData.repoName) {
         updates.repoName = wizardData.repoName as string;
       }
+
       if (wizardData.servicesData) {
         updates.servicesData = wizardData.servicesData as ServicesData;
       }
@@ -134,8 +141,19 @@ export default function CodeGraphPage() {
     }
   }, [localState.selectedRepo, updateLocalState]);
 
+  useEffect(() => {
+    if (hasSwarm && swarmId && _swarmStatus === 'PENDING' && swarmCreationStatus === 'idle') {
+      // This is a loaded swarm that's still pending, start polling
+      setSwarmCreationStatus('pending');
+    }
+  }, [hasSwarm, swarmId, _swarmStatus, swarmCreationStatus]);
+
   // Swarm polling effect
   useEffect(() => {
+    console.log("POLLING EFFECT - swarmId:", swarmId);
+    console.log("POLLING EFFECT - swarmCreationStatus:", swarmCreationStatus);
+    console.log("POLLING EFFECT - hasSwarm:", hasSwarm);
+
     if (swarmId && swarmCreationStatus === 'pending') {
       pollIntervalRef.current = setInterval(async () => {
         try {
@@ -385,6 +403,8 @@ export default function CodeGraphPage() {
   // Get current step status for display
   const currentStepStatus = hasSwarm ? stepStatus : undefined;
 
+  console.log("SWARM NAME", swarmName)
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -409,6 +429,7 @@ export default function CodeGraphPage() {
             ingestStepStatus={ingestStepStatus}
             servicesData={localState.servicesData}
             swarmStatus={swarmCreationStatus}
+            swarmName={swarmName}
             envVars={localState.envVars}
             onSearchChange={handleSearchChange}
             onRepoSelect={handleRepoSelect}

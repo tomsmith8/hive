@@ -22,6 +22,9 @@ export async function fetchSwarmDetails(swarmId: string): Promise<{ ok: boolean;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const url = `${env.SWARM_SUPER_ADMIN_URL}/api/super/details?id=${encodeURIComponent(swarmId)}`;
+
+      console.log("fetch searm details url", url)
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -29,6 +32,9 @@ export async function fetchSwarmDetails(swarmId: string): Promise<{ ok: boolean;
         },
       });
       const data = await response.json();
+
+      console.log("fetch swarm details data", data)
+
       if (response.ok) {
         return { ok: true, data, status: response.status };
       } else {

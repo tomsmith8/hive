@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { WizardStateResponse, WizardStep, Repository } from '@/types/wizard';
+import { WizardStateResponse, WizardStep, Repository, REVERSE_STEP_MAPPING } from '@/types/wizard';
 import { ServicesData } from '@/components/stakgraph/types';
 import { EnvironmentVariable } from '@/types/wizard';
 
@@ -25,6 +25,7 @@ interface UseWizardFlowResult {
   // Swarm state (null if no swarm exists)
   hasSwarm: boolean;
   swarmId?: string;
+  swarmName?: string;
   swarmStatus?: string;
   
   // Wizard state
@@ -81,8 +82,11 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
     setLoading(true);
     setError(null);
     try {
+      console.log("-------------------")
       const res = await fetch(`/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`);
       const data = await res.json();
+
+      console.log("API Response:", data);
       
       if (res.ok && data.success) {
         setResponse(data);
@@ -188,6 +192,9 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
   // Memoized computed values
   const computed = useMemo(() => {
     const hasSwarm = response?.success && response.data;
+
+    console.log("COMPUTED - response:", response);
+    console.log("COMPUTED - hasSwarm:", hasSwarm);
     
     if (!hasSwarm) {
       return {
@@ -196,6 +203,7 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
         stepStatus: undefined,
         wizardData: {},
         swarmId: undefined,
+        swarmName: undefined,
         swarmStatus: undefined,
         workspaceId: undefined,
         workspaceSlug: undefined,
@@ -204,12 +212,16 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
       };
     }
 
+    console.log("COMPUTED - response.data:", response.data);
+    console.log("COMPUTED - swarmId:", response.data.swarmId);
+
     return {
       hasSwarm: true,
       wizardStep: response.data.wizardStep,
       stepStatus: response.data.stepStatus,
       wizardData: response.data.wizardData,
       swarmId: response.data.swarmId,
+      swarmName: response.data.swarmName,
       swarmStatus: response.data.swarmStatus,
       workspaceId: response.data.workspaceId,
       workspaceSlug: response.data.workspaceSlug,

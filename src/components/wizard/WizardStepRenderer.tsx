@@ -28,6 +28,7 @@ interface WizardStepRendererProps {
   ingestStepStatus: 'idle' | 'pending' | 'complete';
   servicesData: ServicesData;
   swarmStatus: 'idle' | 'pending' | 'active' | 'error';
+  swarmName: string;
   envVars: EnvironmentVariable[];
   onSearchChange: (term: string) => void;
   onRepoSelect: (repo: Repository) => void;
@@ -175,6 +176,7 @@ export function WizardStepRenderer({
   ingestStepStatus,
   servicesData,
   swarmStatus,
+  swarmName,
   envVars,
   onSearchChange,
   onRepoSelect,
@@ -229,8 +231,10 @@ export function WizardStepRenderer({
       );
       
     case 4:
+      console.log("swarmStatus>>>>>>>", swarmStatus)
       return (
         <GraphInfrastructureStep
+          swarmName={swarmName}
           graphDomain={sanitizeWorkspaceName(projectName)}
           status={swarmStatus === 'idle' ? 'idle' : swarmStatus === 'pending' ? 'pending' : 'complete'}
           onCreate={onCreateSwarm}

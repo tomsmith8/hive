@@ -66,6 +66,7 @@ export interface WizardStateResponse {
     stepStatus: string;
     wizardData: Record<string, unknown>;
     swarmId?: string;
+    swarmName?: string;
     swarmStatus?: string;
     workspaceId: string;
     workspaceSlug: string;
@@ -120,3 +121,28 @@ export interface WizardResetResponse {
   message?: string;
   error?: string;
 } 
+
+// Step mapping from wizard step keys to numbers
+export const STEP_MAPPING = {
+  WELCOME: 1,
+  REPOSITORY_SELECT: 2,
+  PROJECT_NAME: 3,
+  GRAPH_INFRASTRUCTURE: 4,
+  INGEST_CODE: 5,
+  ADD_SERVICES: 6,
+  ENVIRONMENT_SETUP: 7,
+  REVIEW_POOL_ENVIRONMENT: 8,
+  STAKWORK_SETUP: 9,
+}
+
+export const REVERSE_STEP_MAPPING = {
+  1: "WELCOME",
+  2: "REPOSITORY_SELECT",
+  3: "PROJECT_NAME",
+  4: "GRAPH_INFRASTRUCTURE",
+  5: "INGEST_CODE",
+  6: "ADD_SERVICES",
+  7: "ENVIRONMENT_SETUP",
+  8: "REVIEW_POOL_ENVIRONMENT",
+  9: "STAKWORK_SETUP"
+}

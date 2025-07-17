@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         swarmId: true,
+        name: true,
         status: true,
         wizardStep: true,
         stepStatus: true,
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: false,
         message: 'No swarm found for workspace',
-      } as WizardStateError, { status: 404 });
+      } as WizardStateError, { status: 200 });
     }
 
     // Parse wizard data if it's a string
@@ -95,6 +96,8 @@ export async function GET(request: NextRequest) {
       wizardData = swarm.wizardData as Record<string, unknown>;
     }
 
+    console.log("swarm", swarm)
+
     // Prepare response
     const response: WizardStateResponse = {
       success: true,
@@ -104,6 +107,7 @@ export async function GET(request: NextRequest) {
         wizardData,
         swarmId: swarm.swarmId || undefined,
         swarmStatus: swarm.status,
+        swarmName: swarm.name,
         workspaceId: workspace.id,
         workspaceSlug: workspace.slug,
         workspaceName: workspace.name,

@@ -76,7 +76,7 @@ export async function GET(
     if (!swarm) {
       return NextResponse.json(
         { success: false, message: "No swarm found for this workspace", error: "SWARM_NOT_FOUND" },
-        { status: 404 }
+        { status: 200 }
       );
     }
 

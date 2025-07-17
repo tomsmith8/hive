@@ -55,7 +55,11 @@ export class HttpClient {
         } as ApiError;
       }
 
-      return await response.json();
+      const jsonResponse = await response.json()
+
+      console.log("[HttpClient] RESPONSE:", jsonResponse);
+
+      return jsonResponse;
     } catch (error) {
       clearTimeout(timeoutId);
       
