@@ -51,6 +51,7 @@ interface UseWizardFlowResult {
   
   // Swarm management
   createSwarm: (swarmData: Record<string, unknown>) => Promise<void>;
+  ingestCode: () => Promise<void>;
   updateWizardProgress: (data: {
     wizardStep?: string;
     stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
@@ -130,6 +131,33 @@ export function useWizardFlow({ workspaceSlug }: UseWizardFlowOptions): UseWizar
           wizardStep: 'GRAPH_INFRASTRUCTURE',
           stepStatus: 'PROCESSING',
           wizardData: swarmData,
+        }),
+      });
+
+      if (!progressResponse.ok) {
+        throw new Error('Failed to update wizard progress');
+      }
+
+      // Refresh to get the new swarm state
+      await checkSwarmExists();
+    } catch (error) {
+      console.error('Error creating swarm:', error);
+      throw error;
+    }
+  }, [workspaceSlug, checkSwarmExists]);
+
+  // Ingest code and start persisting state
+  const ingestCode = useCallback(async () => {
+    console.log("ingestCode endpoint being called......")
+    try {
+      // First update the wizard progress to create the swarm record
+      const progressResponse = await fetch('/api/swarm/stakgraph/ingest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          
         }),
       });
 

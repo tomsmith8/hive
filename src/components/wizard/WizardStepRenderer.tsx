@@ -65,7 +65,9 @@ function IngestCodeStep({
   const [countdown, setCountdown] = useState(5);
   
   const handleStart = () => {
+    console.log("CALLED handleStart")
     onStatusChange?.('PROCESSING');
+    console.log("CALLING onStart()")
     onStart();
   };
   
@@ -74,18 +76,7 @@ function IngestCodeStep({
     onContinue();
   };
   
-  useEffect(() => { 
-    if (isPending) setCountdown(5); 
-  }, [isPending]);
-  
-  useEffect(() => { 
-    if (isPending && countdown > 0) { 
-      const t = setTimeout(() => setCountdown(countdown - 1), 1000); 
-      return () => clearTimeout(t); 
-    } 
-  }, [isPending, countdown]);
-  
-  const canContinue = isPending && countdown === 0;
+  const canContinue = isPending;
   
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">

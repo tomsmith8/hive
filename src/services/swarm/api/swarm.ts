@@ -66,7 +66,7 @@ export async function swarmApiRequest({
   try {
     const url = `${swarmUrl.replace(/\/$/, '')}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
     const headers: Record<string, string> = {
-      'x-api-token': apiKey,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     };
     const response = await fetch(url, {

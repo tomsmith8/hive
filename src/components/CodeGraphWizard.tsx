@@ -199,10 +199,10 @@ export function CodeGraphWizard({ user }: CodeGraphWizardProps) {
     }
   }, [step, updateWizardProgressUnified, selectedRepo, projectName, repoName, servicesData, reverseStepMapping]);
 
-  const handleIngestStart = () => {
-    console.log("HANDLE INGEST START")
+  const handleIngestStart = useCallback(() => {
+    console.log("handleIngestStart called - setting ingestStepStatus to pending from codegraphwizard");
     setIngestStepStatus('pending');
-  };
+  }, []);
 
   const handleIngestContinue = () => {
     setIngestStepStatus('complete');

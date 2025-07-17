@@ -42,6 +42,7 @@ export default function CodeGraphPage() {
     updateLocalState,
     resetLocalState,
     createSwarm,
+    ingestCode,
     updateWizardProgress,
     refresh: refreshWizardState
   } = useWizardFlow({ workspaceSlug: workspace?.slug || '' });
@@ -277,7 +278,7 @@ export default function CodeGraphPage() {
 
     if (hasSwarm) {
       try {
-        const newStep = (currentStep + 1) as WizardStep;
+        const newStep = (currentStep) as WizardStep;
         const newWizardStep = reverseStepMapping[newStep as keyof typeof reverseStepMapping];
 
         await updateWizardProgress({
@@ -362,9 +363,33 @@ export default function CodeGraphPage() {
     updateLocalState({ searchTerm: term });
   };
 
-  const handleIngestStart = () => {
+  const handleIngestStart = useCallback(async () => {
+    console.log("handleIngestStart called - setting ingestStepStatus to pending from page");
     setIngestStepStatus('pending');
-  };
+
+    try {
+      const res = await fetch('/api/swarm/stakgraph/ingest', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          swarmId: swarmId
+        }),
+      });
+      
+      const data = await res.json();
+      console.log("response from handleIngestStart", data)
+      // if (data.success && data.data?.id) {
+      //   setSwarmCreationStatus('active');
+      // } else {
+      //   setSwarmCreationStatus('error');
+      // }
+    } catch (error) {
+      console.error('Failed to ingest code:', error);
+      // setSwarmCreationStatus('error');
+    }
+  }, [swarmId]);
 
   const handleIngestContinue = () => {
     setIngestStepStatus('complete');
