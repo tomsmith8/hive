@@ -8,4 +8,6 @@ psql $DATABASE_URL
 
 select * from chat_messages;
 
+\d chat_messages
+
 ```

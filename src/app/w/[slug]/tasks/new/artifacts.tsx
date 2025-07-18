@@ -29,7 +29,7 @@ import "prismjs/components/prism-css";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-ruby";
 import "prismjs/components/prism-json";
-import "prismjs/themes/prism-okaidia.css";
+import "./prims-dark-plus.css";
 
 function SyntaxHighlighter({
   code,
@@ -47,7 +47,7 @@ function SyntaxHighlighter({
   }, [code, language]);
 
   return (
-    <pre className="text-sm bg-background/50 p-4 rounded border overflow-x-auto overflow-y-auto h-full">
+    <pre className="text-xs bg-background/50 p-4 rounded border">
       <code ref={codeRef} className={`language-${language}`}>
         {code}
       </code>
@@ -160,13 +160,13 @@ export function CodeArtifactPanel({ artifacts }: { artifacts: Artifact[] }) {
         </div>
       )}
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden min-h-0">
         {artifacts.map((artifact, index) => {
           const content = artifact.content as CodeContent;
           return (
             <div
               key={artifact.id}
-              className={`h-full ${activeTab === index ? "block" : "hidden"}`}
+              className={`h-full flex flex-col ${activeTab === index ? "" : "hidden"}`}
             >
               <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
                 <div className="flex items-center gap-2 min-w-0">
@@ -205,7 +205,7 @@ export function CodeArtifactPanel({ artifacts }: { artifacts: Artifact[] }) {
                 </div>
               )}
 
-              <div className="p-4 h-full overflow-auto">
+              <div className="p-4 flex-1 min-h-0 overflow-auto">
                 <SyntaxHighlighter
                   code={content.content}
                   language={

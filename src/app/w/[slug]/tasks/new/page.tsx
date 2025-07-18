@@ -343,7 +343,7 @@ export default function TaskChatPage() {
               >
                 <Tabs
                   defaultValue={availableTabs[0]}
-                  className="flex-1 flex flex-col"
+                  className="flex-1 flex flex-col min-h-0"
                 >
                   <motion.div
                     className="px-6 py-4 border-b bg-background/80 backdrop-blur"
@@ -364,7 +364,7 @@ export default function TaskChatPage() {
                   </motion.div>
 
                   <motion.div
-                    className="flex-1 overflow-hidden"
+                    className="flex-1 overflow-hidden min-h-0"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6 }}
