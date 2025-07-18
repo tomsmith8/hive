@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { ArrowUp } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
@@ -17,6 +17,7 @@ import {
   ChatStatus,
   Option,
   createChatMessage,
+  ArtifactType,
 } from "@/lib/chat";
 import { assistantMessage, codeMessage } from "./mockmsgs";
 import {
@@ -92,6 +93,7 @@ export default function TaskChatPage() {
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null); // TODO: Create task when chat starts
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<ArtifactType | null>(null);
 
   useEffect(() => {
     if (started) {
@@ -204,10 +206,19 @@ export default function TaskChatPage() {
   const hasNonFormArtifacts =
     codeArtifacts.length > 0 || browserArtifacts.length > 0;
 
-  // Count available tabs
-  const availableTabs = [];
-  if (codeArtifacts.length > 0) availableTabs.push("code");
-  if (browserArtifacts.length > 0) availableTabs.push("preview");
+  const availableTabs: ArtifactType[] = useMemo(() => {
+    const tabs: ArtifactType[] = [];
+    if (codeArtifacts.length > 0) tabs.push("CODE");
+    if (browserArtifacts.length > 0) tabs.push("BROWSER");
+    return tabs;
+  }, [codeArtifacts.length, browserArtifacts.length]);
+
+  // Auto-select first tab when artifacts become available
+  useEffect(() => {
+    if (availableTabs.length > 0 && !activeTab) {
+      setActiveTab(availableTabs[0]);
+    }
+  }, [availableTabs, activeTab]);
 
   return (
     <AnimatePresence mode="wait">
@@ -342,23 +353,26 @@ export default function TaskChatPage() {
                 className="bg-background rounded-xl border shadow-sm overflow-hidden flex flex-col"
               >
                 <Tabs
-                  defaultValue={availableTabs[0]}
+                  value={activeTab as string}
                   className="flex-1 flex flex-col min-h-0"
+                  onValueChange={(value) => {
+                    setActiveTab(value as ArtifactType);
+                  }}
                 >
                   <motion.div
                     className="px-6 py-4 border-b bg-background/80 backdrop-blur"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ duration: 0.4 }}
                   >
                     <TabsList
                       className={`grid w-full grid-cols-${availableTabs.length}`}
                     >
                       {codeArtifacts.length > 0 && (
-                        <TabsTrigger value="code">Code</TabsTrigger>
+                        <TabsTrigger value="CODE">Code</TabsTrigger>
                       )}
                       {browserArtifacts.length > 0 && (
-                        <TabsTrigger value="preview">Live Preview</TabsTrigger>
+                        <TabsTrigger value="BROWSER">Live Preview</TabsTrigger>
                       )}
                     </TabsList>
                   </motion.div>
@@ -367,15 +381,25 @@ export default function TaskChatPage() {
                     className="flex-1 overflow-hidden min-h-0"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.4 }}
                   >
                     {codeArtifacts.length > 0 && (
-                      <TabsContent value="code" className="h-full mt-0">
+                      <TabsContent
+                        value="CODE"
+                        className="h-full mt-0"
+                        forceMount
+                        hidden={activeTab !== "CODE"}
+                      >
                         <CodeArtifactPanel artifacts={codeArtifacts} />
                       </TabsContent>
                     )}
                     {browserArtifacts.length > 0 && (
-                      <TabsContent value="preview" className="h-full mt-0">
+                      <TabsContent
+                        value="BROWSER"
+                        className="h-full mt-0"
+                        forceMount
+                        hidden={activeTab !== "BROWSER"}
+                      >
                         <BrowserArtifactPanel artifacts={browserArtifacts} />
                       </TabsContent>
                     )}
