@@ -29,7 +29,7 @@ import "prismjs/components/prism-css";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-ruby";
 import "prismjs/components/prism-json";
-import "prismjs/themes/prism.css";
+import "prismjs/themes/prism-okaidia.css";
 
 function SyntaxHighlighter({
   code,
@@ -47,7 +47,7 @@ function SyntaxHighlighter({
   }, [code, language]);
 
   return (
-    <pre className="text-sm bg-background/50 p-4 rounded border overflow-x-auto">
+    <pre className="text-sm bg-background/50 p-4 rounded border overflow-x-auto overflow-y-auto h-full">
       <code ref={codeRef} className={`language-${language}`}>
         {code}
       </code>
@@ -113,7 +113,7 @@ export function FormArtifact({
             onClick={() => handleSubmit(option)}
             className="w-full justify-start"
           >
-            {option.option_label}
+            {option.optionLabel}
           </Button>
         ))}
       </div>

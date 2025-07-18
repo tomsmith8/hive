@@ -190,26 +190,10 @@ export default function TaskChatPage() {
   const handleArtifactAction = (action: Option, response?: string) => {
     console.log("Action triggered:", action, response);
 
-    if (action.option_response === "confirmed") {
-      // Remove the form artifact and add the code artifacts
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.artifacts?.some((a) => a.id === "action-confirm")
-            ? {
-                ...msg,
-                artifacts: msg.artifacts?.filter(
-                  (a) => a.id !== "action-confirm"
-                ),
-              }
-            : msg
-        )
-      );
-
-      // Add new message with artifacts after a short delay
-      setTimeout(() => {
-        const codemsg = codeMessage();
-        setMessages((prev) => [...prev, codemsg]);
-      }, 800);
+    if (action.optionResponse === "confirmed") {
+      // Add new message with artifacts
+      const codemsg = codeMessage();
+      setMessages((prev) => [...prev, codemsg]);
     }
   };
 
@@ -243,7 +227,7 @@ export default function TaskChatPage() {
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -60 }}
-          transition={{ duration: 0.6, ease: [0.4, 0.0, 0.2, 1] }}
+          transition={{ duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }}
           className="h-[80vh] md:h-[90vh] flex gap-4"
         >
           {/* Main Chat Area */}
@@ -253,7 +237,7 @@ export default function TaskChatPage() {
             initial={{ width: "100%" }}
             animate={{ width: hasNonFormArtifacts ? "50%" : "100%" }}
             transition={{
-              duration: 0.8,
+              duration: 0.6,
               ease: [0.4, 0.0, 0.2, 1],
             }}
           >
@@ -352,7 +336,7 @@ export default function TaskChatPage() {
                 animate={{ opacity: 1, x: 0, width: "50%" }}
                 exit={{ opacity: 0, x: 100, width: 0 }}
                 transition={{
-                  duration: 0.8,
+                  duration: 0.4,
                   ease: [0.4, 0.0, 0.2, 1],
                 }}
                 className="bg-background rounded-xl border shadow-sm overflow-hidden flex flex-col"

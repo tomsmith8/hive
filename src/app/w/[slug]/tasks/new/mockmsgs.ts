@@ -155,15 +155,15 @@ export function assistantMessage(): ChatMessage {
             "Here's my plan to implement the connection leak monitor:",
           options: [
             {
-              action_type: "button",
-              option_label: "✓ Confirm Plan",
-              option_response: "confirmed",
+              actionType: "button",
+              optionLabel: "✓ Confirm Plan",
+              optionResponse: "confirmed",
               webhook: "https://stakwork.com/api/chat/confirm",
             },
             {
-              action_type: "button",
-              option_label: "✗ Modify Plan",
-              option_response: "modify",
+              actionType: "button",
+              optionLabel: "✗ Modify Plan",
+              optionResponse: "modify",
               webhook: "https://stakwork.com/api/chat/modify",
             },
           ],

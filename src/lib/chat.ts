@@ -19,9 +19,9 @@ export interface ContextTag {
 }
 
 export interface Option {
-  action_type: "button" | "chat";
-  option_label: string;
-  option_response: string;
+  actionType: "button" | "chat";
+  optionLabel: string;
+  optionResponse: string;
   webhook: string;
 }
 
