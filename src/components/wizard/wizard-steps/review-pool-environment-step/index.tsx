@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
-import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
-import { Badge } from "../ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { 
   FileText, 
   Settings, 
@@ -239,7 +239,7 @@ interface ReviewPoolEnvironmentStepProps {
   stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
-export default function ReviewPoolEnvironmentStep({ 
+const ReviewPoolEnvironmentStep = ({ 
   repoName,
   projectName,
   servicesData,
@@ -247,183 +247,149 @@ export default function ReviewPoolEnvironmentStep({
   onConfirm, 
   onBack,
   stepStatus: _stepStatus
-}: ReviewPoolEnvironmentStepProps) {
-  const FILES = getFiles(repoName, projectName, servicesData, envVars);
-  
-  const [activeFile, setActiveFile] = useState(FILES[0].name);
-  const [fileContents, setFileContents] = useState(
-    Object.fromEntries(FILES.map(f => [f.name, f.content]))
-  );
-  const [originalContents] = useState(
-    Object.fromEntries(FILES.map(f => [f.name, f.content]))
-  );
-  const [errors, setErrors] = useState<Record<string, string>>({});
+}: ReviewPoolEnvironmentStepProps) => {
+  const [activeTab, setActiveTab] = useState("devcontainer");
+  const [fileContents, setFileContents] = useState<Record<string, string>>({});
+  const [originalContents, setOriginalContents] = useState<Record<string, string>>({});
 
-  // Update file contents when envVars change
+  const files = getFiles(repoName, projectName, servicesData, envVars);
+
   useEffect(() => {
-    const newFiles = getFiles(repoName, projectName, servicesData, envVars);
-    const newContents = Object.fromEntries(newFiles.map(f => [f.name, f.content]));
-    setFileContents(newContents);
+    const initialContents: Record<string, string> = {};
+    files.forEach(file => {
+      initialContents[file.name] = file.content;
+    });
+    setOriginalContents(initialContents);
+    setFileContents(initialContents);
   }, [repoName, projectName, servicesData, envVars]);
-
-  const validateFile = useCallback((fileName: string, content: string) => {
-    const file = FILES.find(f => f.name === fileName);
-    if (!file) return;
-    try {
-      if (file.type === "json") {
-        JSON.parse(content);
-      }
-      setErrors(prev => ({ ...prev, [fileName]: '' }));
-    } catch {
-      setErrors(prev => ({ 
-        ...prev, 
-        [fileName]: file.type === "json" ? "Invalid JSON format" : "Invalid file format" 
-      }));
-    }
-  }, [FILES]);
 
   const handleContentChange = (fileName: string, value: string) => {
     setFileContents(prev => ({ ...prev, [fileName]: value }));
-    validateFile(fileName, value);
   };
 
   const isFileModified = (fileName: string) => fileContents[fileName] !== originalContents[fileName];
-  const hasErrors = Object.values(errors).some(error => error !== '');
+
   const resetFiles = () => {
     setFileContents(originalContents);
-    setErrors({});
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'Tab') {
-        e.preventDefault();
-        const currentIndex = FILES.findIndex(f => f.name === activeFile);
-        const nextIndex = (currentIndex + 1) % FILES.length;
-        setActiveFile(FILES[nextIndex].name);
+      if (e.key === 'Escape') {
+        resetFiles();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeFile, FILES]);
 
-  useEffect(() => {
-    FILES.forEach(file => validateFile(file.name, fileContents[file.name]));
-  }, [validateFile, fileContents, FILES]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [originalContents]);
 
-  const currentFileStats = getFileStats(fileContents[activeFile]);
+  const hasModifications = Object.keys(fileContents).some(fileName => isFileModified(fileName));
 
   return (
-    <Card className="max-w-4xl mx-auto bg-card text-card-foreground">
+    <Card className="max-w-4xl mx-auto">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mx-auto mb-4">
-          {/* Animated SVG omitted for brevity */}
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="12" y="12" width="40" height="40" rx="8" fill="#F3F4F6" stroke="#10B981" strokeWidth="2" />
+            <path d="M24 28h16" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+            <path d="M24 36h12" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="32" cy="32" r="3" fill="#10B981" />
+          </svg>
         </div>
         <CardTitle className="text-2xl">Review Pool Environment</CardTitle>
         <CardDescription>
-          Review and edit your environment files. Your services and environment variables have been automatically populated.
+          Review and customize the configuration files for your development environment.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs value={activeFile} onValueChange={setActiveFile} className="w-full">
-          <div className="mb-4 overflow-x-auto">
-            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0">
-              {FILES.map(file => (
-                <TabsTrigger 
-                  key={file.name} 
-                  value={file.name} 
-                  className={`font-mono text-xs flex items-center gap-2 relative ${
-                    isFileModified(file.name) ? 'text-orange-600' : ''
-                  }`}
-                >
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="devcontainer" className="flex items-center gap-2">
+              {getFileIcon("json")}
+              DevContainer
+            </TabsTrigger>
+            <TabsTrigger value="pm2" className="flex items-center gap-2">
+              {getFileIcon("javascript")}
+              PM2 Config
+            </TabsTrigger>
+            <TabsTrigger value="docker-compose" className="flex items-center gap-2">
+              {getFileIcon("yaml")}
+              Docker Compose
+            </TabsTrigger>
+            <TabsTrigger value="dockerfile" className="flex items-center gap-2">
+              {getFileIcon("dockerfile")}
+              Dockerfile
+            </TabsTrigger>
+          </TabsList>
+
+          {files.map(file => (
+            <TabsContent key={file.name} value={file.name.toLowerCase().replace('.', '-')} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   {getFileIcon(file.type)}
-                  <span className="hidden sm:inline">{file.name}</span>
-                  <span className="sm:hidden">{file.name.split('.')[0]}</span>
+                  <span className="font-medium">{file.name}</span>
                   {isFileModified(file.name) && (
-                    <span className="w-2 h-2 bg-orange-500 rounded-full" />
+                    <Badge variant="secondary" className="text-xs">
+                      Modified
+                    </Badge>
                   )}
-                  {errors[file.name] && (
-                    <AlertCircle className="w-3 h-3 text-red-500" />
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-
-          {FILES.map(file => (
-            <TabsContent key={file.name} value={file.name} className="w-full space-y-4">
-              {/* File Stats */}
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <Badge variant="outline" className="text-xs">
-                  {currentFileStats.lines} lines
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {currentFileStats.chars} chars
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {formatBytes(currentFileStats.bytes)}
-                </Badge>
-                {isFileModified(file.name) && (
-                  <Badge variant="outline" className="text-xs text-orange-600">
-                    Modified
-                  </Badge>
-                )}
-              </div>
-
-              {/* Show error message if any */}
-              {errors[file.name] && (
-                <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors[file.name]}
                 </div>
-              )}
-
-              {/* Code Editor */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{getFileStats(fileContents[file.name] || file.content).lines} lines</span>
+                  <span>•</span>
+                  <span>{formatBytes(getFileStats(fileContents[file.name] || file.content).bytes)}</span>
+                </div>
+              </div>
+              
               <div className="relative">
                 <Textarea
-                  className={`font-mono text-xs min-h-[300px] sm:min-h-[400px] resize-vertical ${
-                    errors[file.name] ? 'border-red-500' : ''
-                  }`}
-                  value={fileContents[file.name]}
-                  onChange={e => handleContentChange(file.name, e.target.value)}
-                  spellCheck={false}
-                  placeholder="Enter your code here..."
-                  style={{
-                    tabSize: 2,
-                    fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
-                  }}
+                  value={fileContents[file.name] || file.content}
+                  onChange={(e) => handleContentChange(file.name, e.target.value)}
+                  className="font-mono text-sm min-h-[300px] resize-none"
+                  placeholder={`Enter ${file.name} content...`}
                 />
+                {isFileModified(file.name) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleContentChange(file.name, originalContents[file.name])}
+                    className="absolute top-2 right-2"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    Reset
+                  </Button>
+                )}
               </div>
             </TabsContent>
           ))}
         </Tabs>
 
-        {/* Action Buttons */}
-        <div className="flex justify-between pt-4">
-          <Button variant="outline" onClick={onBack}>
+        {hasModifications && (
+          <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <AlertCircle className="w-4 h-4 text-yellow-600" />
+            <span className="text-sm text-yellow-800">
+              You have unsaved changes. Press ESC to reset all files.
+            </span>
+          </div>
+        )}
+
+        <div className="flex justify-between pt-6">
+          <Button variant="outline" type="button" onClick={onBack}>
             Back
           </Button>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={resetFiles}
-              disabled={!FILES.some(f => isFileModified(f.name))}
-              className="flex items-center gap-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Reset All
-            </Button>
-            <Button 
-              className="px-8 bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={onConfirm}
-              disabled={hasErrors}
-            >
-              Confirm & Continue
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+          <Button 
+            className="px-8 bg-green-600 hover:bg-green-700" 
+            type="button" 
+            onClick={onConfirm}
+          >
+            Confirm Setup
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default ReviewPoolEnvironmentStep;

@@ -29,7 +29,7 @@ export function GraphInfrastructureStep({
 }: GraphInfrastructureStepProps) {
   const isPending = status === "pending";
   const isComplete = status === "complete";
-  
+
   const handleCreate = async () => {
     onStatusChange?.('PROCESSING');
     try {
@@ -40,7 +40,7 @@ export function GraphInfrastructureStep({
       throw error;
     }
   };
-  
+
   const handleComplete = () => {
     onStatusChange?.('COMPLETED');
     onComplete();

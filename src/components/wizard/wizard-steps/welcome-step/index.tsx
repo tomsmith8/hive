@@ -8,11 +8,12 @@ interface WelcomeStepProps {
   onStatusChange?: (status: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED') => void;
 }
 
-export function WelcomeStep({ onNext, stepStatus: _stepStatus, onStatusChange }: WelcomeStepProps) {
+const WelcomeStep = ({ onNext, stepStatus: _stepStatus, onStatusChange }: WelcomeStepProps) => {
   const handleNext = () => {
     onStatusChange?.('COMPLETED');
     onNext();
   };
+  
   return (
     <Card className="max-w-4xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
@@ -72,4 +73,6 @@ export function WelcomeStep({ onNext, stepStatus: _stepStatus, onStatusChange }:
       </CardContent>
     </Card>
   );
-} 
+};
+
+export default WelcomeStep;
