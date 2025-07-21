@@ -69,10 +69,7 @@ type WizardStore = {
   workspaceSlug: string;
   workspaceId: string;
   hasKey: boolean;
-<<<<<<< HEAD
-=======
 
->>>>>>> c94507a (feat: setup all steps, update user creation)
   swarmId?: string;
   swarmName?: string;
   swarmStatus?: string;
@@ -119,10 +116,7 @@ export const useWizardStore = create<WizardStore>()(
     workspaceId: '',
     services: [],
     hasKey: false,
-<<<<<<< HEAD
-=======
 
->>>>>>> c94507a (feat: setup all steps, update user creation)
 
     // API Logic
     fetchWizardState: async () => {
@@ -137,7 +131,7 @@ export const useWizardStore = create<WizardStore>()(
 
         if (res.ok && json.success) {
           const { wizardStep, stepStatus, swarmId, services } = data;
-          set({ wizardStateData: data, currentStep: wizardStep,  currentStepStatus: stepStatus as WizardStepStatus, projectName: data.wizardData?.projectName || '', swarmId, services });
+          set({ wizardStateData: data, currentStep: wizardStep, currentStepStatus: stepStatus as WizardStepStatus, projectName: data.wizardData?.projectName || '', swarmId, services });
         } else {
           set({ wizardStateData: null });
         }

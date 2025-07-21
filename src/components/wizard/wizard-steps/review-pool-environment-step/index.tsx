@@ -246,11 +246,7 @@ interface ReviewPoolEnvironmentStepProps {
   onBack: () => void;
 }
 
-<<<<<<< HEAD
 export const ReviewPoolEnvironmentStep = ({ 
-=======
-const ReviewPoolEnvironmentStep = ({
->>>>>>> c94507a (feat: setup all steps, update user creation)
   onNext,
   onBack,
 }: ReviewPoolEnvironmentStepProps) => {
@@ -421,4 +417,3 @@ const ReviewPoolEnvironmentStep = ({
     </Card>
   );
 };
-
