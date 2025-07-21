@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { ArrowUp } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
@@ -25,6 +25,7 @@ import {
   CodeArtifactPanel,
   BrowserArtifactPanel,
 } from "./artifacts";
+import { useParams, useRouter } from "next/navigation";
 
 function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   const [value, setValue] = useState("");
@@ -85,15 +86,63 @@ export default function TaskChatPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: session } = useSession(); // TODO: Use for authentication when creating tasks
   const { toast } = useToast();
+  const params = useParams();
+  const router = useRouter();
+  const slug = params.slug as string;
+  const taskParams = params.taskParams as string[];
+
+  const isNewTask = taskParams?.[0] === "new";
+  const taskIdFromUrl = !isNewTask ? taskParams?.[0] : null;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null); // TODO: Create task when chat starts
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(
+    taskIdFromUrl
+  );
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<ArtifactType | null>(null);
+
+  const loadTaskMessages = useCallback(
+    async (taskId: string) => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/tasks/${taskId}/messages`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to load messages: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success && result.data.messages) {
+          setMessages(result.data.messages);
+          console.log(`Loaded ${result.data.count} existing messages for task`);
+        }
+      } catch (error) {
+        console.error("Error loading task messages:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load existing messages.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [toast]
+  );
+
+  useEffect(() => {
+    // If we have a task ID from URL, we can optionally load existing messages
+    if (taskIdFromUrl) {
+      setStarted(true);
+      // load existing chat messages for this task
+      loadTaskMessages(taskIdFromUrl);
+    }
+  }, [taskIdFromUrl, loadTaskMessages]);
 
   useEffect(() => {
     if (started) {
@@ -179,6 +228,31 @@ export default function TaskChatPage() {
   };
 
   const handleStart = async (task: string) => {
+    if (isNewTask) {
+      // Create new task
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: task,
+          description: "New task description", // TODO: Add description
+          status: "active",
+          workspaceId: slug,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create task: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setCurrentTaskId(result.data.id);
+
+      router.push(`/w/${slug}/task/${result.data.id}`);
+    }
+
     setStarted(true);
     await sendMessage(task);
 

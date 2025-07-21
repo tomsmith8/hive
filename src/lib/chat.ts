@@ -63,6 +63,7 @@ export function createChatMessage(data: {
   contextTags?: ContextTag[];
   artifacts?: Artifact[];
   sourceWebsocketID?: string;
+  replyId?: string;
 }): ChatMessage {
   return {
     id: data.id,
@@ -73,6 +74,7 @@ export function createChatMessage(data: {
     contextTags: data.contextTags || [],
     status: data.status,
     sourceWebsocketID: data.sourceWebsocketID || null,
+    replyId: data.replyId || null,
     artifacts: data.artifacts || [],
     createdAt: new Date(),
     updatedAt: new Date(),
