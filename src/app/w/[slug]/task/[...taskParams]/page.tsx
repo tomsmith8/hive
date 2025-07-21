@@ -336,11 +336,6 @@ export default function TaskChatPage() {
               ease: [0.4, 0.0, 0.2, 1],
             }}
           >
-            {/* Header */}
-            <div className="px-6 py-4 border-b bg-background/80 backdrop-blur sticky top-0 z-10">
-              <h2 className="text-2xl font-semibold">Hive</h2>
-            </div>
-
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-muted/40">
               {messages.map((msg) => (
