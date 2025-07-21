@@ -58,6 +58,19 @@ export async function POST(request: NextRequest) {
         },
         select: {
           workspaceId: true,
+          workspace: {
+            select: {
+              ownerId: true,
+              members: {
+                where: {
+                  userId: userId,
+                },
+                select: {
+                  role: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -65,15 +78,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Task not found" }, { status: 404 });
       }
 
-      // Check if user is a member of this workspace
-      const isMember = await db.workspaceMember.findFirst({
-        where: {
-          workspaceId: task.workspaceId,
-          userId,
-        },
-      });
+      // Check if user is workspace owner or member
+      const isOwner = task.workspace.ownerId === userId;
+      const isMember = task.workspace.members.length > 0;
 
-      if (!isMember) {
+      if (!isOwner && !isMember) {
         return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     }

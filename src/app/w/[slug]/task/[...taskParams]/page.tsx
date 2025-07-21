@@ -121,11 +121,11 @@ export default function TaskChatPage() {
       }
     } catch (error) {
       console.error("Error loading task messages:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load existing messages.",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to load existing messages.",
+      //   variant: "destructive",
+      // });
     } finally {
       setIsLoading(false);
     }
