@@ -18,13 +18,6 @@ export interface ContextTag {
   id: string;
 }
 
-export interface Option {
-  actionType: "button" | "chat";
-  optionLabel: string;
-  optionResponse: string;
-  webhook: string;
-}
-
 export interface CodeContent {
   content: string; // the code
   language?: string;
@@ -37,8 +30,15 @@ export interface BrowserContent {
   url: string;
 }
 
+export interface Option {
+  actionType: "button" | "chat";
+  optionLabel: string;
+  optionResponse: string;
+}
+
 export interface FormContent {
   actionText: string;
+  webhook: string;
   options: Option[];
 }
 

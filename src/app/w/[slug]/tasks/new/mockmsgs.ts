@@ -153,18 +153,17 @@ export function assistantMessage(): ChatMessage {
         content: {
           actionText:
             "Here's my plan to implement the connection leak monitor:",
+          webhook: "https://stakwork.com/api/chat/confirm",
           options: [
             {
               actionType: "button",
               optionLabel: "✓ Confirm Plan",
               optionResponse: "confirmed",
-              webhook: "https://stakwork.com/api/chat/confirm",
             },
             {
               actionType: "button",
               optionLabel: "✗ Modify Plan",
               optionResponse: "modify",
-              webhook: "https://stakwork.com/api/chat/modify",
             },
           ],
         } as FormContent,
