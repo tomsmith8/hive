@@ -169,15 +169,19 @@ export default function TaskChatPage() {
       }
 
       const result = await response.json();
-      setCurrentTaskId(result.data.id);
+      const newTaskId = result.data.id;
+      setCurrentTaskId(newTaskId);
 
-      const newUrl = `/w/${slug}/task/${result.data.id}`;
+      const newUrl = `/w/${slug}/task/${newTaskId}`;
       // this updates the URL WITHOUT reloading the page
       window.history.replaceState({}, "", newUrl);
-    }
 
-    setStarted(true);
-    await sendMessage(msg);
+      setStarted(true);
+      await sendMessage(msg, { taskId: newTaskId });
+    } else {
+      setStarted(true);
+      await sendMessage(msg);
+    }
 
     // Auto-reply after a short delay (this is temporary mock behavior)
     setTimeout(() => {
@@ -198,6 +202,7 @@ export default function TaskChatPage() {
     messageText: string,
     options?: {
       replyId?: string;
+      taskId?: string;
     }
   ) => {
     if (isLoading) return;
@@ -215,7 +220,7 @@ export default function TaskChatPage() {
     console.log("Sending message:", messageText);
     try {
       const body: { [k: string]: string | string[] | null } = {
-        taskId: currentTaskId,
+        taskId: options?.taskId || currentTaskId,
         message: messageText,
         contextTags: [],
       };
