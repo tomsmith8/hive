@@ -18,7 +18,6 @@ import {
   Option,
   createChatMessage,
   ArtifactType,
-  Artifact,
 } from "@/lib/chat";
 import { assistantMessage, codeMessage } from "./mockmsgs";
 import {
@@ -139,7 +138,7 @@ export default function TaskChatPage() {
           taskId: currentTaskId,
           message: messageText,
           contextTags: [],
-          artifacts: options?.artifacts || [],
+          // artifacts: options?.artifacts || [],
           messageId: options?.messageId,
         }),
       });
