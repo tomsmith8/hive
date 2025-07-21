@@ -112,7 +112,7 @@ export default function TaskChatPage() {
   const sendMessage = async (
     messageText: string,
     options?: {
-      messageId?: string;
+      replyId?: string;
     }
   ) => {
     if (isLoading) return;
@@ -129,18 +129,20 @@ export default function TaskChatPage() {
 
     console.log("Sending message:", messageText);
     try {
+      const body: { [k: string]: string | string[] | null } = {
+        taskId: currentTaskId,
+        message: messageText,
+        contextTags: [],
+      };
+      if (options?.replyId) {
+        body.replyId = options.replyId;
+      }
       const response = await fetch("/api/chat/message", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          taskId: currentTaskId,
-          message: messageText,
-          contextTags: [],
-          // artifacts: options?.artifacts || [],
-          messageId: options?.messageId,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -198,7 +200,7 @@ export default function TaskChatPage() {
     if (originalMessage) {
       // Send the artifact action response to the backend
       await sendMessage(action.optionResponse, {
-        messageId: originalMessage.id,
+        replyId: originalMessage.id,
       });
     }
 
