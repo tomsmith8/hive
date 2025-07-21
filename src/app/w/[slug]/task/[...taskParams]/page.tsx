@@ -19,13 +19,14 @@ import {
   createChatMessage,
   ArtifactType,
 } from "@/lib/chat";
-import { assistantMessage, codeMessage } from "./mockmsgs";
+import { codeMessage } from "./mockmsgs";
 import {
   FormArtifact,
   CodeArtifactPanel,
   BrowserArtifactPanel,
 } from "./artifacts";
 import { useParams } from "next/navigation";
+import { useSSEConnection } from "@/hooks/useSSEConnection";
 
 function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   const [value, setValue] = useState("");
@@ -103,6 +104,31 @@ export default function TaskChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<ArtifactType | null>(null);
+
+  // Handle incoming SSE messages
+  const handleSSEMessage = useCallback((message: ChatMessage) => {
+    setMessages((prev) => [...prev, message]);
+  }, []);
+
+  // Use the SSE connection hook
+  const { isConnected, error: sseError } = useSSEConnection({
+    taskId: currentTaskId,
+    enabled: started,
+    onMessage: handleSSEMessage,
+  });
+
+  // Show SSE connection errors as toasts
+  useEffect(() => {
+    if (sseError) {
+      toast({
+        title: "Connection Error",
+        description:
+          "Lost connection to chat server. Attempting to reconnect...",
+        variant: "destructive",
+      });
+    }
+    // toast in deps causes infinite re-render
+  }, [sseError]);
 
   const loadTaskMessages = useCallback(async (taskId: string) => {
     try {
@@ -183,11 +209,11 @@ export default function TaskChatPage() {
       await sendMessage(msg);
     }
 
-    // Auto-reply after a short delay (this is temporary mock behavior)
-    setTimeout(() => {
-      const msg = assistantMessage();
-      setMessages((prev) => [...prev, msg]);
-    }, 1000);
+    // Remove the auto-reply since we'll get real-time messages via SSE
+    // setTimeout(() => {
+    //   const msg = assistantMessage();
+    //   setMessages((prev) => [...prev, msg]);
+    // }, 1000);
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -421,6 +447,15 @@ export default function TaskChatPage() {
               <Button type="submit" disabled={!input.trim() || isLoading}>
                 {isLoading ? "Sending..." : "Send"}
               </Button>
+              {/* Connection status indicator */}
+              <div className="flex items-center ml-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isConnected ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                  title={isConnected ? "Connected" : "Disconnected"}
+                />
+              </div>
             </form>
           </motion.div>
 

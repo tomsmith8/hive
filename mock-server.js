@@ -230,14 +230,6 @@ function generateBrowserResponse() {
           url: "https://community.sphinx.chat",
         },
       }),
-      createArtifact({
-        id: "browser-preview-2",
-        messageId: messageId,
-        type: ArtifactType.BROWSER,
-        content: {
-          url: "https://sphinx.chat",
-        },
-      }),
     ],
   });
 }

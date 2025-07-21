@@ -153,6 +153,33 @@ export async function POST(request: NextRequest) {
         const result = await response.json();
         console.log("mock result", result);
       }
+    } else {
+      // For development/testing, send a mock response via SSE
+      setTimeout(async () => {
+        try {
+          const mockResponse = await fetch(
+            `${request.url.replace("/chat/message", "/chat/response")}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                taskId,
+                message: `Mock response to: "${message}"`,
+                contextTags: [],
+                artifacts: [],
+              }),
+            }
+          );
+
+          if (mockResponse.ok) {
+            console.log("Mock response sent via SSE");
+          }
+        } catch (error) {
+          console.error("Error sending mock response:", error);
+        }
+      }, 1000);
     }
 
     return NextResponse.json(
