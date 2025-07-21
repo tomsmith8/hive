@@ -25,7 +25,7 @@ import {
   CodeArtifactPanel,
   BrowserArtifactPanel,
 } from "./artifacts";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   const [value, setValue] = useState("");
@@ -87,7 +87,7 @@ export default function TaskChatPage() {
   const { data: session } = useSession(); // TODO: Use for authentication when creating tasks
   const { toast } = useToast();
   const params = useParams();
-  const router = useRouter();
+
   const slug = params.slug as string;
   const taskParams = params.taskParams as string[];
 
@@ -104,35 +104,32 @@ export default function TaskChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<ArtifactType | null>(null);
 
-  const loadTaskMessages = useCallback(
-    async (taskId: string) => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(`/api/tasks/${taskId}/messages`);
+  const loadTaskMessages = useCallback(async (taskId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/tasks/${taskId}/messages`);
 
-        if (!response.ok) {
-          throw new Error(`Failed to load messages: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success && result.data.messages) {
-          setMessages(result.data.messages);
-          console.log(`Loaded ${result.data.count} existing messages for task`);
-        }
-      } catch (error) {
-        console.error("Error loading task messages:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load existing messages.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error(`Failed to load messages: ${response.statusText}`);
       }
-    },
-    [] // Remove toast from dependencies since it's stable from useToast hook
-  );
+
+      const result = await response.json();
+
+      if (result.success && result.data.messages) {
+        setMessages(result.data.messages);
+        console.log(`Loaded ${result.data.count} existing messages for task`);
+      }
+    } catch (error) {
+      console.error("Error loading task messages:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load existing messages.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     // If we have a task ID from URL, we can optionally load existing messages
@@ -249,7 +246,9 @@ export default function TaskChatPage() {
       const result = await response.json();
       setCurrentTaskId(result.data.id);
 
-      router.push(`/w/${slug}/task/${result.data.id}`);
+      const newUrl = `/w/${slug}/task/${result.data.id}`;
+      // this updates the URL WITHOUT reloading the page
+      window.history.replaceState({}, "", newUrl);
     }
 
     setStarted(true);
