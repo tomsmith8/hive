@@ -47,44 +47,47 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!taskId) {
+      return NextResponse.json(
+        { error: "taskId is required" },
+        { status: 400 }
+      );
+    }
 
-    // Validate task exists and user has access (if taskId provided)
-    if (taskId) {
-      // Find the task and get its workspace
-      const task = await db.task.findFirst({
-        where: {
-          id: taskId,
-          deleted: false,
-        },
-        select: {
-          workspaceId: true,
-          workspace: {
-            select: {
-              ownerId: true,
-              members: {
-                where: {
-                  userId: userId,
-                },
-                select: {
-                  role: true,
-                },
+    // Find the task and get its workspace
+    const task = await db.task.findFirst({
+      where: {
+        id: taskId,
+        deleted: false,
+      },
+      select: {
+        workspaceId: true,
+        workspace: {
+          select: {
+            ownerId: true,
+            members: {
+              where: {
+                userId: userId,
+              },
+              select: {
+                role: true,
               },
             },
           },
         },
-      });
+      },
+    });
 
-      if (!task) {
-        return NextResponse.json({ error: "Task not found" }, { status: 404 });
-      }
+    if (!task) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
 
-      // Check if user is workspace owner or member
-      const isOwner = task.workspace.ownerId === userId;
-      const isMember = task.workspace.members.length > 0;
+    // Check if user is workspace owner or member
+    const isOwner = task.workspace.ownerId === userId;
+    const isMember = task.workspace.members.length > 0;
 
-      if (!isOwner && !isMember) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-      }
+    if (!isOwner && !isMember) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Create the chat message
@@ -125,6 +128,32 @@ export async function POST(request: NextRequest) {
         content: artifact.content as unknown,
       })) as Artifact[],
     };
+
+    if (process.env.MOCK_CHAT_SERVER) {
+      console.log("Sending message to mock server", {
+        taskId,
+        message,
+      });
+      const response = await fetch(`${process.env.MOCK_CHAT_SERVER}/chat`, {
+        method: "POST",
+        body: JSON.stringify({
+          taskId,
+          message,
+          userId,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        console.error(
+          `Failed to send message to mock server: ${response.statusText}`
+        );
+      } else {
+        const result = await response.json();
+        console.log("mock result", result);
+      }
+    }
 
     return NextResponse.json(
       {
