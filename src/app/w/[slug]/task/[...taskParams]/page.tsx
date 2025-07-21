@@ -115,6 +115,8 @@ export default function TaskChatPage() {
 
       const result = await response.json();
 
+      console.log("result", result);
+
       if (result.success && result.data.messages) {
         setMessages(result.data.messages);
         console.log(`Loaded ${result.data.count} existing messages for task`);
@@ -145,6 +147,44 @@ export default function TaskChatPage() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, started]);
+
+  const handleStart = async (msg: string) => {
+    if (isNewTask) {
+      // Create new task
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: msg,
+          description: "New task description", // TODO: Add description
+          status: "active",
+          workspaceSlug: slug,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create task: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setCurrentTaskId(result.data.id);
+
+      const newUrl = `/w/${slug}/task/${result.data.id}`;
+      // this updates the URL WITHOUT reloading the page
+      window.history.replaceState({}, "", newUrl);
+    }
+
+    setStarted(true);
+    await sendMessage(msg);
+
+    // Auto-reply after a short delay (this is temporary mock behavior)
+    setTimeout(() => {
+      const msg = assistantMessage();
+      setMessages((prev) => [...prev, msg]);
+    }, 1000);
+  };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,44 +261,6 @@ export default function TaskChatPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleStart = async (task: string) => {
-    if (isNewTask) {
-      // Create new task
-      const response = await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: task,
-          description: "New task description", // TODO: Add description
-          status: "active",
-          workspaceSlug: slug,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create task: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      setCurrentTaskId(result.data.id);
-
-      const newUrl = `/w/${slug}/task/${result.data.id}`;
-      // this updates the URL WITHOUT reloading the page
-      window.history.replaceState({}, "", newUrl);
-    }
-
-    setStarted(true);
-    await sendMessage(task);
-
-    // Auto-reply after a short delay (this is temporary mock behavior)
-    setTimeout(() => {
-      const msg = assistantMessage();
-      setMessages((prev) => [...prev, msg]);
-    }, 1000);
   };
 
   const handleArtifactAction = async (action: Option, response?: string) => {
