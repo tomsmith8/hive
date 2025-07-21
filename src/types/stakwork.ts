@@ -8,6 +8,7 @@ export interface StakworkResponse {
 
 // Payload for creating a Stakwork project
 export interface StakworkProjectPayload {
+<<<<<<< HEAD
     name: string;
     workflow_id: number;
     workflow_params: Record<string, unknown>;
@@ -29,3 +30,18 @@ export interface StakworkProject {
         project_id: number;
     };
 }
+=======
+  name: string;
+  workflow_id: number;
+  workflow_params: Record<string, unknown>;
+}
+
+export interface CreateCustomerResponse {
+  success: boolean;
+  data: {
+    id: number;
+    name: string;
+    token: string;
+  };
+};
+>>>>>>> c94507a (feat: setup all steps, update user creation)

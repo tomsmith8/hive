@@ -68,4 +68,8 @@ export const CompletionStep = () => {
       </CardContent>
     </Card>
   );
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> c94507a (feat: setup all steps, update user creation)

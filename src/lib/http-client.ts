@@ -34,6 +34,7 @@ export class HttpClient {
             },
         };
 
+<<<<<<< HEAD
         // Create AbortController for timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(
@@ -41,6 +42,26 @@ export class HttpClient {
             this.config.timeout || 10000
         );
         config.signal = controller.signal;
+=======
+  async post<T>(
+    endpoint: string,
+    body?: unknown,
+    headers?: Record<string, string>,
+    service?: string
+  ): Promise<T> {
+
+    console.log('--------------------------------post--------------------------------')
+    console.log(headers)
+    console.log(body)
+    console.log('--------------------------------post--------------------------------')
+
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+      headers,
+    }, service);
+  }
+>>>>>>> c94507a (feat: setup all steps, update user creation)
 
         try {
             const response = await fetch(url, config);
