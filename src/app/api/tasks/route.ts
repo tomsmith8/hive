@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
-      workspaceId,
+      workspaceSlug,
       status,
       priority,
       assigneeId,
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!title || !workspaceId) {
+    if (!title || !workspaceSlug) {
       return NextResponse.json(
         { error: "Missing required fields: title, workspaceId" },
         { status: 400 }
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     // Verify workspace exists and user has access
     const workspace = await db.workspace.findFirst({
       where: {
-        id: workspaceId,
+        slug: workspaceSlug,
         deleted: false,
       },
       select: {
@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const workspaceId = workspace.id;
     // Check if user is workspace owner or member
     const isOwner = workspace.ownerId === userId;
     const isMember = workspace.members.length > 0;

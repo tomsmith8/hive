@@ -97,7 +97,6 @@ export default function TaskChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(
     taskIdFromUrl
   );
@@ -132,7 +131,7 @@ export default function TaskChatPage() {
         setIsLoading(false);
       }
     },
-    [toast]
+    [] // Remove toast from dependencies since it's stable from useToast hook
   );
 
   useEffect(() => {
@@ -239,7 +238,7 @@ export default function TaskChatPage() {
           title: task,
           description: "New task description", // TODO: Add description
           status: "active",
-          workspaceId: slug,
+          workspaceSlug: slug,
         }),
       });
 
