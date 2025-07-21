@@ -18,6 +18,7 @@ import {
   Option,
   createChatMessage,
   ArtifactType,
+  Artifact,
 } from "@/lib/chat";
 import { assistantMessage, codeMessage } from "./mockmsgs";
 import {
@@ -105,16 +106,26 @@ export default function TaskChatPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    await sendMessage(input.trim());
+    setInput("");
+  };
+
+  const sendMessage = async (
+    messageText: string,
+    options?: {
+      messageId?: string;
+    }
+  ) => {
+    if (isLoading) return;
+
     const newMessage: ChatMessage = createChatMessage({
       id: Date.now().toString(),
-      message: input,
+      message: messageText,
       role: ChatRole.USER,
       status: ChatStatus.SENDING,
     });
 
     setMessages((msgs) => [...msgs, newMessage]);
-    const messageText = input;
-    setInput("");
     setIsLoading(true);
 
     console.log("Sending message:", messageText);
@@ -128,7 +139,8 @@ export default function TaskChatPage() {
           taskId: currentTaskId,
           message: messageText,
           contextTags: [],
-          artifacts: [],
+          artifacts: options?.artifacts || [],
+          messageId: options?.messageId,
         }),
       });
 
@@ -145,11 +157,6 @@ export default function TaskChatPage() {
       setMessages((msgs) =>
         msgs.map((msg) => (msg.id === newMessage.id ? result.data : msg))
       );
-
-      toast({
-        title: "Message sent",
-        description: "Your message has been saved successfully.",
-      });
     } catch (error) {
       console.error("Error sending message:", error);
 
@@ -170,25 +177,31 @@ export default function TaskChatPage() {
     }
   };
 
-  const handleStart = (task: string) => {
+  const handleStart = async (task: string) => {
     setStarted(true);
-    const userMessage: ChatMessage = createChatMessage({
-      id: Date.now().toString(),
-      message: task,
-      role: ChatRole.USER,
-      status: ChatStatus.SENT,
-    });
-    setMessages([userMessage]);
+    await sendMessage(task);
 
-    // Auto-reply after a short delay
+    // Auto-reply after a short delay (this is temporary mock behavior)
     setTimeout(() => {
       const msg = assistantMessage();
       setMessages((prev) => [...prev, msg]);
     }, 1000);
   };
 
-  const handleArtifactAction = (action: Option, response?: string) => {
+  const handleArtifactAction = async (action: Option, response?: string) => {
     console.log("Action triggered:", action, response);
+
+    // Find the original message that contains artifacts
+    const originalMessage = messages.find((msg) =>
+      msg.artifacts?.some((artifact) => artifact.type === "FORM")
+    );
+
+    if (originalMessage) {
+      // Send the artifact action response to the backend
+      await sendMessage(action.optionResponse, {
+        messageId: originalMessage.id,
+      });
+    }
 
     if (action.optionResponse === "confirmed") {
       // Add new message with artifacts
