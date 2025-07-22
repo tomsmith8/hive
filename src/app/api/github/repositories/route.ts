@@ -20,7 +20,7 @@ export async function GET() {
       },
     });
 
-    if (!account?.accessToken) {
+    if (!account?.access_token) {
       return NextResponse.json(
         { error: "GitHub access token not found" },
         { status: 400 }
@@ -30,7 +30,7 @@ export async function GET() {
     // Fetch repositories from GitHub API
     const response = await axios.get("https://api.github.com/user/repos", {
       headers: {
-        Authorization: `token ${account.accessToken}`,
+        Authorization: `token ${account.access_token}`,
         Accept: "application/vnd.github.v3+json",
       },
       params: {
@@ -65,19 +65,25 @@ export async function GET() {
     });
   } catch (error: unknown) {
     console.error("Error fetching repositories:", error);
-    
-    if (error && typeof error === 'object' && 'response' in error && 
-        error.response && typeof error.response === 'object' && 'status' in error.response && 
-        error.response.status === 401) {
+
+    if (
+      error &&
+      typeof error === "object" &&
+      "response" in error &&
+      error.response &&
+      typeof error.response === "object" &&
+      "status" in error.response &&
+      error.response.status === 401
+    ) {
       return NextResponse.json(
         { error: "GitHub token expired or invalid" },
         { status: 401 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Failed to fetch repositories" },
       { status: 500 }
     );
   }
-} 
+}
