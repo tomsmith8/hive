@@ -24,15 +24,17 @@ export function IngestCodeStep({
 
   const setServices = useWizardStore((s) => s.setServices);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
+
+
 
 
   const services = useWizardStore((s) => s.services);
   const isProcessing = currentStepStatus === "PROCESSING";
   const isPending = currentStepStatus === "PENDING";
+  console.log(isPending)
 
   const handleIngestStart = useCallback(async () => {
-    setCurrentStepStatus("PROCESSING");
-
     try {
       const res = await fetch("/api/swarm/stakgraph/ingest", {
         method: "POST",
@@ -41,7 +43,13 @@ export function IngestCodeStep({
       });
 
       const data = await res.json();
-      console.log("response from handleIngestStart", data);
+
+      await updateWizardProgress({
+        wizardStep: "INGEST_CODE",
+        stepStatus: "PROCESSING",
+      });
+
+
     } catch (error) {
       console.error("Failed to ingest code:", error);
       setCurrentStepStatus("FAILED");
@@ -92,7 +100,7 @@ export function IngestCodeStep({
   }, [workspaceId, swarmId, handleComplete, setCurrentStepStatus]);
 
   useEffect(() => {
-    if (isProcessing && swarmId && workspaceId && (!services || !services.length)) {
+    if (isProcessing && swarmId && workspaceId) {
       startPollingServices();
     }
 
@@ -105,12 +113,10 @@ export function IngestCodeStep({
   }, [isProcessing, swarmId, workspaceId, startPollingServices, services]);
 
   useEffect(() => {
-    if (!services && !services.length) {
+    if (isPending) {
       handleIngestStart();
-    } else {
-      onNext();
     }
-  }, [handleIngestStart, services]);
+  }, [handleIngestStart, services, onNext]);
 
 
   return (

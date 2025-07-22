@@ -204,6 +204,7 @@ model Swarm {
   environmentVariables  Json    @default("[]") @map("environment_variables")
   services              Json    @default("[]") @map("services")
 
+
   // Wizard progress tracking
   wizardStep   SwarmWizardStep @default(WELCOME)
   stepStatus   StepStatus      @default(PENDING)

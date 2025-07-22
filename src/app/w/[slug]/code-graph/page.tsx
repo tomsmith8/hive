@@ -52,7 +52,7 @@ export default function CodeGraphPage() {
         // Update persisted state
         const newWizardStep = STEPS_ARRAY[newStep];
         try {
-          await updateWizardProgress(workspace?.slug || '', {
+          await updateWizardProgress({
             wizardStep: newWizardStep,
             stepStatus: 'PENDING',
             wizardData: {
@@ -81,7 +81,7 @@ export default function CodeGraphPage() {
         // Update persisted state
         const newWizardStep = STEPS_ARRAY[newStep];
         try {
-          await updateWizardProgress(workspace?.slug || '', {
+          await updateWizardProgress({
             wizardStep: newWizardStep,
             stepStatus: 'COMPLETED',
             wizardData: {
@@ -102,7 +102,7 @@ export default function CodeGraphPage() {
 
 
   // Loading state
-  if (loading) {
+  if (loading || currentStep === 'IDLE') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-96">
@@ -143,6 +143,8 @@ export default function CodeGraphPage() {
 
   // Get current step status for display
   const stepStatus = hasSwarm ? currentStepStatus : undefined;
+
+  console.log(currentStepStatus, currentStep)
 
   return (
     <div className="min-h-screen bg-background">

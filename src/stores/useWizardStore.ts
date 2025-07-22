@@ -62,7 +62,7 @@ type WizardStore = {
   searchTerm: string;
   projectName: string;
   repoName: string;
-  services: ServiceDataConfig[];
+  services: null | ServiceDataConfig[];
   envVars: EnvironmentVariable[];
   wizardStep: string | null;
   hasSwarm: boolean;
@@ -79,7 +79,7 @@ type WizardStore = {
   // Actions
   fetchWizardState: () => Promise<void>;
   createSwarm: () => Promise<void>;
-  updateWizardProgress: (workspaceSlug: string, data: {
+  updateWizardProgress: (data: {
     wizardStep?: string;
     stepStatus?: WizardStepStatus;
     wizardData?: Record<string, unknown>;
@@ -106,7 +106,7 @@ export const useWizardStore = create<WizardStore>()(
     loading: false,
     error: null,
     wizardStateData: null,
-    currentStep: 'WELCOME',
+    currentStep: 'IDLE',
     currentStepStatus: 'PENDING',
     selectedRepo: null,
     searchTerm: '',
@@ -114,12 +114,14 @@ export const useWizardStore = create<WizardStore>()(
     workspaceSlug: '',
     repoName: '',
     workspaceId: '',
-    services: [],
+    services: null,
     hasKey: false,
 
 
     // API Logic
     fetchWizardState: async () => {
+
+      console.log("fetchWizardState")
       const state = get();
       const { workspaceSlug } = state;
       set({ loading: true, error: null });
@@ -155,6 +157,26 @@ export const useWizardStore = create<WizardStore>()(
         projectName: state.projectName,
         repoName: state.repoName,
       };
+
+      const res = await fetch("/api/swarm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId: state.workspaceId,
+          name: state.projectName,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Failed to create swarm');
+      }
+
+      const { swarmId } = json.data;
+      set({ swarmId, currentStep: 'GRAPH_INFRASTRUCTURE', currentStepStatus: 'PROCESSING' });
+
       try {
         const res = await fetch('/api/code-graph/wizard-progress', {
           method: 'PUT',
@@ -178,8 +200,9 @@ export const useWizardStore = create<WizardStore>()(
     },
     setWorkspaceSlug: (slug) => set({ workspaceSlug: slug }),
 
-    updateWizardProgress: async (workspaceSlug, data) => {
+    updateWizardProgress: async (data) => {
       const state = get();
+      const { workspaceSlug } = state;
       if (!state.wizardStateData) throw new Error('No swarm exists');
 
       try {
