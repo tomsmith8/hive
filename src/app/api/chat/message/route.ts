@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { db } from "@/lib/db";
+import { config } from "@/lib/env";
 import {
   ChatRole,
   ChatStatus,
@@ -14,6 +15,117 @@ import {
 interface ArtifactRequest {
   type: ArtifactType;
   content?: Record<string, unknown>;
+}
+
+interface StakworkWorkflowPayload {
+  name: string;
+  workflow_id: number;
+  workflow_params: {
+    set_var: {
+      attributes: {
+        vars: {
+          query: string;
+        };
+      };
+    };
+  };
+}
+
+async function callMock(taskId: string, message: string, userId: string) {
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+  console.log("Sending message to mock server", {
+    taskId,
+    message,
+  });
+
+  try {
+    const response = await fetch(`${baseUrl}/api/mock`, {
+      method: "POST",
+      body: JSON.stringify({
+        taskId,
+        message,
+        userId,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Failed to send message to mock server: ${response.statusText}`
+      );
+      return { success: false, error: response.statusText };
+    }
+
+    const result = await response.json();
+    console.log("mock result", result);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error calling mock server:", error);
+    return { success: false, error: String(error) };
+  }
+}
+
+async function callStakwork(message: string) {
+  try {
+    // Validate that all required Stakwork environment variables are set
+    if (!config.STAKWORK_API_KEY) {
+      throw new Error("STAKWORK_API_KEY is required for Stakwork integration");
+    }
+    if (!config.STAKWORK_WORKFLOW_ID) {
+      throw new Error(
+        "STAKWORK_WORKFLOW_ID is required for Stakwork integration"
+      );
+    }
+
+    const stakworkPayload: StakworkWorkflowPayload = {
+      name: "hive_autogen",
+      workflow_id: parseInt(config.STAKWORK_WORKFLOW_ID),
+      workflow_params: {
+        set_var: {
+          attributes: {
+            vars: {
+              query: message,
+            },
+          },
+        },
+      },
+    };
+
+    const stakworkURL = `${config.STAKWORK_BASE_URL}/projects`;
+
+    console.log("Sending message to Stakwork", {
+      url: stakworkURL,
+      payload: stakworkPayload,
+    });
+
+    const response = await fetch(stakworkURL, {
+      method: "POST",
+      body: JSON.stringify(stakworkPayload),
+      headers: {
+        Authorization: `Token token=${config.STAKWORK_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        `Failed to send message to Stakwork: ${response.statusText}`
+      );
+      return { success: false, error: response.statusText };
+    }
+
+    const result = await response.json();
+    console.log("Stakwork result", result);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error calling Stakwork:", error);
+    return { success: false, error: String(error) };
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -129,34 +241,17 @@ export async function POST(request: NextRequest) {
       })) as Artifact[],
     };
 
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    // Check if Stakwork environment variables are defined
+    const useStakwork =
+      config.STAKWORK_API_KEY &&
+      config.STAKWORK_BASE_URL &&
+      config.STAKWORK_WORKFLOW_ID;
 
-    console.log("🔗 Base VERCEL_URL:", baseUrl);
-
-    console.log("Sending message to mock server", {
-      taskId,
-      message,
-    });
-    const response = await fetch(`${baseUrl}/api/mock`, {
-      method: "POST",
-      body: JSON.stringify({
-        taskId,
-        message,
-        userId,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) {
-      console.error(
-        `Failed to send message to mock server: ${response.statusText}`
-      );
+    // Call appropriate service based on environment configuration
+    if (useStakwork) {
+      await callStakwork(message);
     } else {
-      const result = await response.json();
-      console.log("mock result", result);
+      await callMock(taskId, message, userId);
     }
 
     return NextResponse.json(
