@@ -25,7 +25,7 @@ import {
   BrowserArtifactPanel,
 } from "./artifacts";
 import { useParams } from "next/navigation";
-import { useSSEConnection } from "@/hooks/useSSEConnection";
+import { usePusherConnection } from "@/hooks/usePusherConnection";
 
 function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   const [value, setValue] = useState("");
@@ -109,16 +109,16 @@ export default function TaskChatPage() {
     setMessages((prev) => [...prev, message]);
   }, []);
 
-  // Use the SSE connection hook
-  const { isConnected, error: sseError } = useSSEConnection({
+  // Use the Pusher connection hook
+  const { isConnected, error: connectionError } = usePusherConnection({
     taskId: currentTaskId,
     enabled: started,
     onMessage: handleSSEMessage,
   });
 
-  // Show SSE connection errors as toasts
+  // Show connection errors as toasts
   useEffect(() => {
-    if (sseError) {
+    if (connectionError) {
       toast({
         title: "Connection Error",
         description:
@@ -128,7 +128,7 @@ export default function TaskChatPage() {
     }
     // toast in deps causes infinite re-render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sseError]);
+  }, [connectionError]);
 
   const loadTaskMessages = useCallback(async (taskId: string) => {
     try {
