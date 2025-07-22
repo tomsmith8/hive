@@ -23,12 +23,18 @@ interface StakworkWorkflowPayload {
   workflow_params: {
     set_var: {
       attributes: {
-        vars: {
-          query: string;
-        };
+        vars: Record<string, unknown>;
       };
     };
   };
+}
+
+function getBaseUrl(request?: NextRequest): string {
+  // Use the request host or fallback to localhost
+  const host = request?.headers.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
+  return baseUrl;
 }
 
 async function callMock(
@@ -37,11 +43,7 @@ async function callMock(
   userId: string,
   request?: NextRequest
 ) {
-  // Use the request host or fallback to localhost
-  const host = request?.headers.get("host") || "localhost:3000";
-  const protocol = host.includes("localhost") ? "http" : "https";
-  const baseUrl = `${protocol}://${host}`;
-
+  const baseUrl = getBaseUrl(request);
   console.log("Sending message to mock server", {
     taskId,
     message,
@@ -77,7 +79,41 @@ async function callMock(
   }
 }
 
-async function callStakwork(message: string) {
+async function buildVarsPayload(
+  taskId: string,
+  message: string,
+  baseUrl: string,
+  contextTags: ContextTag[],
+  userName: string | null,
+  accessToken: string | null,
+  swarmUrl: string | null,
+  swarmSecretAlias: string | null,
+  poolName: string | null
+) {
+  return {
+    taskId,
+    message,
+    contextTags,
+    webhookUrl: `${baseUrl}/api/chat/response`,
+    alias: userName,
+    accessToken,
+    swarmUrl,
+    swarmSecretAlias,
+    poolName,
+  };
+}
+
+async function callStakwork(
+  taskId: string,
+  message: string,
+  contextTags: ContextTag[],
+  userName: string | null,
+  accessToken: string | null,
+  swarmUrl: string | null,
+  swarmSecretAlias: string | null,
+  poolName: string | null,
+  request?: NextRequest
+) {
   try {
     // Validate that all required Stakwork environment variables are set
     if (!config.STAKWORK_API_KEY) {
@@ -89,15 +125,25 @@ async function callStakwork(message: string) {
       );
     }
 
+    const baseUrl = getBaseUrl(request);
+    const vars = await buildVarsPayload(
+      taskId,
+      message,
+      baseUrl,
+      contextTags,
+      userName,
+      accessToken,
+      swarmUrl,
+      swarmSecretAlias,
+      poolName
+    );
     const stakworkPayload: StakworkWorkflowPayload = {
       name: "hive_autogen",
       workflow_id: parseInt(config.STAKWORK_WORKFLOW_ID),
       workflow_params: {
         set_var: {
           attributes: {
-            vars: {
-              query: message,
-            },
+            vars,
           },
         },
       },
@@ -173,7 +219,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the task and get its workspace
+    // Find the task and get its workspace with swarm details
     const task = await db.task.findFirst({
       where: {
         id: taskId,
@@ -184,6 +230,13 @@ export async function POST(request: NextRequest) {
         workspace: {
           select: {
             ownerId: true,
+            swarm: {
+              select: {
+                swarmUrl: true,
+                swarmSecretAlias: true,
+                poolName: true,
+              },
+            },
             members: {
               where: {
                 userId: userId,
@@ -197,8 +250,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Get user details including name and accounts
+    const user = await db.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        name: true,
+        accounts: {
+          select: {
+            access_token: true,
+            provider: true,
+          },
+        },
+      },
+    });
+
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Check if user is workspace owner or member
@@ -254,9 +327,29 @@ export async function POST(request: NextRequest) {
       config.STAKWORK_BASE_URL &&
       config.STAKWORK_WORKFLOW_ID;
 
+    // Extract data for Stakwork payload
+    const userName = user.name;
+    const accessToken =
+      user.accounts.find((account) => account.access_token)?.access_token ||
+      null;
+    const swarm = task.workspace.swarm;
+    const swarmUrl = swarm?.swarmUrl || null;
+    const swarmSecretAlias = swarm?.swarmSecretAlias || null;
+    const poolName = swarm?.poolName || null;
+
     // Call appropriate service based on environment configuration
     if (useStakwork) {
-      await callStakwork(message);
+      await callStakwork(
+        taskId,
+        message,
+        contextTags,
+        userName,
+        accessToken,
+        swarmUrl,
+        swarmSecretAlias,
+        poolName,
+        request
+      );
     } else {
       await callMock(taskId, message, userId, request);
     }
