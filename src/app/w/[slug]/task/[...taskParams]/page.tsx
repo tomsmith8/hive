@@ -19,7 +19,6 @@ import {
   createChatMessage,
   ArtifactType,
 } from "@/lib/chat";
-import { codeMessage } from "./mockmsgs";
 import {
   FormArtifact,
   CodeArtifactPanel,
@@ -128,6 +127,7 @@ export default function TaskChatPage() {
       });
     }
     // toast in deps causes infinite re-render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sseError]);
 
   const loadTaskMessages = useCallback(async (taskId: string) => {
@@ -149,14 +149,15 @@ export default function TaskChatPage() {
       }
     } catch (error) {
       console.error("Error loading task messages:", error);
-      // toast({
-      //   title: "Error",
-      //   description: "Failed to load existing messages.",
-      //   variant: "destructive",
-      // });
+      toast({
+        title: "Error",
+        description: "Failed to load existing messages.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -307,12 +308,6 @@ export default function TaskChatPage() {
       await sendMessage(action.optionResponse, {
         replyId: originalMessage.id,
       });
-    }
-
-    if (action.optionResponse === "confirmed") {
-      // Add new message with artifacts
-      const codemsg = codeMessage();
-      setMessages((prev) => [...prev, codemsg]);
     }
   };
 
