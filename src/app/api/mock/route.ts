@@ -16,59 +16,54 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
-    // Simulate processing time
-    const delay = 1111;
+    try {
+      // Generate mock response
+      const mockResponse = generateResponseBasedOnMessage(message);
 
-    setTimeout(async () => {
-      try {
-        // Generate mock response
-        const mockResponse = generateResponseBasedOnMessage(message);
+      console.log("🤖 Mock generated response:", {
+        originalMessage: message,
+        response: mockResponse.message,
+        taskId,
+        timestamp: new Date().toISOString(),
+      });
 
-        console.log("🤖 Mock generated response:", {
-          originalMessage: message,
-          response: mockResponse.message,
-          taskId,
-          timestamp: new Date().toISOString(),
-        });
+      // Use the request host for internal API calls
+      const host = req.headers.get("host") || "localhost:3000";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      const baseUrl = `${protocol}://${host}`;
 
-        // Use the request host for internal API calls
-        const host = req.headers.get("host") || "localhost:3000";
-        const protocol = host.includes("localhost") ? "http" : "https";
-        const baseUrl = `${protocol}://${host}`;
+      console.log("🔗 Mock base URL:", baseUrl);
 
-        console.log("🔗 Mock base URL:", baseUrl);
+      const responsePayload = {
+        taskId: taskId,
+        message: mockResponse.message,
+        contextTags: mockResponse.contextTags,
+        sourceWebsocketID: mockResponse.sourceWebsocketID,
+        artifacts: mockResponse.artifacts?.map((artifact) => ({
+          type: artifact.type,
+          content: artifact.content,
+        })),
+      };
 
-        const responsePayload = {
-          taskId: taskId,
-          message: mockResponse.message,
-          contextTags: mockResponse.contextTags,
-          sourceWebsocketID: mockResponse.sourceWebsocketID,
-          artifacts: mockResponse.artifacts?.map((artifact) => ({
-            type: artifact.type,
-            content: artifact.content,
-          })),
-        };
+      console.log("🚀 Mock sending response to API:", {
+        taskId,
+        messagePreview: mockResponse.message.substring(0, 50) + "...",
+        timestamp: new Date().toISOString(),
+      });
 
-        console.log("🚀 Mock sending response to API:", {
-          taskId,
-          messagePreview: mockResponse.message.substring(0, 50) + "...",
-          timestamp: new Date().toISOString(),
-        });
+      await axios.post(`${baseUrl}/api/chat/response`, responsePayload);
 
-        await axios.post(`${baseUrl}/api/chat/response`, responsePayload);
-
-        console.log("✅ Mock response sent successfully:", {
-          taskId,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        console.error("❌ Mock error sending response:", {
-          error,
-          taskId,
-          timestamp: new Date().toISOString(),
-        });
-      }
-    }, delay);
+      console.log("✅ Mock response sent successfully:", {
+        taskId,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("❌ Mock error sending response:", {
+        error,
+        taskId,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // Immediately respond to the original request
     return NextResponse.json({
