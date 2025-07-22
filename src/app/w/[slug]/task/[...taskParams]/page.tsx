@@ -117,7 +117,6 @@ export default function TaskChatPage() {
   // Use the Pusher connection hook
   const { isConnected, error: connectionError } = usePusherConnection({
     taskId: currentTaskId,
-    enabled: started,
     onMessage: handleSSEMessage,
   });
 
