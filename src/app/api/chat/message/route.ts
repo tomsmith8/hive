@@ -31,14 +31,21 @@ interface StakworkWorkflowPayload {
   };
 }
 
-async function callMock(taskId: string, message: string, userId: string) {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+async function callMock(
+  taskId: string,
+  message: string,
+  userId: string,
+  request?: NextRequest
+) {
+  // Use the request host or fallback to localhost
+  const host = request?.headers.get("host") || "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
 
   console.log("Sending message to mock server", {
     taskId,
     message,
+    baseUrl,
   });
 
   try {
@@ -251,7 +258,7 @@ export async function POST(request: NextRequest) {
     if (useStakwork) {
       await callStakwork(message);
     } else {
-      await callMock(taskId, message, userId);
+      await callMock(taskId, message, userId, request);
     }
 
     return NextResponse.json(

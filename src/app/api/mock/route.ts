@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
 
         console.log("🤖 Generated response:", mockResponse.message);
 
-        // Send response back to main app
-        const baseUrl = process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000";
+        // Use the request host for internal API calls
+        const host = req.headers.get("host") || "localhost:3000";
+        const protocol = host.includes("localhost") ? "http" : "https";
+        const baseUrl = `${protocol}://${host}`;
 
         console.log("🔗 Base URL:", baseUrl);
 
