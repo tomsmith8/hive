@@ -1,4 +1,16 @@
 -- CreateEnum
+CREATE TYPE "ChatRole" AS ENUM ('USER', 'ASSISTANT');
+
+-- CreateEnum
+CREATE TYPE "ChatStatus" AS ENUM ('SENDING', 'SENT', 'ERROR');
+
+-- CreateEnum
+CREATE TYPE "ContextTagType" AS ENUM ('PRODUCT_BRIEF', 'FEATURE_BRIEF', 'SCHEMATIC');
+
+-- CreateEnum
+CREATE TYPE "ArtifactType" AS ENUM ('FORM', 'CODE', 'BROWSER', 'IDE', 'MEDIA', 'STREAM');
+
+-- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN', 'MODERATOR');
 
 -- CreateEnum
@@ -36,6 +48,12 @@ CREATE TYPE "TimeHorizon" AS ENUM ('QUARTER', 'HALF_YEAR', 'YEAR', 'CUSTOM');
 
 -- CreateEnum
 CREATE TYPE "CommentEntity" AS ENUM ('FEATURE', 'USER_STORY', 'TASK', 'REQUIREMENT');
+
+-- CreateEnum
+CREATE TYPE "SwarmWizardStep" AS ENUM ('WELCOME', 'REPOSITORY_SELECT', 'PROJECT_NAME', 'GRAPH_INFRASTRUCTURE', 'INGEST_CODE', 'ADD_SERVICES', 'ENVIRONMENT_SETUP', 'REVIEW_POOL_ENVIRONMENT', 'STAKWORK_SETUP');
+
+-- CreateEnum
+CREATE TYPE "StepStatus" AS ENUM ('PENDING', 'STARTED', 'PROCESSING', 'COMPLETED', 'FAILED');
 
 -- CreateTable
 CREATE TABLE "accounts" (
@@ -150,11 +168,24 @@ CREATE TABLE "workspace_members" (
 CREATE TABLE "swarms" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "swarm_id" TEXT,
     "swarm_url" TEXT,
     "status" "SwarmStatus" NOT NULL DEFAULT 'PENDING',
     "instance_type" TEXT NOT NULL DEFAULT 'XL',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "pool_name" TEXT,
+    "repository_name" TEXT,
+    "repository_description" TEXT,
+    "repository_url" TEXT,
+    "swarm_api_key" TEXT,
+    "swarm_secret_alias" TEXT,
+    "pool_api_key" TEXT,
+    "environment_variables" JSONB NOT NULL DEFAULT '[]',
+    "services" JSONB NOT NULL DEFAULT '[]',
+    "wizard_step" "SwarmWizardStep" NOT NULL DEFAULT 'WELCOME',
+    "step_status" "StepStatus" NOT NULL DEFAULT 'PENDING',
+    "wizard_data" JSONB NOT NULL DEFAULT '{}',
     "workspace_id" TEXT NOT NULL,
 
     CONSTRAINT "swarms_pkey" PRIMARY KEY ("id")
@@ -251,8 +282,7 @@ CREATE TABLE "tasks" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "user_story_id" TEXT,
-    "feature_id" TEXT,
+    "workspace_id" TEXT NOT NULL,
     "assignee_id" TEXT,
     "repository_id" TEXT,
     "status" "TaskStatus" NOT NULL DEFAULT 'TODO',
@@ -270,12 +300,41 @@ CREATE TABLE "tasks" (
 );
 
 -- CreateTable
+CREATE TABLE "chat_messages" (
+    "id" TEXT NOT NULL,
+    "task_id" TEXT,
+    "message" TEXT NOT NULL,
+    "role" "ChatRole" NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "context_tags" JSONB NOT NULL DEFAULT '[]',
+    "status" "ChatStatus" NOT NULL DEFAULT 'SENDING',
+    "source_websocket_id" TEXT,
+    "reply_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "chat_messages_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "artifacts" (
+    "id" TEXT NOT NULL,
+    "message_id" TEXT NOT NULL,
+    "type" "ArtifactType" NOT NULL,
+    "content" JSONB,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "artifacts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "roadmaps" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "product_id" TEXT NOT NULL,
-    "timeHorizon" "TimeHorizon" NOT NULL DEFAULT 'QUARTER',
+    "time_horizon" "TimeHorizon" NOT NULL DEFAULT 'QUARTER',
     "start_date" TIMESTAMP(3) NOT NULL,
     "end_date" TIMESTAMP(3) NOT NULL,
     "deleted" BOOLEAN NOT NULL DEFAULT false,
@@ -307,7 +366,7 @@ CREATE TABLE "roadmap_items" (
 CREATE TABLE "comments" (
     "id" TEXT NOT NULL,
     "content" TEXT NOT NULL,
-    "entityType" "CommentEntity" NOT NULL,
+    "entity_type" "CommentEntity" NOT NULL,
     "feature_id" TEXT,
     "user_story_id" TEXT,
     "task_id" TEXT,
@@ -380,7 +439,13 @@ CREATE UNIQUE INDEX "swarms_name_key" ON "swarms"("name");
 CREATE UNIQUE INDEX "swarms_workspace_id_key" ON "swarms"("workspace_id");
 
 -- CreateIndex
+CREATE INDEX "swarms_swarm_id_idx" ON "swarms"("swarm_id");
+
+-- CreateIndex
 CREATE INDEX "repositories_workspace_id_idx" ON "repositories"("workspace_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "repositories_repository_url_workspace_id_key" ON "repositories"("repository_url", "workspace_id");
 
 -- CreateIndex
 CREATE INDEX "products_workspace_id_idx" ON "products"("workspace_id");
@@ -428,10 +493,7 @@ CREATE INDEX "requirements_status_idx" ON "requirements"("status");
 CREATE INDEX "requirements_deleted_idx" ON "requirements"("deleted");
 
 -- CreateIndex
-CREATE INDEX "tasks_user_story_id_idx" ON "tasks"("user_story_id");
-
--- CreateIndex
-CREATE INDEX "tasks_feature_id_idx" ON "tasks"("feature_id");
+CREATE INDEX "tasks_workspace_id_idx" ON "tasks"("workspace_id");
 
 -- CreateIndex
 CREATE INDEX "tasks_assignee_id_idx" ON "tasks"("assignee_id");
@@ -441,6 +503,18 @@ CREATE INDEX "tasks_status_idx" ON "tasks"("status");
 
 -- CreateIndex
 CREATE INDEX "tasks_deleted_idx" ON "tasks"("deleted");
+
+-- CreateIndex
+CREATE INDEX "chat_messages_task_id_idx" ON "chat_messages"("task_id");
+
+-- CreateIndex
+CREATE INDEX "chat_messages_timestamp_idx" ON "chat_messages"("timestamp");
+
+-- CreateIndex
+CREATE INDEX "artifacts_message_id_idx" ON "artifacts"("message_id");
+
+-- CreateIndex
+CREATE INDEX "artifacts_type_idx" ON "artifacts"("type");
 
 -- CreateIndex
 CREATE INDEX "roadmaps_product_id_idx" ON "roadmaps"("product_id");
@@ -527,10 +601,7 @@ ALTER TABLE "user_stories" ADD CONSTRAINT "user_stories_updated_by_id_fkey" FORE
 ALTER TABLE "requirements" ADD CONSTRAINT "requirements_feature_id_fkey" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tasks" ADD CONSTRAINT "tasks_user_story_id_fkey" FOREIGN KEY ("user_story_id") REFERENCES "user_stories"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "tasks" ADD CONSTRAINT "tasks_feature_id_fkey" FOREIGN KEY ("feature_id") REFERENCES "features"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "tasks" ADD CONSTRAINT "tasks_assignee_id_fkey" FOREIGN KEY ("assignee_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -543,6 +614,12 @@ ALTER TABLE "tasks" ADD CONSTRAINT "tasks_created_by_id_fkey" FOREIGN KEY ("crea
 
 -- AddForeignKey
 ALTER TABLE "tasks" ADD CONSTRAINT "tasks_updated_by_id_fkey" FOREIGN KEY ("updated_by_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "artifacts" ADD CONSTRAINT "artifacts_message_id_fkey" FOREIGN KEY ("message_id") REFERENCES "chat_messages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "roadmaps" ADD CONSTRAINT "roadmaps_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
