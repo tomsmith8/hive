@@ -10,6 +10,9 @@ import {
 } from "@/lib/chat";
 import { pusherServer, getTaskChannelName, PUSHER_EVENTS } from "@/lib/pusher";
 
+// Disable caching for real-time messaging
+export const fetchCache = "force-no-store";
+
 interface ArtifactRequest {
   type: ArtifactType;
   content?: Record<string, unknown>;

@@ -276,9 +276,12 @@ export default function TaskChatPage() {
         throw new Error(result.error || "Failed to send message");
       }
 
-      // Replace the temporary message with the complete message from backend
+      // Update the temporary message status instead of replacing entirely
+      // This prevents re-animation since React sees it as the same message
       setMessages((msgs) =>
-        msgs.map((msg) => (msg.id === newMessage.id ? result.data : msg))
+        msgs.map((msg) =>
+          msg.id === newMessage.id ? { ...msg, status: ChatStatus.SENT } : msg
+        )
       );
     } catch (error) {
       console.error("Error sending message:", error);

@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth/nextauth";
 import { db } from "@/lib/db";
 import { type ChatMessage, type ContextTag, type Artifact } from "@/lib/chat";
 
+// Disable caching for real-time messaging
+export const fetchCache = "force-no-store";
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
