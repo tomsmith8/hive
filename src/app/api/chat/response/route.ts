@@ -94,14 +94,27 @@ export async function POST(request: NextRequest) {
     if (taskId) {
       try {
         const channelName = getTaskChannelName(taskId);
+        console.log(
+          `🚀 Broadcasting message to Pusher channel: ${channelName}`
+        );
+        console.log(`📨 Message content:`, {
+          id: clientMessage.id,
+          message: clientMessage.message,
+          role: clientMessage.role,
+          timestamp: clientMessage.timestamp,
+        });
+
         await pusherServer.trigger(
           channelName,
           PUSHER_EVENTS.NEW_MESSAGE,
           clientMessage
         );
-        console.log(`Broadcasting message to Pusher channel: ${channelName}`);
+
+        console.log(
+          `✅ Successfully broadcast message to Pusher channel: ${channelName}`
+        );
       } catch (error) {
-        console.error("Error broadcasting to Pusher:", error);
+        console.error("❌ Error broadcasting to Pusher:", error);
         // Don't fail the request if Pusher fails
       }
     }
