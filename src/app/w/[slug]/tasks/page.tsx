@@ -26,7 +26,7 @@ export default function TasksPage() {
             Manage and track your development tasks and issues.
           </p>
         </div>
-        <Button onClick={() => router.push(`/w/${slug}/tasks/new`)}>
+        <Button onClick={() => router.push(`/w/${slug}/task/new`)}>
           <Plus className="w-4 h-4 mr-2" />
           New Task
         </Button>

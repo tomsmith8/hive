@@ -418,6 +418,7 @@ model ChatMessage {
   contextTags         Json        @default("[]") // stores ContextTag[]
   status              ChatStatus  @default(SENDING)
   sourceWebsocketID   String?     @map("source_websocket_id")
+  replyId             String?     @map("reply_id")
   
   artifacts           Artifact[]
   
