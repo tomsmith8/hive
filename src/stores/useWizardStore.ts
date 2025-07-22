@@ -106,7 +106,7 @@ export const useWizardStore = create<WizardStore>()(
     loading: false,
     error: null,
     wizardStateData: null,
-    currentStep: 'IDLE',
+    currentStep: 'WELCOME',
     currentStepStatus: 'PENDING',
     selectedRepo: null,
     searchTerm: '',
