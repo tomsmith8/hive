@@ -222,9 +222,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // sleep for 1 second
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     // Find the task and get its workspace with swarm details
     const task = await db.task.findFirst({
       where: {
