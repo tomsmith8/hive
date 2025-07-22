@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChatMessage } from "@/lib/chat";
-import { pusherClient, getTaskChannelName, PUSHER_EVENTS } from "@/lib/pusher";
+import {
+  getPusherClient,
+  getTaskChannelName,
+  PUSHER_EVENTS,
+} from "@/lib/pusher";
 import type { Channel } from "pusher-js";
 
 interface UsePusherConnectionOptions {
@@ -45,7 +49,9 @@ export function usePusherConnection({
       channelRef.current.unbind_all();
 
       // Unsubscribe from the channel
-      pusherClient.unsubscribe(getTaskChannelName(currentTaskIdRef.current));
+      getPusherClient().unsubscribe(
+        getTaskChannelName(currentTaskIdRef.current)
+      );
 
       channelRef.current = null;
       currentTaskIdRef.current = null;
@@ -65,7 +71,7 @@ export function usePusherConnection({
 
       try {
         const channelName = getTaskChannelName(targetTaskId);
-        const channel = pusherClient.subscribe(channelName);
+        const channel = getPusherClient().subscribe(channelName);
 
         // Set up event handlers
         channel.bind("pusher:subscription_succeeded", () => {
