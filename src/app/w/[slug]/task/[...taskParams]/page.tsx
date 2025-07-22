@@ -27,6 +27,11 @@ import {
 import { useParams } from "next/navigation";
 import { usePusherConnection } from "@/hooks/usePusherConnection";
 
+// Generate unique IDs to prevent collisions
+function generateUniqueId() {
+  return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
 function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -235,7 +240,7 @@ export default function TaskChatPage() {
     if (isLoading) return;
 
     const newMessage: ChatMessage = createChatMessage({
-      id: Date.now().toString(),
+      id: generateUniqueId(),
       message: messageText,
       role: ChatRole.USER,
       status: ChatStatus.SENDING,

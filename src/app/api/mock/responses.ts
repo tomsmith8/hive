@@ -6,8 +6,13 @@ import {
   JSON_CODE,
 } from "./helpers";
 
+// Generate unique IDs to prevent collisions
+function generateUniqueId() {
+  return `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
 export function generateCodeResponse() {
-  const messageId = Date.now().toString();
+  const messageId = generateUniqueId();
 
   return makeRes(
     "Perfect! I've created the connection leak monitor implementation. Here's what I've built:",
@@ -40,7 +45,7 @@ export function generateCodeResponse() {
 }
 
 export function generateFormResponse() {
-  const messageId = Date.now().toString();
+  const messageId = generateUniqueId();
 
   return makeRes(
     "I'll help you build a connection leak monitor. Here's my plan:",
@@ -72,7 +77,7 @@ export function generateFormResponse() {
 }
 
 export function generateBrowserResponse() {
-  const messageId = Date.now().toString();
+  const messageId = generateUniqueId();
 
   return makeRes("Here's a live preview of the Sphinx Chat community site:", [
     createArtifact({
