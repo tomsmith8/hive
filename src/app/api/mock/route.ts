@@ -2,6 +2,9 @@ import axios from "axios";
 import { generateResponseBasedOnMessage } from "./responses";
 import { NextRequest, NextResponse } from "next/server";
 
+// Disable caching for real-time messaging
+export const fetchCache = "force-no-store";
+
 export async function POST(req: NextRequest) {
   try {
     const { message, taskId, userId } = await req.json();
