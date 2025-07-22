@@ -26,37 +26,39 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Onboarding Card */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-        <CardHeader>
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-              <Rocket className="h-5 w-5 text-primary-foreground" />
+      {/* Onboarding Card - Only show if CodeGraph is not set up */}
+      {workspace && !workspace.isCodeGraphSetup && (
+        <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardHeader>
+            <div className="flex items-center space-x-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+                <Rocket className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Get Started with CodeGraph</CardTitle>
+                <CardDescription className="text-base">
+                  Connect your repository and set up your development environment in just a few minutes.
+                </CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-xl">Get Started with CodeGraph</CardTitle>
-              <CardDescription className="text-base">
-                Connect your repository and set up your development environment in just a few minutes.
-              </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  ✓ Deep code context analysis<br />
+                  ✓ Automated testing environment<br />
+                  ✓ Visual workflow management
+                </p>
+              </div>
+              <Button onClick={handleStartSetup} size="lg" className="flex items-center space-x-2">
+                <span>Connect Repository</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                ✓ Deep code context analysis<br />
-                ✓ Automated testing environment<br />
-                ✓ Visual workflow management
-              </p>
-            </div>
-            <Button onClick={handleStartSetup} size="lg" className="flex items-center space-x-2">
-              <span>Connect Repository</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
