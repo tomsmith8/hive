@@ -133,15 +133,15 @@ export function CodeArtifactPanel({ artifacts }: { artifacts: Artifact[] }) {
               </div>
 
               {content.change && (
-                <div className="px-4 py-2 bg-muted/20 border-b text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="font-medium">Change:</span>
+                <div className="px-4 pt-2 bg-muted/20 border-b text-sm">
+                  <div className="flex items-center text-muted-foreground">
+                    {/* <span className="font-medium">Change:</span> */}
                     <span>{content.change}</span>
                   </div>
                 </div>
               )}
 
-              <div className="p-4 flex-1 min-h-0 overflow-auto">
+              <div className="p-4 pt-1 flex-1 min-h-0 overflow-auto">
                 <SyntaxHighlighter
                   code={content.content}
                   language={
