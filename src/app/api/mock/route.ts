@@ -9,7 +9,12 @@ export async function POST(req: NextRequest) {
   try {
     const { message, taskId, userId } = await req.json();
 
-    console.log("📨 Received message:", { message, taskId, userId });
+    console.log("📨 Mock received message:", {
+      message,
+      taskId,
+      userId,
+      timestamp: new Date().toISOString(),
+    });
 
     // Simulate processing time
     const delay = 1111;
@@ -19,14 +24,19 @@ export async function POST(req: NextRequest) {
         // Generate mock response
         const mockResponse = generateResponseBasedOnMessage(message);
 
-        console.log("🤖 Generated response:", mockResponse.message);
+        console.log("🤖 Mock generated response:", {
+          originalMessage: message,
+          response: mockResponse.message,
+          taskId,
+          timestamp: new Date().toISOString(),
+        });
 
         // Use the request host for internal API calls
         const host = req.headers.get("host") || "localhost:3000";
         const protocol = host.includes("localhost") ? "http" : "https";
         const baseUrl = `${protocol}://${host}`;
 
-        console.log("🔗 Base URL:", baseUrl);
+        console.log("🔗 Mock base URL:", baseUrl);
 
         const responsePayload = {
           taskId: taskId,
@@ -39,11 +49,24 @@ export async function POST(req: NextRequest) {
           })),
         };
 
+        console.log("🚀 Mock sending response to API:", {
+          taskId,
+          messagePreview: mockResponse.message.substring(0, 50) + "...",
+          timestamp: new Date().toISOString(),
+        });
+
         await axios.post(`${baseUrl}/api/chat/response`, responsePayload);
 
-        console.log("✅ Response sent back to main app");
+        console.log("✅ Mock response sent successfully:", {
+          taskId,
+          timestamp: new Date().toISOString(),
+        });
       } catch (error) {
-        console.error("❌ Error sending response:", error);
+        console.error("❌ Mock error sending response:", {
+          error,
+          taskId,
+          timestamp: new Date().toISOString(),
+        });
       }
     }, delay);
 
@@ -53,7 +76,7 @@ export async function POST(req: NextRequest) {
       message: "Message received, response will be generated shortly",
     });
   } catch (error) {
-    console.error("❌ Error processing message:", error);
+    console.error("❌ Mock error processing message:", error);
     return NextResponse.json(
       { error: "Failed to process message" },
       { status: 500 }
