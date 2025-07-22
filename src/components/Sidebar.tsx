@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
-  Home, 
   Settings, 
   Menu,
   CheckSquare,
@@ -31,7 +30,6 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  { icon: Home, label: "Dashboard", href: "" },
   { icon: CheckSquare, label: "Tasks", href: "/tasks" },
   // { icon: Map, label: "Roadmap", href: "/roadmap" },
   { icon: Network, label: "Stakgraph", href: "/stakgraph" },
@@ -71,7 +69,7 @@ export function Sidebar({ user }: SidebarProps) {
 
   const handleNavigate = (href: string) => {
     if (workspaceSlug) {
-      const fullPath = href === "" ? `/w/${workspaceSlug}` : `/w/${workspaceSlug}${href}`;
+      const fullPath = `/w/${workspaceSlug}${href}`;
       router.push(fullPath);
     } else {
       // Fallback to workspaces page if no workspace detected

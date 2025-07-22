@@ -1,18 +1,12 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Github, Calendar, Activity, Code, BarChart3, Settings, Rocket, ArrowRight } from "lucide-react";
+import { Github, Calendar, Activity, Code, BarChart3, Settings } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useRouter } from "next/navigation";
+import { ConnectRepository } from "@/components/ConnectRepository";
 
 export default function DashboardPage() {
   const { workspace, slug } = useWorkspace();
-  const router = useRouter();
-
-  const handleStartSetup = () => {
-    router.push(`/w/${slug}/code-graph`);
-  };
 
   return (
     <div className="space-y-6">
@@ -28,36 +22,7 @@ export default function DashboardPage() {
 
       {/* Onboarding Card - Only show if CodeGraph is not set up */}
       {workspace && !workspace.isCodeGraphSetup && (
-        <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-          <CardHeader>
-            <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-                <Rocket className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Get Started with CodeGraph</CardTitle>
-                <CardDescription className="text-base">
-                  Connect your repository and set up your development environment in just a few minutes.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  ✓ Deep code context analysis<br />
-                  ✓ Automated testing environment<br />
-                  ✓ Visual workflow management
-                </p>
-              </div>
-              <Button onClick={handleStartSetup} size="lg" className="flex items-center space-x-2">
-                <span>Connect Repository</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ConnectRepository workspaceSlug={slug} />
       )}
 
       {/* Stats Grid */}
