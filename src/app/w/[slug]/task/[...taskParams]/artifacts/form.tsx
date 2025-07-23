@@ -6,16 +6,18 @@ import { Artifact, FormContent, Option } from "@/lib/chat";
 
 // Artifact Components
 export function FormArtifact({
+  messageId,
   artifact,
   onAction,
 }: {
+  messageId: string;
   artifact: Artifact;
-  onAction: (action: Option, response?: string) => void;
+  onAction: (messageId: string, action: Option, webhook: string) => void;
 }) {
   const content = artifact.content as FormContent;
 
   const handleSubmit = (action: Option) => {
-    onAction(action);
+    onAction(messageId, action, content.webhook);
   };
 
   return (

@@ -232,8 +232,9 @@ export default function TaskChatPage() {
   const sendMessage = async (
     messageText: string,
     options?: {
-      replyId?: string;
       taskId?: string;
+      replyId?: string;
+      webhook?: string;
     }
   ) => {
     if (isLoading) return;
@@ -248,16 +249,16 @@ export default function TaskChatPage() {
     setMessages((msgs) => [...msgs, newMessage]);
     setIsLoading(true);
 
-    console.log("Sending message:", messageText);
+    console.log("Sending message:", messageText, options);
+
     try {
       const body: { [k: string]: string | string[] | null } = {
         taskId: options?.taskId || currentTaskId,
         message: messageText,
         contextTags: [],
+        ...(options?.replyId && { replyId: options.replyId }),
+        ...(options?.webhook && { webhook: options.webhook }),
       };
-      if (options?.replyId) {
-        body.replyId = options.replyId;
-      }
       const response = await fetch("/api/chat/message", {
         method: "POST",
         headers: {
@@ -302,18 +303,21 @@ export default function TaskChatPage() {
     }
   };
 
-  const handleArtifactAction = async (action: Option, response?: string) => {
-    console.log("Action triggered:", action, response);
+  const handleArtifactAction = async (
+    messageId: string,
+    action: Option,
+    webhook: string
+  ) => {
+    console.log("Action triggered:", action);
 
     // Find the original message that contains artifacts
-    const originalMessage = messages.find((msg) =>
-      msg.artifacts?.some((artifact) => artifact.type === "FORM")
-    );
+    const originalMessage = messages.find((msg) => msg.id === messageId);
 
     if (originalMessage) {
       // Send the artifact action response to the backend
       await sendMessage(action.optionResponse, {
         replyId: originalMessage.id,
+        webhook: webhook,
       });
     }
   };
@@ -422,6 +426,7 @@ export default function TaskChatPage() {
                             transition={{ delay: 0.2 }}
                           >
                             <FormArtifact
+                              messageId={msg.id}
                               artifact={artifact}
                               onAction={handleArtifactAction}
                             />
