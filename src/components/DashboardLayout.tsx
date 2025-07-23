@@ -73,7 +73,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       <Sidebar user={user} />
 
       {/* Main content */}
-      <div className="md:pl-80">
+      <div className={`${isTaskPage ? "md:pl-0" : "md:pl-80"}`}>
         <main className={isTaskPage ? "p-1 md:p-3" : "p-4 md:p-8"}>
           {children}
         </main>
