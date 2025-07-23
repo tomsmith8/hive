@@ -56,7 +56,7 @@ function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-[80vh] md:h-[90vh] bg-background">
+    <div className="flex flex-col items-center justify-center w-full h-[92vh] md:h-[97vh] bg-background">
       <h1 className="text-4xl font-bold text-foreground mb-10 text-center">
         What do you want to do?
       </h1>
@@ -358,7 +358,7 @@ export default function TaskChatPage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -60 }}
           transition={{ duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }}
-          className="h-[80vh] md:h-[90vh] flex gap-4"
+          className="h-[92vh] md:h-[97vh] flex gap-4"
         >
           {/* Main Chat Area */}
           <motion.div
