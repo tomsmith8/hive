@@ -115,7 +115,8 @@ async function callStakwork(
   swarmUrl: string | null,
   swarmSecretAlias: string | null,
   poolName: string | null,
-  request?: NextRequest
+  request: NextRequest,
+  webhook?: string
 ) {
   try {
     // Validate that all required Stakwork environment variables are set
@@ -152,7 +153,7 @@ async function callStakwork(
       },
     };
 
-    const stakworkURL = `${config.STAKWORK_BASE_URL}/projects`;
+    const stakworkURL = webhook || `${config.STAKWORK_BASE_URL}/projects`;
 
     console.log("Sending message to Stakwork", {
       url: stakworkURL,
@@ -206,6 +207,7 @@ export async function POST(request: NextRequest) {
       contextTags = [] as ContextTag[],
       sourceWebsocketID,
       artifacts = [] as ArtifactRequest[],
+      webhook,
     } = body;
 
     // Validate required fields
@@ -351,7 +353,8 @@ export async function POST(request: NextRequest) {
         swarmUrl,
         swarmSecretAlias,
         poolName,
-        request
+        request,
+        webhook
       );
     } else {
       await callMock(taskId, message, userId, request);
