@@ -208,6 +208,7 @@ export async function POST(request: NextRequest) {
       sourceWebsocketID,
       artifacts = [] as ArtifactRequest[],
       webhook,
+      replyId,
     } = body;
 
     // Validate required fields
@@ -296,6 +297,7 @@ export async function POST(request: NextRequest) {
         contextTags: JSON.stringify(contextTags),
         status: ChatStatus.SENT,
         sourceWebsocketID,
+        replyId,
         artifacts: {
           create: artifacts.map((artifact: ArtifactRequest) => ({
             type: artifact.type,

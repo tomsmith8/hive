@@ -18,6 +18,7 @@ import {
   Option,
   createChatMessage,
   ArtifactType,
+  FormContent,
 } from "@/lib/chat";
 import {
   FormArtifact,
@@ -145,8 +146,6 @@ export default function TaskChatPage() {
 
       const result = await response.json();
 
-      console.log("result", result);
-
       if (result.success && result.data.messages) {
         setMessages(result.data.messages);
         console.log(`Loaded ${result.data.count} existing messages for task`);
@@ -244,12 +243,13 @@ export default function TaskChatPage() {
       message: messageText,
       role: ChatRole.USER,
       status: ChatStatus.SENDING,
+      replyId: options?.replyId,
     });
 
     setMessages((msgs) => [...msgs, newMessage]);
     setIsLoading(true);
 
-    console.log("Sending message:", messageText, options);
+    // console.log("Sending message:", messageText, options);
 
     try {
       const body: { [k: string]: string | string[] | null } = {
@@ -308,7 +308,7 @@ export default function TaskChatPage() {
     action: Option,
     webhook: string
   ) => {
-    console.log("Action triggered:", action);
+    // console.log("Action triggered:", action);
 
     // Find the original message that contains artifacts
     const originalMessage = messages.find((msg) => msg.id === messageId);
@@ -377,65 +377,88 @@ export default function TaskChatPage() {
           >
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-muted/40">
-              {messages.map((msg) => (
-                <motion.div
-                  key={msg.id}
-                  className="space-y-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <div
-                    className={`flex items-end gap-3 ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
-                  >
-                    {msg.role === "ASSISTANT" && (
-                      <Avatar>
-                        <AvatarImage src="" alt="Assistant" />
-                        <AvatarFallback>A</AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm ${
-                        msg.role === "USER"
-                          ? "bg-primary text-primary-foreground rounded-br-none"
-                          : "bg-background text-foreground rounded-bl-none border"
-                      }`}
-                    >
-                      {msg.message}
-                    </div>
-                    {msg.role === "USER" && (
-                      <Avatar>
-                        <AvatarImage src="" alt="You" />
-                        <AvatarFallback>Y</AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
+              {messages
+                .filter((msg) => !msg.replyId) // Hide messages that are replies
+                .map((msg) => {
+                  // Find if this message has been replied to
+                  const replyMessage = messages.find(
+                    (m) => m.replyId === msg.id
+                  );
 
-                  {/* Only Form Artifacts in Chat */}
-                  {msg.artifacts
-                    ?.filter((a) => a.type === "FORM")
-                    .map((artifact) => (
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      className="space-y-3"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
                       <div
-                        key={artifact.id}
-                        className={`flex ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
+                        className={`flex items-end gap-3 ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
                       >
-                        <div className="max-w-md">
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                          >
-                            <FormArtifact
-                              messageId={msg.id}
-                              artifact={artifact}
-                              onAction={handleArtifactAction}
-                            />
-                          </motion.div>
+                        {msg.role === "ASSISTANT" && (
+                          <Avatar>
+                            <AvatarImage src="" alt="Assistant" />
+                            <AvatarFallback>A</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div
+                          className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm ${
+                            msg.role === "USER"
+                              ? "bg-primary text-primary-foreground rounded-br-none"
+                              : "bg-background text-foreground rounded-bl-none border"
+                          }`}
+                        >
+                          {msg.message}
                         </div>
+                        {msg.role === "USER" && (
+                          <Avatar>
+                            <AvatarImage src="" alt="You" />
+                            <AvatarFallback>Y</AvatarFallback>
+                          </Avatar>
+                        )}
                       </div>
-                    ))}
-                </motion.div>
-              ))}
+
+                      {/* Only Form Artifacts in Chat */}
+                      {msg.artifacts
+                        ?.filter((a) => a.type === "FORM")
+                        .map((artifact) => {
+                          // Find which option was selected by matching replyMessage content with optionResponse
+                          let selectedOption = null;
+                          if (replyMessage && artifact.content) {
+                            const formContent = artifact.content as FormContent;
+                            selectedOption = formContent.options?.find(
+                              (option: Option) =>
+                                option.optionResponse === replyMessage.message
+                            );
+                          }
+
+                          return (
+                            <div
+                              key={artifact.id}
+                              className={`flex ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
+                            >
+                              <div className="max-w-md">
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.2 }}
+                                >
+                                  <FormArtifact
+                                    messageId={msg.id}
+                                    artifact={artifact}
+                                    onAction={handleArtifactAction}
+                                    selectedOption={selectedOption}
+                                    isDisabled={!!replyMessage}
+                                  />
+                                </motion.div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </motion.div>
+                  );
+                })}
               <div ref={messagesEndRef} />
             </div>
 

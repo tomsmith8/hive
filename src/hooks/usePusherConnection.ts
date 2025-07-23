@@ -22,6 +22,8 @@ interface UsePusherConnectionReturn {
   error: string | null;
 }
 
+const LOGS = false;
+
 export function usePusherConnection({
   taskId,
   enabled = true,
@@ -42,10 +44,12 @@ export function usePusherConnection({
   // Stable disconnect function
   const disconnect = useCallback(() => {
     if (channelRef.current && currentTaskIdRef.current) {
-      console.log(
-        "Unsubscribing from Pusher channel:",
-        getTaskChannelName(currentTaskIdRef.current)
-      );
+      if (LOGS) {
+        console.log(
+          "Unsubscribing from Pusher channel:",
+          getTaskChannelName(currentTaskIdRef.current)
+        );
+      }
 
       // Unbind all events
       channelRef.current.unbind_all();
@@ -69,7 +73,9 @@ export function usePusherConnection({
       // Disconnect from any existing channel
       disconnect();
 
-      console.log("Subscribing to Pusher channel for task:", targetTaskId);
+      if (LOGS) {
+        console.log("Subscribing to Pusher channel for task:", targetTaskId);
+      }
 
       try {
         const channelName = getTaskChannelName(targetTaskId);
@@ -77,10 +83,12 @@ export function usePusherConnection({
 
         // Set up event handlers
         channel.bind("pusher:subscription_succeeded", () => {
-          console.log(
-            "Successfully subscribed to Pusher channel:",
-            channelName
-          );
+          if (LOGS) {
+            console.log(
+              "Successfully subscribed to Pusher channel:",
+              channelName
+            );
+          }
 
           // Add a small delay to ensure Pusher is fully ready to receive messages
           // This prevents race conditions where the first message response might be lost
@@ -100,13 +108,15 @@ export function usePusherConnection({
 
         // Bind to new message events
         channel.bind(PUSHER_EVENTS.NEW_MESSAGE, (message: ChatMessage) => {
-          console.log(`📥 Received Pusher message:`, {
-            id: message.id,
-            message: message.message,
-            role: message.role,
-            timestamp: message.timestamp,
-            channelName,
-          });
+          if (LOGS) {
+            console.log(`📥 Received Pusher message:`, {
+              id: message.id,
+              message: message.message,
+              role: message.role,
+              timestamp: message.timestamp,
+              channelName,
+            });
+          }
           if (onMessageRef.current) {
             onMessageRef.current(message);
           }
@@ -132,7 +142,9 @@ export function usePusherConnection({
 
     // Only connect if we don't already have a connection for this task
     if (currentTaskIdRef.current !== taskId) {
-      console.log("Connecting to Pusher channel for task:", taskId);
+      if (LOGS) {
+        console.log("Connecting to Pusher channel for task:", taskId);
+      }
       connect(taskId);
     }
 
