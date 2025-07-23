@@ -463,11 +463,11 @@ export default function StakgraphPage() {
                                 onEnvVarsChange={handleEnvVarsChange}
                             />
 
-                            <ServicesForm
+                            {/* <ServicesForm
                                 data={{ services: formData.services }}
                                 loading={loading}
                                 onChange={handleServicesChange}
-                            />
+                            /> */}
                         </div>
 
                         <Button type="submit" disabled={loading}>

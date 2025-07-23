@@ -62,7 +62,9 @@ export async function swarmApiRequest({
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   apiKey: string;
   data?: unknown;
-}): Promise<{ ok: boolean; data?: unknown; status: number }> {
+}): Promise<{ ok: boolean; data?: {
+  request_id?: string;
+}; status: number }> {
   try {
     const url = `${swarmUrl.replace(/\/$/, '')}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 

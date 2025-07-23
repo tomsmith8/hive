@@ -11,6 +11,7 @@ import {
     getSwarmVanityAddress,
 } from "@/lib/constants";
 import { isFakeMode, createFakeSwarm } from "@/services/swarm/fake";
+import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
     if (isFakeMode) {
@@ -84,6 +85,46 @@ export async function POST(request: NextRequest) {
             success: true,
             message: `${name}-Swarm was created successfully`,
             data: { id: updatedSwarm.id, swarm_id },
+        });
+    } catch (error) {
+        console.error("Error creating Swarm:", error);
+        return NextResponse.json(
+            { success: false, message: "Failed to create swarm" },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PUT(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json(
+                { success: false, message: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const body = await request.json();
+        const { envVars, services, workspaceId } = body;
+
+        if (!envVars && !services) {
+            return NextResponse.json(
+                { success: false, message: "Missing required fields: swarmId, envVars, services" },
+                { status: 400 }
+            );
+        }
+
+        const updatedSwarm = await saveOrUpdateSwarm({
+            workspaceId: workspaceId,
+            environmentVariables: envVars,
+            services,
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: "Swarm updated successfully",
+            data: { id: updatedSwarm.id },
         });
     } catch (error) {
         console.error("Error creating Swarm:", error);

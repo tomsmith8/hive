@@ -15,9 +15,9 @@ export interface Repository {
 }
 
 export interface EnvironmentVariable {
-  key: string;
+  name: string;
   value: string;
-  show: boolean;
+  show?: boolean;
 }
 
 export interface User {
@@ -72,6 +72,8 @@ export type WizardStateData = {
   workspaceId: string;
   workspaceSlug: string;
   workspaceName: string;
+  ingestRefId?: string;
+  poolName?: string;
   services: ServiceDataConfig[];
   user: {
     id: string;

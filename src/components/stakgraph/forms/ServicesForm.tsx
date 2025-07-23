@@ -3,42 +3,43 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Play, Download, Hammer, TestTube } from "lucide-react";
-import { ServicesData, FormSectionProps, ServiceConfig } from "../types";
+import { ServicesData, FormSectionProps, ServiceDataConfig } from "../types";
 
-export default function ServicesForm({ 
-  data, 
-  loading, 
-  onChange 
-}: Omit<FormSectionProps<ServicesData>, 'errors'>) {
+export default function ServicesForm({
+  data,
+  loading,
+  onChange
+}: Omit<FormSectionProps<ServiceDataConfig[]>, 'errors'>) {
 
   const handleAddService = () => {
     const newServices = [
-      ...data.services,
-      { name: "", port: 0, scripts: { start: "" } }
+      ...data,
+      { name: "", port: 0, scripts: { start: "" }, env: {} }
     ];
-    onChange({ services: newServices });
+
+    onChange(newServices);
   };
 
   const handleRemoveService = (idx: number) => {
-    const newServices = data.services.filter((_, i) => i !== idx);
-    onChange({ services: newServices });
+    const newServices = data.filter((_, i) => i !== idx);
+    onChange(newServices);
   };
 
-  const handleServiceChange = (idx: number, field: keyof ServiceConfig, value: string | number) => {
-    const updatedServices = [...data.services];
+  const handleServiceChange = (idx: number, field: keyof ServiceDataConfig, value: string | number) => {
+    const updatedServices = [...data];
     if (field === 'port') {
       updatedServices[idx].port = typeof value === 'number' ? value : Number(value);
     } else if (field === 'name') {
       updatedServices[idx].name = value as string;
     }
-    onChange({ services: updatedServices });
+    onChange(updatedServices);
   };
 
-  const handleServiceScriptChange = (idx: number, scriptKey: keyof ServiceConfig['scripts'], value: string) => {
-    const updatedServices = data.services.map((svc, i) =>
+  const handleServiceScriptChange = (idx: number, scriptKey: keyof ServiceDataConfig['scripts'], value: string) => {
+    const updatedServices = data.map((svc, i) =>
       i === idx ? { ...svc, scripts: { ...svc.scripts, [scriptKey]: value } } : svc
     );
-    onChange({ services: updatedServices });
+    onChange(updatedServices);
   };
 
   return (
@@ -47,25 +48,25 @@ export default function ServicesForm({
       <p className="text-xs text-muted-foreground mb-2">
         Define your services, their ports, and scripts. The <b>start</b> script is required.
       </p>
-      
-      {data.services.length === 0 ? (
-        <Button 
-          type="button" 
-          variant="secondary" 
-          onClick={handleAddService} 
+
+      {data.length === 0 ? (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleAddService}
           disabled={loading}
         >
           Add Service
         </Button>
       ) : (
         <>
-          {data.services.map((svc, idx) => (
+          {data.map((svc, idx) => (
             <Card key={idx} className="mb-2">
               <CardContent className="space-y-3 py-2">
                 <div className="mb-2">
                   <span className="text-md font-bold">Service</span>
                 </div>
-                
+
                 <div className="flex gap-2 mb-2 items-end">
                   <div className="w-1/3">
                     <Label htmlFor={`service-name-${idx}`} className="mb-1">Name</Label>
@@ -77,7 +78,7 @@ export default function ServicesForm({
                       disabled={loading}
                     />
                   </div>
-                  
+
                   <div className="w-1/4">
                     <Label htmlFor={`service-port-${idx}`} className="mb-1">Port</Label>
                     <Input
@@ -99,7 +100,7 @@ export default function ServicesForm({
                       required
                     />
                   </div>
-                  
+
                   <div className="flex-1 flex justify-end">
                     <Button
                       type="button"
@@ -112,11 +113,11 @@ export default function ServicesForm({
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="mb-2 mt-2">
                   <span className="text-md font-bold">Scripts Configuration</span>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Play className="w-4 h-4 text-muted-foreground" />
@@ -174,11 +175,11 @@ export default function ServicesForm({
               </CardContent>
             </Card>
           ))}
-          
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={handleAddService} 
+
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleAddService}
             disabled={loading}
           >
             Add Service

@@ -27,13 +27,16 @@ export default function CodeGraphPage() {
   const setWorkspaceId = useWizardStore((s) => s.setWorkspaceId);
   const setHasKey = useWizardStore((s) => s.setHasKey);
 
+  const resetWizard = useWizardStore((s) => s.resetWizard);
+
   useEffect(() => {
     if (workspace) {
+      resetWizard();
       setWorkspaceSlug(workspace.slug);
       setWorkspaceId(workspace.id);
       setHasKey(workspace.hasKey);
     }
-  }, [workspace, setWorkspaceSlug]);
+  }, [workspace, setWorkspaceSlug, resetWizard]);
 
 
 

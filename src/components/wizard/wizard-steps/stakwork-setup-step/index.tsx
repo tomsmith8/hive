@@ -26,6 +26,7 @@ export const StakworkSetupStep = ({
           workspaceId,
         }),
       })
+      onNext();
       const res = await data.json();
       console.log(res)
     } catch (error) {
@@ -74,12 +75,12 @@ export const StakworkSetupStep = ({
           <Label htmlFor="stakworkName" className="text-sm font-medium text-gray-700">
             Stakwork Customer
           </Label>
-          <Input
+          {/* <Input
             id="stakworkName"
             value={workspaceName}
             readOnly
             className="mt-2 bg-gray-100 cursor-not-allowed"
-          />
+          /> */}
         </div>
         <div className="flex justify-between pt-4">
           <Button variant="outline" type="button" onClick={onBack}>

@@ -100,6 +100,8 @@ export async function GET(request: NextRequest) {
         workspaceSlug: workspace.slug,
         workspaceName: workspace.name,
         services: swarm.services,
+        ingestRefId: swarm.ingestRefId,
+        poolName: swarm.poolName || '',
         user: {
           id: userId,
           name: session.user.name,

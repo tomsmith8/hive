@@ -26,6 +26,7 @@ export function GraphInfrastructureStep({
   const currentStepStatus = useWizardStore((s) => s.currentStepStatus);
   const createSwarm = useWizardStore((s) => s.createSwarm);
 
+  const swarmIsLoading = useWizardStore((s) => s.swarmIsLoading);
   const isPending = currentStepStatus === "PENDING";
 
 
@@ -148,7 +149,7 @@ export function GraphInfrastructureStep({
               <Button variant="outline" type="button" onClick={onBack}>
                 Back
               </Button>
-              <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleCreate}>
+              <Button disabled={swarmIsLoading} className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleCreate}>
                 Create
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

@@ -18,7 +18,6 @@ const stakgraphSettingsSchema = z.object({
   swarmUrl: z.string().url("Invalid swarm URL"),
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   poolName: z.string().min(1, "Pool name is required"),
-  poolApiKey: z.string().min(1, "Pool API Key is required"),
   environmentVariables: z.array(z.object({
     key: z.string(),
     value: z.string()

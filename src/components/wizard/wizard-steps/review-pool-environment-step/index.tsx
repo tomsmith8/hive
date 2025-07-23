@@ -14,9 +14,8 @@ import {
   ArrowRight
 } from "lucide-react";
 import { EnvironmentVariable } from "@/types/wizard";
-import { ServiceDataConfig, ServicesData } from "@/components/stakgraph/types";
+import { ServiceDataConfig } from "@/components/stakgraph/types";
 import { useWizardStore } from "@/stores/useWizardStore";
-import { ServiceConfig } from "@/types";
 
 // Helper function to generate containerEnv from environment variables
 const generateContainerEnv = (envVars: EnvironmentVariable[]) => {
@@ -43,8 +42,8 @@ const formatContainerEnv = (containerEnv: Record<string, string>) => {
 };
 
 // Helper function to generate PM2 apps from services data
-const generatePM2Apps = (repoName: string, servicesData: ServicesData) => {
-  if (!servicesData || !servicesData.services || servicesData.services.length === 0) {
+const generatePM2Apps = (repoName: string, servicesData: ServiceDataConfig[]) => {
+  if (!servicesData || !servicesData || servicesData.length === 0) {
     // Return default configuration if no services
     return [{
       name: "default-service",
@@ -63,7 +62,7 @@ const generatePM2Apps = (repoName: string, servicesData: ServicesData) => {
     }];
   }
 
-  return servicesData.services.map(service => ({
+  return servicesData.map(service => ({
     name: service.name,
     script: service.scripts?.start || "",
     cwd: `/workspaces/${repoName}`,
@@ -113,7 +112,7 @@ ${envEntries}
   return `[\n${formattedApps.join(',\n')}\n  ]`;
 };
 
-const getFiles = (repoName: string, projectName: string, servicesData: ServicesData, envVars: EnvironmentVariable[]) => {
+const getFiles = (repoName: string, projectName: string, servicesData: ServiceDataConfig[], envVars: EnvironmentVariable[]) => {
   const containerEnv = generateContainerEnv(envVars);
   const pm2Apps = generatePM2Apps(repoName, servicesData);
 
@@ -234,7 +233,7 @@ const formatBytes = (bytes: number) => {
 interface ReviewPoolEnvironmentStepProps {
   repoName: string;
   projectName: string;
-  servicesData: ServicesData;
+  servicesData: ServiceDataConfig[];
   envVars: EnvironmentVariable[];
   onConfirm: () => void;
   onBack: () => void;
@@ -254,24 +253,24 @@ export const ReviewPoolEnvironmentStep = ({
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [originalContents, setOriginalContents] = useState<Record<string, string>>({});
 
+  const poolName = useWizardStore((s) => s.poolName);
   const repoName = useWizardStore((s) => s.repoName);
   const projectName = useWizardStore((s) => s.projectName);
   const services = useWizardStore((s) => s.services);
+  const swarmId = useWizardStore((s) => s.swarmId);
+  const workspaceId = useWizardStore((s) => s.workspaceId);
 
   const envVars = services.reduce<EnvironmentVariable[]>((acc, service) => {
-    const envs = Object.entries(service.env).map(([key, value]) => ({
-      key,
+    const envs = Object.entries(service.env).map(([name, value]) => ({
+      name,
       value,
       show: true,
     }));
     return [...acc, ...envs];
   }, []);
 
-  const servicesData = useMemo(() => ({
-    services: services
-  }), [services]);
 
-  const files = getFiles(repoName, projectName, servicesData, envVars);
+  const files = getFiles(repoName, projectName, services, envVars);
 
   useEffect(() => {
     const initialContents: Record<string, string> = {};
@@ -280,7 +279,7 @@ export const ReviewPoolEnvironmentStep = ({
     });
     setOriginalContents(initialContents);
     setFileContents(initialContents);
-  }, [servicesData]);
+  }, [services]);
 
   const handleContentChange = (fileName: string, value: string) => {
     setFileContents(prev => ({ ...prev, [fileName]: value }));
@@ -305,8 +304,44 @@ export const ReviewPoolEnvironmentStep = ({
 
   const hasModifications = Object.keys(fileContents).some(fileName => isFileModified(fileName));
 
-  console.log(activeTab)
-  console.log(files.map(file => file.name.toLowerCase().replace('.', '-')))
+
+  const handleNext = useCallback(async() => {
+
+    if(poolName) {
+      onNext();
+      return;
+    }
+    
+    const base64EncodedFiles = 
+      Object.entries(fileContents).reduce((acc, [name, content]) => {
+        acc[name] = Buffer.from(content).toString("base64")
+        return acc
+      }, {} as Record<string, string>)
+
+
+    try {
+      await fetch("/api/pool-manager/create-pool", {
+        method: "POST",
+        body: JSON.stringify({ container_files: base64EncodedFiles, swarmId: swarmId, workspaceId: workspaceId }),
+      });
+
+      onNext();
+    } catch (error) {
+      console.error(error);
+    }
+
+  }, [onNext, fileContents, poolName]);
+
+  const handleConfirm = useCallback(() => {
+    const containerFiles = files.map(file => ({
+      name: file.name,
+      content: fileContents[file.name] || file.content,
+    }));
+
+    console.log(containerFiles)
+
+  }, [fileContents]);
+
 
   return (
     <Card className="max-w-4xl mx-auto">
@@ -364,9 +399,6 @@ export const ReviewPoolEnvironmentStep = ({
                     <span>{formatBytes(getFileStats(fileContents[file.name] || file.content).bytes)}</span>
                   </div>
                 </div>
-                {fileContents[file.name] || file.content}
-                asdf
-                {console.log(fileContents[file.name] || file.content)}
                 <div className="relative">
                   <Textarea
                     value={fileContents[file.name] || file.content}
@@ -407,7 +439,7 @@ export const ReviewPoolEnvironmentStep = ({
           <Button
             className="px-8 bg-green-600 hover:bg-green-700"
             type="button"
-            onClick={onNext}
+            onClick={handleNext}
           >
             Confirm Setup
             <ArrowRight className="w-4 h-4 ml-2" />

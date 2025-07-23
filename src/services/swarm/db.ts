@@ -25,12 +25,13 @@ interface SaveOrUpdateSwarmParams {
   repositoryUrl?: string;
   swarmApiKey?: string;
   poolName?: string;
-  poolApiKey?: string; // NEW FIELD
   services?: ServiceConfig[]; // Use ServiceConfig[]
   swarmId?: string;
   swarmSecretAlias?: string;
+  ingestRefId?: string;
   wizardStep?: SwarmWizardStep;
   stepStatus?: StepStatus;
+  containerFiles?: Record<string, string>;
   wizardData?: unknown;
 }
 
@@ -48,19 +49,22 @@ export const select = {
   repositoryUrl: true,
   swarmApiKey: true,
   poolName: true,
-  poolApiKey: true, // NEW FIELD
   services: true,
   swarmSecretAlias: true,
   wizardStep: true,
   stepStatus: true,
   wizardData: true,
   swarmId: true,
+  ingestRefId: true,
   environmentVariables: true,
+  containerFiles: true,
 };
 
 export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   let swarm = await db.swarm.findUnique({ where: { workspaceId: params.workspaceId } });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  console.log("params", params)
+  
   const data: Record<string, any> = {};
   if (params.name !== undefined) data.name = params.name;
   if (params.instanceType !== undefined) data.instanceType = params.instanceType;
@@ -72,16 +76,16 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   if (params.repositoryUrl !== undefined) data.repositoryUrl = params.repositoryUrl;
   if (params.swarmApiKey !== undefined) data.swarmApiKey = params.swarmApiKey;
   if (params.poolName !== undefined) data.poolName = params.poolName;
-  if (params.poolApiKey !== undefined) data.poolApiKey = params.poolApiKey;
   if (params.swarmId !== undefined) data.swarmId = params.swarmId;
   if (params.swarmSecretAlias !== undefined) data.swarmSecretAlias = params.swarmSecretAlias;
   if (params.wizardStep !== undefined) data.wizardStep = params.wizardStep;
   if (params.stepStatus !== undefined) data.stepStatus = params.stepStatus;
   if (params.wizardData !== undefined) data.wizardData = params.wizardData;
   if (params.services !== undefined) {
-    console.log("[saveOrUpdateSwarm] Saving services:", params.services);
     data.services = params.services;
   }
+  if (params.containerFiles !== undefined) data.containerFiles = params.containerFiles;
+  if (params.ingestRefId !== undefined) data.ingestRefId = params.ingestRefId;
   data.updatedAt = new Date();
 
   if (swarm) {
@@ -100,7 +104,6 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
         repositoryUrl: params.repositoryUrl || '',
         swarmApiKey: params.swarmApiKey || '',
         poolName: params.poolName || '',
-        poolApiKey: params.poolApiKey || '', // NEW FIELD
         services: params.services ? params.services : [],
         swarmSecretAlias: params.swarmSecretAlias || '',
         wizardStep: params.wizardStep,

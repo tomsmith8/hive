@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useWizardStore } from "@/stores/useWizardStore";
-import { sanitizeWorkspaceName } from "@/utils/repositoryParser";
 
 interface IngestCodeStepStepProps {
   onNext: () => void;
@@ -21,18 +20,19 @@ export function IngestCodeStep({
   const workspaceId = useWizardStore((s) => s.workspaceId);
   const setCurrentStepStatus = useWizardStore((s) => s.setCurrentStepStatus);
   const currentStepStatus = useWizardStore((s) => s.currentStepStatus);
+  const setIngestRefId = useWizardStore((s) => s.setIngestRefId);
 
   const setServices = useWizardStore((s) => s.setServices);
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollTimeoutlRef = useRef<NodeJS.Timeout | null>(null);
   const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
 
 
 
 
   const services = useWizardStore((s) => s.services);
-  const isProcessing = currentStepStatus === "PROCESSING";
   const isPending = currentStepStatus === "PENDING";
-  console.log(isPending)
+  const ingestRefId = useWizardStore((s) => s.ingestRefId);
+
 
   const handleIngestStart = useCallback(async () => {
     try {
@@ -42,13 +42,16 @@ export function IngestCodeStep({
         body: JSON.stringify({ swarmId }),
       });
 
-      const data = await res.json();
+      const { data } = await res.json();
 
-      await updateWizardProgress({
+      updateWizardProgress({
         wizardStep: "INGEST_CODE",
         stepStatus: "PROCESSING",
-      });
+        wizardData: {
+        }
+      })
 
+      setIngestRefId(data.request_id);
 
     } catch (error) {
       console.error("Failed to ingest code:", error);
@@ -56,61 +59,62 @@ export function IngestCodeStep({
     }
   }, [swarmId, setCurrentStepStatus]);
 
-  const handleComplete = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-    setCurrentStepStatus("COMPLETED");
-    onNext();
-  }, [onNext, setCurrentStepStatus]);
+  const handleServices = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/swarm/stakgraph/services?workspaceId=${encodeURIComponent(
+          workspaceId
+        )}&swarmId=${encodeURIComponent(swarmId!)}`
+      );
+      const data = await res.json();
 
-  const startPollingServices = useCallback(() => {
-    if (pollIntervalRef.current) {
+      if (data.success || data.status === "ACTIVE") {
+        console.log("poll success", data);
+        setServices(data.data)
 
-      return; // avoid multiple intervals
-    }
-
-    pollIntervalRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `/api/swarm/stakgraph/services?workspaceId=${encodeURIComponent(
-            workspaceId
-          )}&swarmId=${encodeURIComponent(swarmId!)}`
-        );
-        const data = await res.json();
-
-        if (data.success || data.status === "ACTIVE") {
-          console.log("poll success", data);
-          setServices(data.data)
-
-          handleComplete();
-        } else {
-          console.log("polling response (not ready):", data);
-        }
-      } catch (error) {
-        console.error("Polling error:", error);
-        setCurrentStepStatus("FAILED");
-        if (pollIntervalRef.current) {
-          clearInterval(pollIntervalRef.current);
-          pollIntervalRef.current = null;
-        }
+      } else {
+        console.log("polling response (not ready):", data);
       }
-    }, 3000);
-  }, [workspaceId, swarmId, handleComplete, setCurrentStepStatus]);
+    } catch (error) {
+      console.error("Polling error:", error);
+      setCurrentStepStatus("FAILED");
+    }
+  }, [workspaceId, swarmId, setCurrentStepStatus, ingestRefId]);
 
   useEffect(() => {
-    if (isProcessing && swarmId && workspaceId) {
-      startPollingServices();
+
+    const getIngestStatus = async () => {
+      try {
+        const res = await fetch(`/api/swarm/stakgraph/ingest?id=${ingestRefId}&swarmId=${swarmId}&workspaceId=${workspaceId}`);
+        const { apiResult } = await res.json();
+        console.log(apiResult)
+
+        const { data } = apiResult;
+        if (data.status === "Complete") {
+
+          await handleServices()
+          setCurrentStepStatus("COMPLETED");
+          onNext();
+        } else {
+          pollTimeoutlRef.current = setTimeout(getIngestStatus, 3000);
+        }
+      } catch (error) {
+        console.error("Failed to get ingest status:", error);
+      }
+    }
+    if (ingestRefId) {
+      getIngestStatus();
     }
 
     return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
+      if (pollTimeoutlRef.current) {
+        clearTimeout(pollTimeoutlRef.current);
+        pollTimeoutlRef.current = null;
       }
-    };
-  }, [isProcessing, swarmId, workspaceId, startPollingServices, services]);
+    }
+  }, [ingestRefId]);
+
+
 
   useEffect(() => {
     if (isPending) {

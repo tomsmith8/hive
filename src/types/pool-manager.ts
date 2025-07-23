@@ -52,6 +52,7 @@ export interface CreatePoolRequest {
     github_pat: string;
     github_username: string;
     env_vars: []; //Key value pair of name and value
+    container_files: Record<string, string>;
 }
 //Response:
 // {

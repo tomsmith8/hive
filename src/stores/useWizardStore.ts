@@ -7,6 +7,25 @@ import { ServiceDataConfig } from '@/components/stakgraph/types';
 
 type WizardStepStatus = 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
+const initialState = {
+
+  loading: false,
+  error: null,
+  currentStep: 'WELCOME',
+  currentStepStatus: 'PENDING',
+  selectedRepo: null,
+  searchTerm: '',
+  projectName: '',
+  workspaceSlug: '',
+  repoName: '',
+  workspaceId: '',
+  services: [],
+  envVars: [],
+  hasKey: false,
+  swarmIsLoading: false,
+  ingestRefId: '',
+  poolName: '',
+}
 
 export const STEPS_ARRAY = [
   'WELCOME',
@@ -53,7 +72,6 @@ type WizardStore = {
   // Backend state
   loading: boolean;
   error: string | null;
-  wizardStateData: WizardStateData | null;
 
   // Local UI state
   currentStep: (typeof STEPS_ARRAY)[number];
@@ -61,24 +79,28 @@ type WizardStore = {
   selectedRepo: Repository | null;
   searchTerm: string;
   projectName: string;
+  poolName: string;
   repoName: string;
-  services: null | ServiceDataConfig[];
+  services: ServiceDataConfig[];
   envVars: EnvironmentVariable[];
   wizardStep: string | null;
   hasSwarm: boolean;
   workspaceSlug: string;
   workspaceId: string;
   hasKey: boolean;
+  swarmIsLoading: boolean;
+  ingestRefId: string;
 
   swarmId?: string;
   swarmName?: string;
   swarmStatus?: string;
   workspaceName?: string;
-  user?: WizardStateData['user'];
 
   // Actions
   fetchWizardState: () => Promise<void>;
   createSwarm: () => Promise<void>;
+  setIngestRefId: (id: string) => void;
+  setSwarmIsLoading: (isLoading: boolean) => void;
   updateWizardProgress: (data: {
     wizardStep?: string;
     stepStatus?: WizardStepStatus;
@@ -98,30 +120,16 @@ type WizardStore = {
   setWorkspaceSlug: (slug: string) => void;
   setWorkspaceId: (id: string) => void;
   setHasKey: (hasKey: boolean) => void;
+  resetWizard: () => void;
 };
 
 export const useWizardStore = create<WizardStore>()(
   devtools((set, get) => ({
     // Initial state
-    loading: false,
-    error: null,
-    wizardStateData: null,
-    currentStep: 'WELCOME',
-    currentStepStatus: 'PENDING',
-    selectedRepo: null,
-    searchTerm: '',
-    projectName: '',
-    workspaceSlug: '',
-    repoName: '',
-    workspaceId: '',
-    services: null,
-    hasKey: false,
-
+    ...initialState,
 
     // API Logic
     fetchWizardState: async () => {
-
-      console.log("fetchWizardState")
       const state = get();
       const { workspaceSlug } = state;
       set({ loading: true, error: null });
@@ -132,15 +140,12 @@ export const useWizardStore = create<WizardStore>()(
         const { data } = json;
 
         if (res.ok && json.success) {
-          const { wizardStep, stepStatus, swarmId, services } = data;
-          set({ wizardStateData: data, currentStep: wizardStep, currentStepStatus: stepStatus as WizardStepStatus, projectName: data.wizardData?.projectName || '', swarmId, services });
-        } else {
-          set({ wizardStateData: null });
+          const { wizardStep, stepStatus, swarmId, services, ingestRefId, environmentVariables, poolName } = data;
+          set({ envVars: environmentVariables, currentStep: wizardStep, currentStepStatus: stepStatus as WizardStepStatus, projectName: data.wizardData?.projectName || '', swarmId, services, ingestRefId, poolName });
         }
       } catch (err) {
         set({
           error: err instanceof Error ? err.message : 'Unknown error',
-          wizardStateData: null,
         });
       } finally {
         set({ loading: false });
@@ -149,14 +154,7 @@ export const useWizardStore = create<WizardStore>()(
 
     createSwarm: async () => {
       const state = get();
-      const { workspaceSlug } = state;
-
-      const swarmData = {
-        name: state.projectName,
-        selectedRepo: state.selectedRepo,
-        projectName: state.projectName,
-        repoName: state.repoName,
-      };
+      set({ swarmIsLoading: true });
 
       const res = await fetch("/api/swarm", {
         method: "POST",
@@ -175,21 +173,23 @@ export const useWizardStore = create<WizardStore>()(
       }
 
       const { swarmId } = json.data;
-      set({ swarmId, currentStep: 'GRAPH_INFRASTRUCTURE', currentStepStatus: 'PROCESSING' });
+
+      const swarmData = {
+        name: state.projectName,
+        selectedRepo: state.selectedRepo,
+        projectName: state.projectName,
+        repoName: state.repoName,
+        swarmId,
+      };
+
 
       try {
-        const res = await fetch('/api/code-graph/wizard-progress', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            workspaceSlug,
-            wizardStep: 'GRAPH_INFRASTRUCTURE',
-            stepStatus: 'PROCESSING',
-            wizardData: swarmData,
-          }),
+        await state.updateWizardProgress({
+          wizardStep: 'GRAPH_INFRASTRUCTURE',
+          stepStatus: 'PROCESSING',
+          wizardData: swarmData,
         });
 
-        set({ currentStep: 'GRAPH_INFRASTRUCTURE', currentStepStatus: 'PROCESSING' });
 
         if (!res.ok) throw new Error('Failed to create swarm');
 
@@ -197,13 +197,15 @@ export const useWizardStore = create<WizardStore>()(
         console.error('Error creating swarm:', err);
         throw err;
       }
+      finally {
+        set({ swarmIsLoading: false });
+      }
     },
     setWorkspaceSlug: (slug) => set({ workspaceSlug: slug }),
 
     updateWizardProgress: async (data) => {
       const state = get();
       const { workspaceSlug } = state;
-      if (!state.wizardStateData) throw new Error('No swarm exists');
 
       try {
         const res = await fetch('/api/code-graph/wizard-progress', {
@@ -239,5 +241,8 @@ export const useWizardStore = create<WizardStore>()(
     setEnvVars: (vars) => set({ envVars: vars }),
     setWorkspaceId: (id) => set({ workspaceId: id }),
     setHasKey: (hasKey) => set({ hasKey }),
+    setSwarmIsLoading: (isLoading) => set({ swarmIsLoading: isLoading }),
+    setIngestRefId: (id) => set({ ingestRefId: id }),
+    resetWizard: () => set(initialState),
   }))
 );
