@@ -98,6 +98,7 @@ CREATE TABLE "users" (
     "deleted" BOOLEAN NOT NULL DEFAULT false,
     "deleted_at" TIMESTAMP(3),
     "last_login_at" TIMESTAMP(3),
+    "pool_api_key" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -148,6 +149,7 @@ CREATE TABLE "workspaces" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "owner_id" TEXT NOT NULL,
+    "stakwork_api_key" TEXT,
 
     CONSTRAINT "workspaces_pkey" PRIMARY KEY ("id")
 );
@@ -180,12 +182,13 @@ CREATE TABLE "swarms" (
     "repository_url" TEXT,
     "swarm_api_key" TEXT,
     "swarm_secret_alias" TEXT,
-    "pool_api_key" TEXT,
     "environment_variables" JSONB NOT NULL DEFAULT '[]',
     "services" JSONB NOT NULL DEFAULT '[]',
     "wizard_step" "SwarmWizardStep" NOT NULL DEFAULT 'WELCOME',
     "step_status" "StepStatus" NOT NULL DEFAULT 'PENDING',
     "wizard_data" JSONB NOT NULL DEFAULT '{}',
+    "ingest_ref_id" TEXT,
+    "container_files" JSONB,
     "workspace_id" TEXT NOT NULL,
 
     CONSTRAINT "swarms_pkey" PRIMARY KEY ("id")

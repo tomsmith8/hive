@@ -1,10 +1,8 @@
 import { db } from '@/lib/db';
-import type { PrismaClient } from '@prisma/client';
 import { CreateWorkspaceRequest, WorkspaceResponse, WorkspaceWithRole, WorkspaceWithAccess, WorkspaceAccessValidation, WorkspaceRole } from '@/types/workspace';
 import { RESERVED_WORKSPACE_SLUGS, WORKSPACE_SLUG_PATTERNS, WORKSPACE_ERRORS, WORKSPACE_PERMISSION_LEVELS } from '@/lib/constants';
 
 // Type assertion to help IDE recognize Prisma client methods
-const prisma = db as PrismaClient;
 
 // Existing functions
 export async function createWorkspace(data: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
@@ -50,7 +48,7 @@ export async function getWorkspacesByUserId(userId: string): Promise<WorkspaceRe
     where: { ownerId: userId },
   });
 
-  return workspaces.map(workspace => ({
+  return workspaces.map((workspace: any) => ({
     ...workspace,
     createdAt: workspace.createdAt.toISOString(),
     updatedAt: workspace.updatedAt.toISOString(),
@@ -85,6 +83,7 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     return {
       id: workspace.id,
       name: workspace.name,
+      hasKey: !!workspace.stakworkApiKey,
       description: workspace.description,
       slug: workspace.slug,
       ownerId: workspace.ownerId,
@@ -119,6 +118,7 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     updatedAt: workspace.updatedAt.toISOString(),
     userRole: membership.role as WorkspaceRole,
     owner: workspace.owner,
+    hasKey: !!workspace.stakworkApiKey,
     isCodeGraphSetup: workspace.swarm !== null && workspace.swarm.status === 'ACTIVE'
   };
 }
@@ -138,7 +138,7 @@ export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRo
 
   // Add owned workspaces with member count
   for (const workspace of ownedWorkspaces) {
-    const memberCount = await prisma.workspaceMember.count({
+    const memberCount = await db.workspaceMember.count({
       where: { workspaceId: workspace.id, leftAt: null }
     });
 
@@ -156,7 +156,7 @@ export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRo
   }
 
   // Get member workspaces
-  const memberships = await prisma.workspaceMember.findMany({
+  const memberships = await db.workspaceMember.findMany({
     where: {
       userId,
       leftAt: null
@@ -169,7 +169,7 @@ export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRo
   // Add member workspaces
   for (const membership of memberships) {
     if (membership.workspace) {
-      const memberCount = await prisma.workspaceMember.count({
+      const memberCount = await db.workspaceMember.count({
         where: { workspaceId: membership.workspace.id, leftAt: null }
       });
 
@@ -247,7 +247,7 @@ export async function getDefaultWorkspaceForUser(userId: string): Promise<Worksp
   }
 
   // Get first workspace where user is a member
-  const membership = await prisma.workspaceMember.findFirst({
+  const membership = await db.workspaceMember.findFirst({
     where: {
       userId,
       leftAt: null

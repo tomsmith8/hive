@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth/nextauth';
 import { db } from '@/lib/db';
 import { validateUserWorkspaceAccess } from '@/lib/auth/workspace-resolver';
 import { WizardStateResponse, WizardStateError } from '@/types/wizard';
-import { StepStatus } from '@prisma/client';
+import { ServiceDataConfig } from '@/components/stakgraph';
 
 export async function GET(request: NextRequest) {
   try {
@@ -63,16 +63,7 @@ export async function GET(request: NextRequest) {
     const swarm = await db.swarm.findFirst({
       where: {
         workspaceId: workspace.id,
-      },
-      select: {
-        id: true,
-        swarmId: true,
-        name: true,
-        status: true,
-        wizardStep: true,
-        stepStatus: true,
-        wizardData: true,
-      },
+      }
     });
 
     // If no swarm exists, return empty response
@@ -96,14 +87,12 @@ export async function GET(request: NextRequest) {
       wizardData = swarm.wizardData as Record<string, unknown>;
     }
 
-    console.log("swarm", swarm)
-
     // Prepare response
     const response: WizardStateResponse = {
       success: true,
       data: {
         wizardStep: swarm.wizardStep,
-        stepStatus: swarm.stepStatus || ('PENDING' as StepStatus),
+        stepStatus: swarm.stepStatus || ('PENDING'),
         wizardData,
         swarmId: swarm.swarmId || undefined,
         swarmStatus: swarm.status,
@@ -111,6 +100,11 @@ export async function GET(request: NextRequest) {
         workspaceId: workspace.id,
         workspaceSlug: workspace.slug,
         workspaceName: workspace.name,
+        services: Array.isArray(swarm.services)
+          ? (swarm.services as unknown as ServiceDataConfig[])
+          : [],
+        ingestRefId: swarm.ingestRefId || '',
+        poolName: swarm.poolName || '',
         user: {
           id: userId,
           name: session.user.name,

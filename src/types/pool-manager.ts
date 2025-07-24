@@ -52,6 +52,7 @@ export interface CreatePoolRequest {
     github_pat: string;
     github_username: string;
     env_vars: []; //Key value pair of name and value
+    container_files: Record<string, string>;
 }
 //Response:
 // {
@@ -94,12 +95,16 @@ export interface UpdatePoolRequest {
     members?: string[];
 }
 
+
 export interface PoolUser {
     email: string;
     username: string;
     authentication_token: string;
 }
 
+export interface PoolUserResponse {
+    user: PoolUser;
+}
 export interface Pool {
     id: string;
     name: string;

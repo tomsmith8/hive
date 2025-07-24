@@ -18,7 +18,6 @@ const stakgraphSettingsSchema = z.object({
   swarmUrl: z.string().url("Invalid swarm URL"),
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   poolName: z.string().min(1, "Pool name is required"),
-  poolApiKey: z.string().min(1, "Pool API Key is required"),
   environmentVariables: z.array(z.object({
     key: z.string(),
     value: z.string()
@@ -80,12 +79,20 @@ export async function GET(
       );
     }
 
+    const user = await db.user.findUnique({
+      where: {
+        email: session?.user?.email || '',
+      },
+    });
+
+    const poolApiKey = user?.poolApiKey;
+
     // Fetch environment variables from Pool Manager using poolName and poolApiKey
     let environmentVariables: Array<{ key: string; value: string }> = [];
-    if (swarm.poolName && swarm.poolApiKey) {
+    if (swarm.poolName && poolApiKey) {
       try {
         const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
-        environmentVariables = await poolManager.getPoolEnvVars(swarm.poolName, swarm.poolApiKey);
+        environmentVariables = await poolManager.getPoolEnvVars(swarm.poolName, poolApiKey);
       } catch (err) {
         console.error('Failed to fetch env vars from Pool Manager:', err);
         // Optionally, you can return an error or fallback to empty array
@@ -102,7 +109,6 @@ export async function GET(
         swarmUrl: swarm.swarmUrl || "",
         swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.poolName || "",
-        poolApiKey: swarm.poolApiKey || "",
         environmentVariables,
         services: typeof swarm.services === 'string' ? JSON.parse(swarm.services) : (swarm.services || []),
         status: swarm.status,
@@ -179,18 +185,25 @@ export async function PUT(
       swarmUrl: settings.swarmUrl,
       swarmSecretAlias: settings.swarmSecretAlias,
       poolName: settings.poolName,
-      poolApiKey: settings.poolApiKey,
       services: settings.services,
     });
 
+    const user = await db.user.findUnique({
+      where: {
+        email: session?.user?.email || '',
+      },
+    });
+
+    const poolApiKey = user?.poolApiKey;
+
     // After updating/creating the swarm, update environment variables in Pool Manager if poolName, poolApiKey, and environmentVariables are present
-    if (settings.poolName && settings.poolApiKey && Array.isArray(settings.environmentVariables)) {
+    if (settings.poolName && poolApiKey && Array.isArray(settings.environmentVariables)) {
       try {
         const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
         // Fetch current env vars from Pool Manager
-        const currentEnvVars = await poolManager.getPoolEnvVars(settings.poolName, settings.poolApiKey);
+        const currentEnvVars = await poolManager.getPoolEnvVars(settings.poolName, poolApiKey);
         // Always send all vars, with correct masked/changed status
-        await poolManager.updatePoolEnvVars(settings.poolName, settings.poolApiKey, settings.environmentVariables, currentEnvVars);
+        await poolManager.updatePoolEnvVars(settings.poolName, poolApiKey, settings.environmentVariables, currentEnvVars);
       } catch (err) {
         console.error('Failed to update env vars in Pool Manager:', err);
         // Optionally, return error or continue

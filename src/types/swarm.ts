@@ -37,11 +37,10 @@ export interface SwarmSelectResult {
     repositoryUrl: string;
     swarmSecretAlias: string;
     poolName: string;
-    poolApiKey?: string; // NEW FIELD
-    services: ServiceConfig[] | string; // string if not parsed yet
+    services: ServicesConfig[] | string; // string if not parsed yet
 }
 
-export interface ServiceConfig {
+export interface ServicesConfig {
     name: string;
     port: number;
     scripts: {

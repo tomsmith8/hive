@@ -1,27 +1,53 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ServicesForm from "@/components/stakgraph/forms/ServicesForm";
-import { ServicesData } from "@/components/stakgraph/types";
+import { ServiceDataConfig, ServicesData } from "@/components/stakgraph/types";
 import { WizardStep } from "@/types/wizard";
+import { useWizardStore } from "@/stores/useWizardStore";
+import { useCallback, useState } from "react";
+import { ServiceConfig } from "@/types";
 
 interface ServicesStepProps {
-  servicesData: ServicesData;
-  onServicesChange: (data: Partial<ServicesData>) => void;
   onNext: () => void;
   onBack: () => void;
-  onStepChange: (step: WizardStep) => void;
 }
 
-const ServicesStep = ({
-  servicesData,
-  onServicesChange,
+export const ServicesStep = ({
   onNext,
   onBack,
-  onStepChange,
 }: ServicesStepProps) => {
-  const handleBackToStep = (targetStep: WizardStep) => {
-    onStepChange(targetStep);
-  };
+
+  const services = useWizardStore((s) => s.services);
+  const setServices = useWizardStore((s) => s.setServices);
+  const workspaceId = useWizardStore((s) => s.workspaceId);
+  const swarmId = useWizardStore((s) => s.swarmId);
+  const [loading, setLoading] = useState(false);
+
+  console.log(services)
+
+  const onServicesChange = useCallback((data: ServiceDataConfig[]) => {
+    setServices(data);
+  }, [services]);
+
+  const handleNext = useCallback(async () => {
+
+    try {
+      await fetch('/api/swarm', {
+        method: 'PUT',
+        body: JSON.stringify({
+          services: services,
+          swarmId: swarmId,
+          workspaceId: workspaceId,
+        }),
+      });
+
+      onNext();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [onNext, services, workspaceId, swarmId]);
 
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
@@ -38,15 +64,15 @@ const ServicesStep = ({
       </CardHeader>
       <CardContent>
         <ServicesForm
-          data={servicesData}
+          data={services ?? []}
           loading={false}
-          onChange={partial => onServicesChange({ ...servicesData, ...partial, services: partial.services ?? servicesData.services })}
+          onChange={partial => onServicesChange(partial)}
         />
         <div className="flex justify-between pt-6">
-          <Button variant="outline" type="button" onClick={() => handleBackToStep(5)}>
+          <Button variant="outline" type="button" onClick={() => onBack()}>
             Back
           </Button>
-          <Button className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={onNext}>
+          <Button disabled={loading} className="px-8 bg-primary text-primary-foreground hover:bg-primary/90" type="button" onClick={handleNext}>
             Next
           </Button>
         </div>

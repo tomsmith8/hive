@@ -1,3 +1,5 @@
+import { ServiceDataConfig } from "@/components/stakgraph";
+
 export interface Repository {
   id: number;
   name: string;
@@ -13,9 +15,9 @@ export interface Repository {
 }
 
 export interface EnvironmentVariable {
-  key: string;
+  name: string;
   value: string;
-  show: boolean;
+  show?: boolean;
 }
 
 export interface User {
@@ -59,25 +61,31 @@ export type WizardStepKey =
   | 'STAKWORK_SETUP';
 
 // API Response Types
+
+export type WizardStateData = {
+  wizardStep: string;
+  stepStatus: string;
+  wizardData: Record<string, unknown>;
+  swarmId?: string;
+  swarmName?: string;
+  swarmStatus?: string;
+  workspaceId: string;
+  workspaceSlug: string;
+  workspaceName: string;
+  ingestRefId?: string;
+  poolName?: string;
+  services: ServiceDataConfig[];
+  user: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+}
+
 export interface WizardStateResponse {
   success: boolean;
-  data: {
-    wizardStep: string;
-    stepStatus: string;
-    wizardData: Record<string, unknown>;
-    swarmId?: string;
-    swarmName?: string;
-    swarmStatus?: string;
-    workspaceId: string;
-    workspaceSlug: string;
-    workspaceName: string;
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-    };
-  };
+  data: WizardStateData
   message?: string;
 }
 

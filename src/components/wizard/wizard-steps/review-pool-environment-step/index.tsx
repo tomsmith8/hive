@@ -1,31 +1,32 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  Settings, 
-  Package, 
+import {
+  FileText,
+  Settings,
+  Package,
   Container,
   AlertCircle,
   RotateCcw,
   ArrowRight
 } from "lucide-react";
 import { EnvironmentVariable } from "@/types/wizard";
-import { ServicesData } from "@/components/stakgraph/types";
+import { ServiceDataConfig } from "@/components/stakgraph/types";
+import { useWizardStore } from "@/stores/useWizardStore";
 
 // Helper function to generate containerEnv from environment variables
 const generateContainerEnv = (envVars: EnvironmentVariable[]) => {
   const containerEnv: Record<string, string> = {};
-  
+
   envVars.forEach(envVar => {
-    if (envVar.key && envVar.value) {
-      containerEnv[envVar.key] = envVar.value;
+    if (envVar.name && envVar.value) {
+      containerEnv[envVar.name] = envVar.value;
     }
   });
-  
+
   return containerEnv;
 };
 
@@ -34,15 +35,15 @@ const formatContainerEnv = (containerEnv: Record<string, string>) => {
   if (Object.keys(containerEnv).length === 0) {
     return '{}';
   }
-  
+
   const entries = Object.entries(containerEnv);
   const formattedEntries = entries.map(([key, value]) => `    "${key}": "${value}"`);
   return `{\n${formattedEntries.join(',\n')}\n  }`;
 };
 
 // Helper function to generate PM2 apps from services data
-const generatePM2Apps = (repoName: string, servicesData: ServicesData) => {
-  if (!servicesData || !servicesData.services || servicesData.services.length === 0) {
+const generatePM2Apps = (repoName: string, servicesData: ServiceDataConfig[]) => {
+  if (!servicesData || !servicesData || servicesData.length === 0) {
     // Return default configuration if no services
     return [{
       name: "default-service",
@@ -61,7 +62,7 @@ const generatePM2Apps = (repoName: string, servicesData: ServicesData) => {
     }];
   }
 
-  return servicesData.services.map(service => ({
+  return servicesData.map(service => ({
     name: service.name,
     script: service.scripts?.start || "",
     cwd: `/workspaces/${repoName}`,
@@ -93,7 +94,7 @@ const formatPM2Apps = (apps: Array<{
     const envEntries = Object.entries(app.env)
       .map(([key, value]) => `        ${key}: "${value}"`)
       .join(',\n');
-    
+
     return `    {
       name: "${app.name}",
       script: "${app.script}",
@@ -111,10 +112,10 @@ ${envEntries}
   return `[\n${formattedApps.join(',\n')}\n  ]`;
 };
 
-const getFiles = (repoName: string, projectName: string, servicesData: ServicesData, envVars: EnvironmentVariable[]) => {
+const getFiles = (repoName: string, projectName: string, servicesData: ServiceDataConfig[], envVars: EnvironmentVariable[]) => {
   const containerEnv = generateContainerEnv(envVars);
   const pm2Apps = generatePM2Apps(repoName, servicesData);
-  
+
   return [
     {
       name: "devcontainer.json",
@@ -232,27 +233,44 @@ const formatBytes = (bytes: number) => {
 interface ReviewPoolEnvironmentStepProps {
   repoName: string;
   projectName: string;
-  servicesData: ServicesData;
+  servicesData: ServiceDataConfig[];
   envVars: EnvironmentVariable[];
   onConfirm: () => void;
   onBack: () => void;
   stepStatus?: 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
 
-const ReviewPoolEnvironmentStep = ({ 
-  repoName,
-  projectName,
-  servicesData,
-  envVars,
-  onConfirm, 
+interface ReviewPoolEnvironmentStepProps {
+  onNext: () => void;
+  onBack: () => void;
+}
+
+export const ReviewPoolEnvironmentStep = ({ 
+  onNext,
   onBack,
-  stepStatus: _stepStatus
 }: ReviewPoolEnvironmentStepProps) => {
-  const [activeTab, setActiveTab] = useState("devcontainer");
+  const [activeTab, setActiveTab] = useState("devcontainer-json");
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [originalContents, setOriginalContents] = useState<Record<string, string>>({});
 
-  const files = getFiles(repoName, projectName, servicesData, envVars);
+  const poolName = useWizardStore((s) => s.poolName);
+  const repoName = useWizardStore((s) => s.repoName);
+  const projectName = useWizardStore((s) => s.projectName);
+  const services = useWizardStore((s) => s.services);
+  const swarmId = useWizardStore((s) => s.swarmId);
+  const workspaceId = useWizardStore((s) => s.workspaceId);
+
+  const envVars = services.reduce<EnvironmentVariable[]>((acc, service) => {
+    const envs = Object.entries(service.env).map(([name, value]) => ({
+      name,
+      value,
+      show: true,
+    }));
+    return [...acc, ...envs];
+  }, []);
+
+
+  const files = getFiles(repoName, projectName, services, envVars);
 
   useEffect(() => {
     const initialContents: Record<string, string> = {};
@@ -261,7 +279,7 @@ const ReviewPoolEnvironmentStep = ({
     });
     setOriginalContents(initialContents);
     setFileContents(initialContents);
-  }, [repoName, projectName, servicesData, envVars]);
+  }, [services]);
 
   const handleContentChange = (fileName: string, value: string) => {
     setFileContents(prev => ({ ...prev, [fileName]: value }));
@@ -286,6 +304,45 @@ const ReviewPoolEnvironmentStep = ({
 
   const hasModifications = Object.keys(fileContents).some(fileName => isFileModified(fileName));
 
+
+  const handleNext = useCallback(async() => {
+
+    if(poolName) {
+      onNext();
+      return;
+    }
+    
+    const base64EncodedFiles = 
+      Object.entries(fileContents).reduce((acc, [name, content]) => {
+        acc[name] = Buffer.from(content).toString("base64")
+        return acc
+      }, {} as Record<string, string>)
+
+
+    try {
+      await fetch("/api/pool-manager/create-pool", {
+        method: "POST",
+        body: JSON.stringify({ container_files: base64EncodedFiles, swarmId: swarmId, workspaceId: workspaceId }),
+      });
+
+      onNext();
+    } catch (error) {
+      console.error(error);
+    }
+
+  }, [onNext, fileContents, poolName]);
+
+  const handleConfirm = useCallback(() => {
+    const containerFiles = files.map(file => ({
+      name: file.name,
+      content: fileContents[file.name] || file.content,
+    }));
+
+    console.log(containerFiles)
+
+  }, [fileContents]);
+
+
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader className="text-center">
@@ -305,15 +362,15 @@ const ReviewPoolEnvironmentStep = ({
       <CardContent className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="devcontainer" className="flex items-center gap-2">
+            <TabsTrigger value="devcontainer-json" className="flex items-center gap-2">
               {getFileIcon("json")}
               DevContainer
             </TabsTrigger>
-            <TabsTrigger value="pm2" className="flex items-center gap-2">
+            <TabsTrigger value="pm2-config.js" className="flex items-center gap-2">
               {getFileIcon("javascript")}
               PM2 Config
             </TabsTrigger>
-            <TabsTrigger value="docker-compose" className="flex items-center gap-2">
+            <TabsTrigger value="docker-compose-yml" className="flex items-center gap-2">
               {getFileIcon("yaml")}
               Docker Compose
             </TabsTrigger>
@@ -323,46 +380,47 @@ const ReviewPoolEnvironmentStep = ({
             </TabsTrigger>
           </TabsList>
 
-          {files.map(file => (
-            <TabsContent key={file.name} value={file.name.toLowerCase().replace('.', '-')} className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {getFileIcon(file.type)}
-                  <span className="font-medium">{file.name}</span>
+          {files.map(file => {
+            return (
+              <TabsContent key={file.name} value={file.name.toLowerCase().replace('.', '-')} className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {getFileIcon(file.type)}
+                    <span className="font-medium">{file.name}</span>
+                    {isFileModified(file.name) && (
+                      <Badge variant="secondary" className="text-xs">
+                        Modified
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{getFileStats(fileContents[file.name] || file.content).lines} lines</span>
+                    <span>•</span>
+                    <span>{formatBytes(getFileStats(fileContents[file.name] || file.content).bytes)}</span>
+                  </div>
+                </div>
+                <div className="relative">
+                  <Textarea
+                    value={fileContents[file.name] || file.content}
+                    onChange={(e) => handleContentChange(file.name, e.target.value)}
+                    className="font-mono text-sm min-h-[300px] resize-none"
+                    placeholder={`Enter ${file.name} content...`}
+                  />
                   {isFileModified(file.name) && (
-                    <Badge variant="secondary" className="text-xs">
-                      Modified
-                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleContentChange(file.name, originalContents[file.name])}
+                      className="absolute top-2 right-2"
+                    >
+                      <RotateCcw className="w-3 h-3 mr-1" />
+                      Reset
+                    </Button>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{getFileStats(fileContents[file.name] || file.content).lines} lines</span>
-                  <span>•</span>
-                  <span>{formatBytes(getFileStats(fileContents[file.name] || file.content).bytes)}</span>
-                </div>
-              </div>
-              
-              <div className="relative">
-                <Textarea
-                  value={fileContents[file.name] || file.content}
-                  onChange={(e) => handleContentChange(file.name, e.target.value)}
-                  className="font-mono text-sm min-h-[300px] resize-none"
-                  placeholder={`Enter ${file.name} content...`}
-                />
-                {isFileModified(file.name) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleContentChange(file.name, originalContents[file.name])}
-                    className="absolute top-2 right-2"
-                  >
-                    <RotateCcw className="w-3 h-3 mr-1" />
-                    Reset
-                  </Button>
-                )}
-              </div>
-            </TabsContent>
-          ))}
+              </TabsContent>
+            )
+          })}
         </Tabs>
 
         {hasModifications && (
@@ -378,10 +436,10 @@ const ReviewPoolEnvironmentStep = ({
           <Button variant="outline" type="button" onClick={onBack}>
             Back
           </Button>
-          <Button 
-            className="px-8 bg-green-600 hover:bg-green-700" 
-            type="button" 
-            onClick={onConfirm}
+          <Button
+            className="px-8 bg-green-600 hover:bg-green-700"
+            type="button"
+            onClick={handleNext}
           >
             Confirm Setup
             <ArrowRight className="w-4 h-4 ml-2" />
@@ -391,5 +449,3 @@ const ReviewPoolEnvironmentStep = ({
     </Card>
   );
 };
-
-export default ReviewPoolEnvironmentStep;

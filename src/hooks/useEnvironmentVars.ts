@@ -11,7 +11,7 @@ interface UseEnvironmentVarsReturn {
 
 export function useEnvironmentVars(initialVars?: EnvironmentVariable[]): UseEnvironmentVarsReturn {
   const [envVars, setEnvVars] = useState<EnvironmentVariable[]>(
-    initialVars || [{ key: '', value: '', show: false }]
+    initialVars || [{ name: '', value: '', show: false }]
   );
 
   const handleEnvChange = (index: number, field: keyof EnvironmentVariable, value: string | boolean) => {
@@ -23,7 +23,7 @@ export function useEnvironmentVars(initialVars?: EnvironmentVariable[]): UseEnvi
   };
 
   const handleAddEnv = () => {
-    setEnvVars(prev => [...prev, { key: '', value: '', show: false }]);
+    setEnvVars(prev => [...prev, { name: '', value: '', show: false }]);
   };
 
   const handleRemoveEnv = (index: number) => {

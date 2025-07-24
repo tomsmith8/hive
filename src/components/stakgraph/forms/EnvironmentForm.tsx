@@ -7,7 +7,7 @@ import { useEnvironmentVars } from "@/hooks/useEnvironmentVars";
 import { useEffect } from "react";
 
 interface EnvironmentFormProps extends FormSectionProps<EnvironmentData> {
-  onEnvVarsChange: (envVars: Array<{key: string; value: string; show: boolean}>) => void;
+  onEnvVarsChange: (envVars: Array<{name: string; value: string; show?: boolean}>) => void;
 }
 
 export default function EnvironmentForm({ 
@@ -29,7 +29,7 @@ export default function EnvironmentForm({
   useEffect(() => {
     if (data.environmentVariables && Array.isArray(data.environmentVariables)) {
       setEnvVars(data.environmentVariables.map(env => ({
-        key: env.key,
+        name: env.name,
         value: env.value,
         show: false
       })));
@@ -97,8 +97,8 @@ export default function EnvironmentForm({
             <div key={idx} className="flex gap-2 items-center">
               <Input
                 placeholder="KEY"
-                value={pair.key}
-                onChange={(e) => handleEnvChange(idx, 'key', e.target.value)}
+                value={pair.name}
+                onChange={(e) => handleEnvChange(idx, 'name', e.target.value)}
                 className="w-1/3"
                 disabled={loading}
               />

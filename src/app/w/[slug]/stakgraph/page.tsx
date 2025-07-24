@@ -43,8 +43,7 @@ export default function StakgraphPage() {
     const [saved, setSaved] = useState(false);
 
     // Environment variables for the EnvironmentForm
-    const [envVars, setEnvVars] = useState<
-        Array<{ key: string; value: string; show: boolean }>
+    const [envVars, setEnvVars] = useState<Array<{ name: string; value: string; show?: boolean }>
     >([]);
 
     const { toast } = useToast();
@@ -119,7 +118,7 @@ export default function StakgraphPage() {
     }, []);
 
     const handleEnvVarsChange = useCallback(
-        (newEnvVars: Array<{ key: string; value: string; show: boolean }>) => {
+        (newEnvVars: Array<{ name: string; value: string; show?: boolean }>) => {
             setEnvVars(newEnvVars);
             setSaved(false);
         },
@@ -164,7 +163,7 @@ export default function StakgraphPage() {
                             setEnvVars(
                                 settings.environmentVariables.map(
                                     (env: EnvironmentVariable) => ({
-                                        key: env.key,
+                                        key: env.name,
                                         value: env.value,
                                         show: false,
                                     })
@@ -253,7 +252,7 @@ export default function StakgraphPage() {
                 poolName: formData.poolName.trim(),
                 poolApiKey: formData.poolApiKey.trim(),
                 environmentVariables: envVars.map((env) => ({
-                    key: env.key,
+                    name: env.name,
                     value: env.value,
                 })),
                 services: formData.services,
@@ -463,11 +462,11 @@ export default function StakgraphPage() {
                                 onEnvVarsChange={handleEnvVarsChange}
                             />
 
-                            <ServicesForm
+                            {/* <ServicesForm
                                 data={{ services: formData.services }}
                                 loading={loading}
                                 onChange={handleServicesChange}
-                            />
+                            /> */}
                         </div>
 
                         <Button type="submit" disabled={loading}>
