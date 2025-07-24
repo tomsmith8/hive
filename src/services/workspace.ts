@@ -59,8 +59,7 @@ export async function getWorkspacesByUserId(userId: string): Promise<WorkspaceRe
  * Gets a workspace by slug if user has access (owner or member)
  */
 export async function getWorkspaceBySlug(slug: string, userId: string): Promise<WorkspaceWithAccess | null> {
-
-  // Get the workspace with owner info
+  // Get the workspace with owner info and swarm status
   const workspace = await db.workspace.findFirst({
     where: { 
       slug
@@ -68,6 +67,9 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     include: {
       owner: {
         select: { id: true, name: true, email: true }
+      },
+      swarm: {
+        select: { id: true, status: true }
       }
     }
   });
@@ -88,7 +90,8 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
       createdAt: workspace.createdAt.toISOString(),
       updatedAt: workspace.updatedAt.toISOString(),
       userRole: 'OWNER',
-      owner: workspace.owner
+      owner: workspace.owner,
+      isCodeGraphSetup: workspace.swarm !== null && workspace.swarm.status === 'ACTIVE'
     };
   }
 
@@ -115,7 +118,8 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     updatedAt: workspace.updatedAt.toISOString(),
     userRole: membership.role as WorkspaceRole,
     owner: workspace.owner,
-    hasKey: !!workspace.stakworkApiKey
+    hasKey: !!workspace.stakworkApiKey,
+    isCodeGraphSetup: workspace.swarm !== null && workspace.swarm.status === 'ACTIVE'
   };
 }
 

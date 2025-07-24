@@ -31,6 +31,7 @@ export interface WorkspaceWithAccess extends WorkspaceResponse {
     name: string | null;
     email: string | null;
   };
+  isCodeGraphSetup: boolean;
 }
 
 export interface WorkspaceAccessValidation {

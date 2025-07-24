@@ -83,8 +83,8 @@ export function useWorkspaceForm() {
         throw new Error(data.error || "Failed to create workspace");
       }
       
-      // After successful creation, redirect to the new workspace
-      router.push(`/w/${formData.slug}`);
+      // After successful creation, redirect to tasks page
+      router.push(`/w/${formData.slug}/tasks`);
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
