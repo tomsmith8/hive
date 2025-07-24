@@ -1,7 +1,13 @@
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Github, Calendar, Activity, Code, BarChart3, Settings } from "lucide-react";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { ConnectRepository } from "@/components/ConnectRepository";
 
-export default async function DashboardPage() {
+export default function DashboardPage() {
+  const { workspace, slug } = useWorkspace();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -13,6 +19,11 @@ export default async function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Onboarding Card - Only show if CodeGraph is not set up */}
+      {workspace && !workspace.isCodeGraphSetup && (
+        <ConnectRepository workspaceSlug={slug} />
+      )}
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

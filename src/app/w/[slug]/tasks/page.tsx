@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/button";
 import { CheckSquare, Clock, Users, Calendar, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { ConnectRepository } from "@/components/ConnectRepository";
 
 export default function TasksPage() {
   const router = useRouter();
-  const { slug } = useWorkspace();
+  const { workspace, slug } = useWorkspace();
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -26,13 +27,25 @@ export default function TasksPage() {
             Manage and track your development tasks and issues.
           </p>
         </div>
-        <Button onClick={() => router.push(`/w/${slug}/task/new`)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Task
-        </Button>
+        {workspace?.isCodeGraphSetup && (
+          <Button onClick={() => router.push(`/w/${slug}/task/new`)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Task
+          </Button>
+        )}
       </div>
 
-      {/* Task Stats */}
+      {/* Connect Repository Card - Only show if CodeGraph is not set up */}
+      {workspace && !workspace.isCodeGraphSetup ? (
+        <ConnectRepository 
+          workspaceSlug={slug} 
+          title="Connect repository to Start Managing Tasks"
+          description="Setup your development environment to ask codebase questions or write code."
+          buttonText="Connect Repository"
+        />
+      ) : (
+        <>
+          {/* Task Stats */}
       <div className="grid gap-6 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -200,6 +213,8 @@ export default function TasksPage() {
           </CardContent>
         </Card>
       </div>
+      </>
+      )}
     </div>
   );
 }
