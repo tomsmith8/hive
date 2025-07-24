@@ -1,11 +1,25 @@
-import { db } from '@/lib/db';
-import { CreateWorkspaceRequest, WorkspaceResponse, WorkspaceWithRole, WorkspaceWithAccess, WorkspaceAccessValidation, WorkspaceRole } from '@/types/workspace';
-import { RESERVED_WORKSPACE_SLUGS, WORKSPACE_SLUG_PATTERNS, WORKSPACE_ERRORS, WORKSPACE_PERMISSION_LEVELS } from '@/lib/constants';
+import { db } from "@/lib/db";
+import {
+  CreateWorkspaceRequest,
+  WorkspaceResponse,
+  WorkspaceWithRole,
+  WorkspaceWithAccess,
+  WorkspaceAccessValidation,
+  WorkspaceRole,
+} from "@/types/workspace";
+import {
+  RESERVED_WORKSPACE_SLUGS,
+  WORKSPACE_SLUG_PATTERNS,
+  WORKSPACE_ERRORS,
+  WORKSPACE_PERMISSION_LEVELS,
+} from "@/lib/constants";
 
 // Type assertion to help IDE recognize Prisma client methods
 
 // Existing functions
-export async function createWorkspace(data: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
+export async function createWorkspace(
+  data: CreateWorkspaceRequest
+): Promise<WorkspaceResponse> {
   // Validate the slug before creating
   const slugValidation = validateWorkspaceSlug(data.slug);
   if (!slugValidation.isValid) {
@@ -13,11 +27,13 @@ export async function createWorkspace(data: CreateWorkspaceRequest): Promise<Wor
   }
 
   // Check if the slug already exists
-  const existing = await db.workspace.findUnique({ where: { slug: data.slug } });
+  const existing = await db.workspace.findUnique({
+    where: { slug: data.slug },
+  });
   if (existing) {
     throw new Error(WORKSPACE_ERRORS.SLUG_ALREADY_EXISTS);
   }
-  
+
   try {
     const workspace = await db.workspace.create({
       data: {
@@ -33,17 +49,27 @@ export async function createWorkspace(data: CreateWorkspaceRequest): Promise<Wor
       updatedAt: workspace.updatedAt.toISOString(),
     };
   } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002' && 
-        'meta' in error && error.meta && typeof error.meta === 'object' && 
-        'target' in error.meta && Array.isArray(error.meta.target) && 
-        error.meta.target.includes('slug')) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002" &&
+      "meta" in error &&
+      error.meta &&
+      typeof error.meta === "object" &&
+      "target" in error.meta &&
+      Array.isArray(error.meta.target) &&
+      error.meta.target.includes("slug")
+    ) {
       throw new Error(WORKSPACE_ERRORS.SLUG_ALREADY_EXISTS);
     }
     throw error;
   }
 }
 
-export async function getWorkspacesByUserId(userId: string): Promise<WorkspaceResponse[]> {
+export async function getWorkspacesByUserId(
+  userId: string
+): Promise<WorkspaceResponse[]> {
   const workspaces = await db.workspace.findMany({
     where: { ownerId: userId },
   });
@@ -58,20 +84,23 @@ export async function getWorkspacesByUserId(userId: string): Promise<WorkspaceRe
 /**
  * Gets a workspace by slug if user has access (owner or member)
  */
-export async function getWorkspaceBySlug(slug: string, userId: string): Promise<WorkspaceWithAccess | null> {
+export async function getWorkspaceBySlug(
+  slug: string,
+  userId: string
+): Promise<WorkspaceWithAccess | null> {
   // Get the workspace with owner info and swarm status
   const workspace = await db.workspace.findFirst({
-    where: { 
-      slug
+    where: {
+      slug,
     },
     include: {
       owner: {
-        select: { id: true, name: true, email: true }
+        select: { id: true, name: true, email: true },
       },
       swarm: {
-        select: { id: true, status: true }
-      }
-    }
+        select: { id: true, status: true },
+      },
+    },
   });
 
   if (!workspace) {
@@ -89,9 +118,10 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
       ownerId: workspace.ownerId,
       createdAt: workspace.createdAt.toISOString(),
       updatedAt: workspace.updatedAt.toISOString(),
-      userRole: 'OWNER',
+      userRole: "OWNER",
       owner: workspace.owner,
-      isCodeGraphSetup: workspace.swarm !== null && workspace.swarm.status === 'ACTIVE'
+      isCodeGraphSetup:
+        workspace.swarm !== null && workspace.swarm.status === "ACTIVE",
     };
   }
 
@@ -100,8 +130,8 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     where: {
       workspaceId: workspace.id,
       userId,
-      leftAt: null
-    }
+      leftAt: null,
+    },
   });
 
   if (!membership) {
@@ -119,27 +149,30 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     userRole: membership.role as WorkspaceRole,
     owner: workspace.owner,
     hasKey: !!workspace.stakworkApiKey,
-    isCodeGraphSetup: workspace.swarm !== null && workspace.swarm.status === 'ACTIVE'
+    isCodeGraphSetup:
+      workspace.swarm !== null && workspace.swarm.status === "ACTIVE",
   };
 }
 
 /**
  * Gets all workspaces a user has access to, including their role
  */
-export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRole[]> {
+export async function getUserWorkspaces(
+  userId: string
+): Promise<WorkspaceWithRole[]> {
   const result: WorkspaceWithRole[] = [];
 
   // Get owned workspaces
   const ownedWorkspaces = await db.workspace.findMany({
-    where: { 
-      ownerId: userId
-    }
+    where: {
+      ownerId: userId,
+    },
   });
 
   // Add owned workspaces with member count
   for (const workspace of ownedWorkspaces) {
     const memberCount = await db.workspaceMember.count({
-      where: { workspaceId: workspace.id, leftAt: null }
+      where: { workspaceId: workspace.id, leftAt: null },
     });
 
     result.push({
@@ -150,8 +183,8 @@ export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRo
       ownerId: workspace.ownerId,
       createdAt: workspace.createdAt.toISOString(),
       updatedAt: workspace.updatedAt.toISOString(),
-      userRole: 'OWNER',
-      memberCount: memberCount + 1 // +1 for owner
+      userRole: "OWNER",
+      memberCount: memberCount + 1, // +1 for owner
     });
   }
 
@@ -159,18 +192,18 @@ export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRo
   const memberships = await db.workspaceMember.findMany({
     where: {
       userId,
-      leftAt: null
+      leftAt: null,
     },
     include: {
-      workspace: true
-    }
+      workspace: true,
+    },
   });
 
   // Add member workspaces
   for (const membership of memberships) {
     if (membership.workspace) {
       const memberCount = await db.workspaceMember.count({
-        where: { workspaceId: membership.workspace.id, leftAt: null }
+        where: { workspaceId: membership.workspace.id, leftAt: null },
       });
 
       result.push({
@@ -182,7 +215,7 @@ export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRo
         createdAt: membership.workspace.createdAt.toISOString(),
         updatedAt: membership.workspace.updatedAt.toISOString(),
         userRole: membership.role as WorkspaceRole,
-        memberCount: memberCount + 1 // +1 for owner
+        memberCount: memberCount + 1, // +1 for owner
       });
     }
   }
@@ -194,20 +227,23 @@ export async function getUserWorkspaces(userId: string): Promise<WorkspaceWithRo
 /**
  * Validates user access to a workspace and returns permission details
  */
-export async function validateWorkspaceAccess(slug: string, userId: string): Promise<WorkspaceAccessValidation> {
+export async function validateWorkspaceAccess(
+  slug: string,
+  userId: string
+): Promise<WorkspaceAccessValidation> {
   const workspace = await getWorkspaceBySlug(slug, userId);
-  
+
   if (!workspace) {
     return {
       hasAccess: false,
       canRead: false,
       canWrite: false,
-      canAdmin: false
+      canAdmin: false,
     };
   }
 
   const roleLevel = WORKSPACE_PERMISSION_LEVELS[workspace.userRole];
-  
+
   return {
     hasAccess: true,
     userRole: workspace.userRole,
@@ -218,24 +254,26 @@ export async function validateWorkspaceAccess(slug: string, userId: string): Pro
       slug: workspace.slug,
       ownerId: workspace.ownerId,
       createdAt: workspace.createdAt,
-      updatedAt: workspace.updatedAt
+      updatedAt: workspace.updatedAt,
     },
     canRead: roleLevel >= WORKSPACE_PERMISSION_LEVELS.VIEWER,
     canWrite: roleLevel >= WORKSPACE_PERMISSION_LEVELS.DEVELOPER,
-    canAdmin: roleLevel >= WORKSPACE_PERMISSION_LEVELS.ADMIN
+    canAdmin: roleLevel >= WORKSPACE_PERMISSION_LEVELS.ADMIN,
   };
 }
 
 /**
  * Gets the user's default/primary workspace (first owned, then first member)
  */
-export async function getDefaultWorkspaceForUser(userId: string): Promise<WorkspaceResponse | null> {
+export async function getDefaultWorkspaceForUser(
+  userId: string
+): Promise<WorkspaceResponse | null> {
   // Try to get the first owned workspace
   const ownedWorkspace = await db.workspace.findFirst({
-    where: { 
-      ownerId: userId
+    where: {
+      ownerId: userId,
     },
-    orderBy: { createdAt: 'asc' }
+    orderBy: { createdAt: "asc" },
   });
 
   if (ownedWorkspace) {
@@ -250,10 +288,10 @@ export async function getDefaultWorkspaceForUser(userId: string): Promise<Worksp
   const membership = await db.workspaceMember.findFirst({
     where: {
       userId,
-      leftAt: null
+      leftAt: null,
     },
     include: { workspace: true },
-    orderBy: { joinedAt: 'asc' }
+    orderBy: { joinedAt: "asc" },
   });
 
   if (membership?.workspace) {
@@ -272,32 +310,41 @@ export async function getDefaultWorkspaceForUser(userId: string): Promise<Worksp
 /**
  * Deletes a workspace by slug if user has admin access (owner)
  */
-export async function deleteWorkspaceBySlug(slug: string, userId: string): Promise<void> {
+export async function deleteWorkspaceBySlug(
+  slug: string,
+  userId: string
+): Promise<void> {
   // First check if user has access and is owner
   const workspace = await getWorkspaceBySlug(slug, userId);
-  
+
   if (!workspace) {
-    throw new Error('Workspace not found or access denied');
+    throw new Error("Workspace not found or access denied");
   }
 
-  if (workspace.userRole !== 'OWNER') {
-    throw new Error('Only workspace owners can delete workspaces');
+  if (workspace.userRole !== "OWNER") {
+    throw new Error("Only workspace owners can delete workspaces");
   }
 
   // Delete the workspace (cascade will handle related records)
   await db.workspace.delete({
-    where: { 
-      id: workspace.id 
-    }
+    where: {
+      id: workspace.id,
+    },
   });
 }
 
 /**
  * Validates a workspace slug against reserved words and format requirements
  */
-export function validateWorkspaceSlug(slug: string): { isValid: boolean; error?: string } {
+export function validateWorkspaceSlug(slug: string): {
+  isValid: boolean;
+  error?: string;
+} {
   // Check length
-  if (slug.length < WORKSPACE_SLUG_PATTERNS.MIN_LENGTH || slug.length > WORKSPACE_SLUG_PATTERNS.MAX_LENGTH) {
+  if (
+    slug.length < WORKSPACE_SLUG_PATTERNS.MIN_LENGTH ||
+    slug.length > WORKSPACE_SLUG_PATTERNS.MAX_LENGTH
+  ) {
     return { isValid: false, error: WORKSPACE_ERRORS.SLUG_INVALID_LENGTH };
   }
 
@@ -307,9 +354,13 @@ export function validateWorkspaceSlug(slug: string): { isValid: boolean; error?:
   }
 
   // Check against reserved slugs
-  if (RESERVED_WORKSPACE_SLUGS.includes(slug as typeof RESERVED_WORKSPACE_SLUGS[number])) {
+  if (
+    RESERVED_WORKSPACE_SLUGS.includes(
+      slug as (typeof RESERVED_WORKSPACE_SLUGS)[number]
+    )
+  ) {
     return { isValid: false, error: WORKSPACE_ERRORS.SLUG_RESERVED };
   }
 
   return { isValid: true };
-} 
+}
