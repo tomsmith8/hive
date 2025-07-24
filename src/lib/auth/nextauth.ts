@@ -44,11 +44,13 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "github") {
         try {
           // Check if there's an existing user with the same email
-          const existingUser = user.email ? await db.user.findUnique({
-            where: {
-              email: user.email,
-            },
-          }) : null;
+          const existingUser = user.email
+            ? await db.user.findUnique({
+                where: {
+                  email: user.email,
+                },
+              })
+            : null;
 
           if (existingUser) {
             // Check if there's already a GitHub account for this user
@@ -67,13 +69,22 @@ export const authOptions: NextAuthOptions = {
                   type: account.type,
                   provider: account.provider,
                   providerAccountId: account.providerAccountId,
-                  access_token: account.access_token,
-                  refresh_token: account.refresh_token,
-                  expires_at: account.expires_at,
-                  token_type: account.token_type,
+                  access_token: account.access_token as
+                    | string
+                    | undefined
+                    | null,
+                  refresh_token: account.refresh_token as
+                    | string
+                    | undefined
+                    | null,
+                  expires_at: account.expires_at as number | undefined | null,
+                  token_type: account.token_type as string | undefined | null,
                   scope: account.scope,
-                  id_token: account.id_token,
-                  session_state: account.session_state,
+                  id_token: account.id_token as string | undefined | null,
+                  session_state: account.session_state as
+                    | string
+                    | undefined
+                    | null,
                 },
               });
 
@@ -134,8 +145,12 @@ export const authOptions: NextAuthOptions = {
                   publicGists: githubProfile.public_gists,
                   followers: githubProfile.followers,
                   following: githubProfile.following,
-                  githubCreatedAt: githubProfile.created_at ? new Date(githubProfile.created_at) : null,
-                  githubUpdatedAt: githubProfile.updated_at ? new Date(githubProfile.updated_at) : null,
+                  githubCreatedAt: githubProfile.created_at
+                    ? new Date(githubProfile.created_at)
+                    : null,
+                  githubUpdatedAt: githubProfile.updated_at
+                    ? new Date(githubProfile.updated_at)
+                    : null,
                   accountType: githubProfile.type,
                   scopes: account.scope ? account.scope.split(",") : [],
                 },
@@ -154,8 +169,12 @@ export const authOptions: NextAuthOptions = {
                   publicGists: githubProfile.public_gists,
                   followers: githubProfile.followers,
                   following: githubProfile.following,
-                  githubCreatedAt: githubProfile.created_at ? new Date(githubProfile.created_at) : null,
-                  githubUpdatedAt: githubProfile.updated_at ? new Date(githubProfile.updated_at) : null,
+                  githubCreatedAt: githubProfile.created_at
+                    ? new Date(githubProfile.created_at)
+                    : null,
+                  githubUpdatedAt: githubProfile.updated_at
+                    ? new Date(githubProfile.updated_at)
+                    : null,
                   accountType: githubProfile.type,
                   scopes: account.scope ? account.scope.split(",") : [],
                 },
@@ -166,12 +185,22 @@ export const authOptions: NextAuthOptions = {
             }
           } else if (account && !account.access_token) {
             // Account exists but token is revoked - this is expected after disconnection
-            console.log("GitHub account exists but token is revoked - user needs to re-authenticate");
+            console.log(
+              "GitHub account exists but token is revoked - user needs to re-authenticate"
+            );
           }
         }
 
         if (githubAuth) {
-          (session.user as { github?: { username?: string; publicRepos?: number; followers?: number } }).github = {
+          (
+            session.user as {
+              github?: {
+                username?: string;
+                publicRepos?: number;
+                followers?: number;
+              };
+            }
+          ).github = {
             username: githubAuth.githubUsername,
             publicRepos: githubAuth.publicRepos ?? undefined,
             followers: githubAuth.followers ?? undefined,
@@ -193,16 +222,23 @@ export const authOptions: NextAuthOptions = {
 };
 
 /**
- * Fetches the GitHub username and PAT (access_token) for a given userId.
+ * Fetches the GitHub username and PAT (accessToken) for a given userId.
  * Returns { username, pat } or null if not found.
  */
-export async function getGithubUsernameAndPAT(userId: string): Promise<{ username: string; pat: string } | null> {
+export async function getGithubUsernameAndPAT(
+  userId: string
+): Promise<{ username: string; pat: string } | null> {
   // Get GitHub username from GitHubAuth
   const githubAuth = await db.gitHubAuth.findUnique({ where: { userId } });
   // Get PAT from Account
-  const githubAccount = await db.account.findFirst({ where: { userId, provider: 'github' } });
+  const githubAccount = await db.account.findFirst({
+    where: { userId, provider: "github" },
+  });
   if (githubAuth?.githubUsername && githubAccount?.access_token) {
-    return { username: githubAuth.githubUsername, pat: githubAccount.access_token };
+    return {
+      username: githubAuth.githubUsername,
+      pat: githubAccount.access_token,
+    };
   }
   return null;
-} 
+}

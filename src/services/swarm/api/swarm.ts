@@ -84,8 +84,9 @@ export async function swarmApiRequest({
 
     } catch (error) {
       console.error("swarmApiRequest error", error)
+      responseData = undefined;
     }
-    return { ok: response.ok, data: responseData, status: response.status };
+    return { ok: response.ok, data: responseData as { request_id?: string }, status: response.status };
   } catch (error) {
     console.error("swarmApiRequest", error)
     return { ok: false, status: 500 };

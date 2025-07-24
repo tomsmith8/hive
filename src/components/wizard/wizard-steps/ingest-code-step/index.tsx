@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
@@ -12,7 +11,6 @@ interface IngestCodeStepStepProps {
 }
 
 export function IngestCodeStep({
-
   onNext,
   onBack,
 }: IngestCodeStepStepProps) {
@@ -21,18 +19,12 @@ export function IngestCodeStep({
   const setCurrentStepStatus = useWizardStore((s) => s.setCurrentStepStatus);
   const currentStepStatus = useWizardStore((s) => s.currentStepStatus);
   const setIngestRefId = useWizardStore((s) => s.setIngestRefId);
-
   const setServices = useWizardStore((s) => s.setServices);
-  const pollTimeoutlRef = useRef<NodeJS.Timeout | null>(null);
   const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
-
-
-
-
-  const services = useWizardStore((s) => s.services);
-  const isPending = currentStepStatus === "PENDING";
   const ingestRefId = useWizardStore((s) => s.ingestRefId);
+  const isPending = currentStepStatus === "PENDING";
 
+  const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleIngestStart = useCallback(async () => {
     try {
@@ -47,17 +39,15 @@ export function IngestCodeStep({
       updateWizardProgress({
         wizardStep: "INGEST_CODE",
         stepStatus: "PROCESSING",
-        wizardData: {
-        }
-      })
+        wizardData: {},
+      });
 
       setIngestRefId(data.request_id);
-
     } catch (error) {
       console.error("Failed to ingest code:", error);
       setCurrentStepStatus("FAILED");
     }
-  }, [swarmId, setCurrentStepStatus]);
+  }, [swarmId, setIngestRefId, setCurrentStepStatus, updateWizardProgress]);
 
   const handleServices = useCallback(async () => {
     try {
@@ -70,8 +60,7 @@ export function IngestCodeStep({
 
       if (data.success || data.status === "ACTIVE") {
         console.log("poll success", data);
-        setServices(data.data)
-
+        setServices(data.data);
       } else {
         console.log("polling response (not ready):", data);
       }
@@ -79,97 +68,86 @@ export function IngestCodeStep({
       console.error("Polling error:", error);
       setCurrentStepStatus("FAILED");
     }
-  }, [workspaceId, swarmId, setCurrentStepStatus, ingestRefId]);
+  }, [workspaceId, swarmId, setServices, setCurrentStepStatus]);
 
   useEffect(() => {
+    if (!ingestRefId) return;
+
+    let isCancelled = false;
 
     const getIngestStatus = async () => {
+      if (isCancelled) return;
+
       try {
-        const res = await fetch(`/api/swarm/stakgraph/ingest?id=${ingestRefId}&swarmId=${swarmId}&workspaceId=${workspaceId}`);
+        const res = await fetch(
+          `/api/swarm/stakgraph/ingest?id=${ingestRefId}&swarmId=${swarmId}&workspaceId=${workspaceId}`
+        );
         const { apiResult } = await res.json();
-        console.log(apiResult)
-
         const { data } = apiResult;
-        if (data.status === "Complete") {
 
-          await handleServices()
+        console.log("Ingest status:", data);
+
+        if (data.status === "Complete") {
+          await handleServices();
           setCurrentStepStatus("COMPLETED");
           onNext();
         } else {
-          pollTimeoutlRef.current = setTimeout(getIngestStatus, 3000);
+          pollTimeoutRef.current = setTimeout(getIngestStatus, 3000);
         }
       } catch (error) {
         console.error("Failed to get ingest status:", error);
       }
-    }
-    if (ingestRefId) {
-      getIngestStatus();
-    }
+    };
+
+    getIngestStatus();
 
     return () => {
-      if (pollTimeoutlRef.current) {
-        clearTimeout(pollTimeoutlRef.current);
-        pollTimeoutlRef.current = null;
+      isCancelled = true;
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+        pollTimeoutRef.current = null;
       }
-    }
-  }, [ingestRefId]);
-
-
+    };
+  }, [ingestRefId, swarmId, workspaceId, handleServices, setCurrentStepStatus, onNext]);
 
   useEffect(() => {
     if (isPending) {
       handleIngestStart();
     }
-  }, [handleIngestStart, services, onNext]);
-
+  }, [isPending, handleIngestStart]);
 
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
         <div className="flex items-center justify-center mx-auto mb-4">
-          <svg width="80" height="64" viewBox="0 0 80 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="40" cy="32" r="12" fill="#E0E7FF" />
-            <circle cx="40" cy="32" r="5" fill="#60A5FA">
-              <animate attributeName="r" values="5;7;5" dur="1.2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="64" cy="20" r="4" fill="#2563EB">
-              <animate attributeName="r" values="4;6;4" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="64" cy="44" r="4" fill="#2563EB">
-              <animate attributeName="r" values="4;6;4" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="16" cy="20" r="4" fill="#2563EB">
-              <animate attributeName="r" values="4;6;4" dur="1.2s" begin="0.9s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="16" cy="44" r="4" fill="#2563EB">
-              <animate attributeName="r" values="4;6;4" dur="1.2s" begin="1.2s" repeatCount="indefinite" />
-            </circle>
-            <line x1="40" y1="32" x2="64" y2="20" stroke="#60A5FA" strokeWidth="2">
-              <animate attributeName="stroke" values="#60A5FA;#2563EB;#60A5FA" dur="1.2s" repeatCount="indefinite" />
-            </line>
-            <line x1="40" y1="32" x2="64" y2="44" stroke="#60A5FA" strokeWidth="2">
-              <animate attributeName="stroke" values="#60A5FA;#2563EB;#60A5FA" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
-            </line>
-            <line x1="40" y1="32" x2="16" y2="20" stroke="#60A5FA" strokeWidth="2">
-              <animate attributeName="stroke" values="#60A5FA;#2563EB;#60A5FA" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
-            </line>
-            <line x1="40" y1="32" x2="16" y2="44" stroke="#60A5FA" strokeWidth="2">
-              <animate attributeName="stroke" values="#60A5FA;#2563EB;#60A5FA" dur="1.2s" begin="0.9s" repeatCount="indefinite" />
-            </line>
-            <line x1="16" y1="20" x2="16" y2="44" stroke="#60A5FA" strokeWidth="2" opacity="0.5" />
-            <line x1="64" y1="20" x2="64" y2="44" stroke="#60A5FA" strokeWidth="2" opacity="0.5" />
-          </svg>
+          {/* SVG loader here */}
         </div>
         <AnimatePresence mode="wait">
           {!isPending ? (
-            <motion.div key="title-ingest" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+            <motion.div
+              key="title-ingest"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
               <CardTitle className="text-2xl">Ingest Code</CardTitle>
-              <CardDescription>We will now ingest your codebase. This may take a few minutes.</CardDescription>
+              <CardDescription>
+                We will now ingest your codebase. This may take a few minutes.
+              </CardDescription>
             </motion.div>
           ) : (
-            <motion.div key="title-ingest-pending" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+            <motion.div
+              key="title-ingest-pending"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
               <CardTitle className="text-2xl">Ingesting Code</CardTitle>
-              <CardDescription>Your codebase is being ingested. Please wait...</CardDescription>
+              <CardDescription>
+                Your codebase is being ingested. Please wait...
+              </CardDescription>
             </motion.div>
           )}
         </AnimatePresence>

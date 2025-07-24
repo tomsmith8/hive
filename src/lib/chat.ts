@@ -18,13 +18,6 @@ export interface ContextTag {
   id: string;
 }
 
-export interface Option {
-  actionType: "button" | "chat";
-  optionLabel: string;
-  optionResponse: string;
-  webhook: string;
-}
-
 export interface CodeContent {
   content: string; // the code
   language?: string;
@@ -37,8 +30,15 @@ export interface BrowserContent {
   url: string;
 }
 
+export interface Option {
+  actionType: "button" | "chat";
+  optionLabel: string;
+  optionResponse: string;
+}
+
 export interface FormContent {
   actionText: string;
+  webhook: string;
   options: Option[];
 }
 
@@ -63,6 +63,7 @@ export function createChatMessage(data: {
   contextTags?: ContextTag[];
   artifacts?: Artifact[];
   sourceWebsocketID?: string;
+  replyId?: string;
 }): ChatMessage {
   return {
     id: data.id,
@@ -73,6 +74,7 @@ export function createChatMessage(data: {
     contextTags: data.contextTags || [],
     status: data.status,
     sourceWebsocketID: data.sourceWebsocketID || null,
+    replyId: data.replyId || null,
     artifacts: data.artifacts || [],
     createdAt: new Date(),
     updatedAt: new Date(),

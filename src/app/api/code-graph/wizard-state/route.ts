@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/nextauth';
 import { db } from '@/lib/db';
 import { validateUserWorkspaceAccess } from '@/lib/auth/workspace-resolver';
 import { WizardStateResponse, WizardStateError } from '@/types/wizard';
+import { ServiceDataConfig } from '@/components/stakgraph';
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,8 +100,10 @@ export async function GET(request: NextRequest) {
         workspaceId: workspace.id,
         workspaceSlug: workspace.slug,
         workspaceName: workspace.name,
-        services: swarm.services,
-        ingestRefId: swarm.ingestRefId,
+        services: Array.isArray(swarm.services)
+          ? (swarm.services as unknown as ServiceDataConfig[])
+          : [],
+        ingestRefId: swarm.ingestRefId || '',
         poolName: swarm.poolName || '',
         user: {
           id: userId,

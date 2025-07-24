@@ -222,7 +222,6 @@ export const useWizardStore = create<WizardStore>()(
           throw new Error(json.message || 'Failed to update wizard progress');
         }
 
-        await state.fetchWizardState();
       } catch (err) {
         console.error('Error updating wizard progress:', err);
         throw err;

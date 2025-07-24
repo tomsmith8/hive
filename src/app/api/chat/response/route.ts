@@ -8,14 +8,15 @@ import {
   type Artifact,
   type ChatMessage,
 } from "@/lib/chat";
+import { pusherServer, getTaskChannelName, PUSHER_EVENTS } from "@/lib/pusher";
+
+// Disable caching for real-time messaging
+export const fetchCache = "force-no-store";
 
 interface ArtifactRequest {
   type: ArtifactType;
   content?: Record<string, unknown>;
 }
-
-// TODO: Implement real-time connection management
-// const connections = new Map<string, Response>();
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,13 +90,34 @@ export async function POST(request: NextRequest) {
       })) as Artifact[],
     };
 
-    // TODO: Implement real-time broadcasting via WebSocket or SSE
-    // For now, we just store the message in the database
-    // The frontend can poll for new messages or use a WebSocket library
-    console.log(
-      "Chat message created and ready for broadcast:",
-      clientMessage.id
-    );
+    // Broadcast the new message via Pusher to all connected clients for this task
+    if (taskId) {
+      try {
+        const channelName = getTaskChannelName(taskId);
+        console.log(
+          `🚀 Broadcasting message to Pusher channel: ${channelName}`
+        );
+        console.log(`📨 Message content:`, {
+          id: clientMessage.id,
+          message: clientMessage.message,
+          role: clientMessage.role,
+          timestamp: clientMessage.timestamp,
+        });
+
+        await pusherServer.trigger(
+          channelName,
+          PUSHER_EVENTS.NEW_MESSAGE,
+          clientMessage
+        );
+
+        console.log(
+          `✅ Successfully broadcast message to Pusher channel: ${channelName}`
+        );
+      } catch (error) {
+        console.error("❌ Error broadcasting to Pusher:", error);
+        // Don't fail the request if Pusher fails
+      }
+    }
 
     return NextResponse.json(
       {
@@ -111,18 +133,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// GET endpoint for Server-Sent Events connection (simplified for now)
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const workspaceId = searchParams.get("workspace");
-
-  // TODO: Implement proper SSE/WebSocket connection
-  // For now, return a simple response indicating the endpoint is available
-  return NextResponse.json({
-    message: "Real-time endpoint available",
-    workspaceId,
-    timestamp: new Date().toISOString(),
-  });
 }

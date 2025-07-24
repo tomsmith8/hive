@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { WizardProgress } from "@/components/wizard/WizardProgress";
 import { WizardStepRenderer } from "@/components/wizard/WizardStepRenderer";
@@ -19,7 +19,6 @@ export default function CodeGraphPage() {
   const error = useWizardStore((s) => s.error);
   const hasSwarm = useWizardStore((s) => s.hasSwarm);
   const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
-  const wizardStateData = useWizardStore((s) => s.wizardStateData);
   const workspaceSlug = useWizardStore((s) => s.workspaceSlug);
   const setWorkspaceSlug = useWizardStore((s) => s.setWorkspaceSlug);
   const setCurrentStep = useWizardStore((s) => s.setCurrentStep);
@@ -30,13 +29,19 @@ export default function CodeGraphPage() {
   const resetWizard = useWizardStore((s) => s.resetWizard);
 
   useEffect(() => {
-    if (workspace) {
+    console.log(workspace?.slug)
+    if (workspace?.slug && workspace?.id) {
       resetWizard();
       setWorkspaceSlug(workspace.slug);
       setWorkspaceId(workspace.id);
       setHasKey(workspace.hasKey);
     }
-  }, [workspace, setWorkspaceSlug, resetWizard]);
+
+    return () => {
+      console.log("unmounting")
+      resetWizard();
+    }
+  }, [workspace?.id, workspace?.slug, workspace?.hasKey, setWorkspaceSlug, resetWizard]);
 
 
 
@@ -59,7 +64,6 @@ export default function CodeGraphPage() {
             wizardStep: newWizardStep,
             stepStatus: 'PENDING',
             wizardData: {
-              ...(wizardStateData || {}),
               step: newStep,
             }
           });
@@ -88,7 +92,6 @@ export default function CodeGraphPage() {
             wizardStep: newWizardStep,
             stepStatus: 'COMPLETED',
             wizardData: {
-              ...(wizardStateData || {}),
               step: newStep,
             }
           });
@@ -164,7 +167,6 @@ export default function CodeGraphPage() {
             onNext={handleNext}
             onBack={handleBack}
             step={currentStep}
-            stepStatus={stepStatus as 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED'}
           />
         </div>
       </div>

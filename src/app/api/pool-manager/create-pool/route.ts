@@ -17,13 +17,11 @@ export async function POST(request: NextRequest) {
 
         const user = await db.user.findUnique({
             where: {
-                email: session?.user.email,
+                email: session?.user.email || '',
             },
         })
 
         let poolApiKey = user?.poolApiKey;
-
-        console.log(user, 'user---user')
 
         if (!poolApiKey) {
             console.log(session?.user)
@@ -95,18 +93,18 @@ export async function POST(request: NextRequest) {
             console.log((session.user.name || '').toLowerCase())
             console.log("--------------------------------createUser--------------------------------")
 
-            const { user } = await poolManager.createUser({
+            const { user: poolUser } = await poolManager.createUser({
                 email: session.user.email,
                 password,
                 username: `${(session.user.name || '')}-${swarmId}`.toLowerCase(),
             });
 
-            poolApiKey = user.authentication_token;
+            poolApiKey = poolUser.authentication_token;
         }
 
         await db.user.update({
             where: {
-                email: session?.user.email,
+                email: session?.user.email || '',
             },
             data: {
                 poolApiKey,
@@ -139,7 +137,6 @@ export async function POST(request: NextRequest) {
 
         const repository = await db.repository.findFirst({
             where: {
-                name: swarm.repoName,
                 workspaceId: swarm.workspaceId,
             },
         });
@@ -169,16 +166,18 @@ export async function POST(request: NextRequest) {
         const pool = await poolManager.createPool({
             pool_name: swarm.id,
             minimum_vms: 2,
-            repo_name: repository.repositoryUrl,
-            branch_name: repository.branch,
-            github_pat: account.access_token,
+            repo_name: repository?.repositoryUrl || '',
+            branch_name: repository?.branch || '',
+            github_pat: account?.access_token || '',
             github_username: session?.user.name || '',
-            env_vars: swarm.environmentVariables ? JSON.parse(swarm.environmentVariables) : [
-                {
-                    "name": "MY_ENV",
-                    "value": "MY_VALUE"
-                }
-            ],
+            env_vars: typeof swarm.environmentVariables === 'string'
+                ? JSON.parse(swarm.environmentVariables)
+                : [
+                    {
+                        name: "MY_ENV",
+                        value: "MY_VALUE",
+                    },
+                ],
             container_files,
         });
 

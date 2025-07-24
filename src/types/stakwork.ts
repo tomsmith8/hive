@@ -13,11 +13,19 @@ export interface StakworkProjectPayload {
   workflow_params: Record<string, unknown>;
 }
 
-export interface CreateCustomerResponse {
+export interface CreateProjectRequest {
+  title: any;
+  description: any;
+  budget: any;
+  skills: any;
+  name: string;
+  workflow_id: number;
+  workflow_params: { set_var: { attributes: { vars: unknown } } };
+}
+
+export interface StakworkProject {
   success: boolean;
   data: {
-    id: number;
-    name: string;
-    token: string;
+    project_id: number;
   };
-};
+}

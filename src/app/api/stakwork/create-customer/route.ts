@@ -15,12 +15,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { workspaceId } = body;
 
-    const customer = await stakworkService().createCustomer(workspaceId)
+    const customerResponse = await stakworkService().createCustomer(workspaceId);
 
-    if (customer.success && customer.data) {
+    // Defensive: check for expected shape, fallback to empty object if not
+    const data = (customerResponse && typeof customerResponse === 'object' && 'data' in customerResponse)
+      ? (customerResponse as { data?: { token?: string } }).data
+      : undefined;
 
-      const { token } = customer?.data || {};
-
+    if (data && typeof data === 'object' && 'token' in data) {
+      const { token } = data;
 
       const workspace = await db.workspace.findFirst({ where: { id: workspaceId } });
 
@@ -35,16 +38,17 @@ export async function POST(request: NextRequest) {
 
       const swarm = await db.swarm.findFirst({
         where: {
-          workspaceId: workspace.id,
+          workspaceId: workspace?.id || '',
         }
       })
 
-      const sanitizedSecretAlias = swarm.swarmSecretAlias.replace(/{{(.*?)}}/g, "$1");
+      const sanitizedSecretAlias = (swarm?.swarmSecretAlias || '').replace(/{{(.*?)}}/g, "$1");
 
-      await stakworkService().createSecret(sanitizedSecretAlias, swarm.swarmApiKey, token)
+      if (sanitizedSecretAlias && swarm?.swarmApiKey && token) {
+        await stakworkService().createSecret(sanitizedSecretAlias, swarm.swarmApiKey, token)
+      }
 
-
-      return NextResponse.json({ customer }, { status: 201 });
+      return NextResponse.json({ token }, { status: 201 });
     }
   } catch (error) {
     console.error('Error creating Stakwork customer:', error);

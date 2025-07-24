@@ -11,7 +11,6 @@ import {
     getSwarmVanityAddress,
 } from "@/lib/constants";
 import { isFakeMode, createFakeSwarm } from "@/services/swarm/fake";
-import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
     if (isFakeMode) {
@@ -65,6 +64,14 @@ export async function POST(request: NextRequest) {
 
         // Append '-swarm' to the name for the 3rd party request
         const thirdPartyName = `${name.toLowerCase()}-Swarm`;
+
+        console.log("--------------------------------swarm-data--------------------------------")
+        console.log(vanity_address)
+        console.log(thirdPartyName)
+        console.log(instance_type)
+        console.log(env)
+        console.log("--------------------------------swarm-data--------------------------------")
+
         const apiResponse = await swarmService.createSwarm({
             vanity_address,
             name: thirdPartyName,

@@ -63,12 +63,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Confirm repo_url association (for now, check repositoryUrl field)
-    // if (swarm.repositoryUrl !== repo_url) {
-    //   return NextResponse.json({ success: false, message: 'Swarm is not associated with the given repo_url' }, { status: 400 });
-    // }
-
-    // Determine workspaceId for repository
     const repoWorkspaceId = workspaceId || swarm.workspaceId;
 
     console.log("*************");

@@ -20,7 +20,8 @@
     "test:db:setup": "node scripts/setup-test-db.js",
     "test:db:cleanup": "node scripts/cleanup-test-db.js",
     "test:db:reset": "npm run test:db:cleanup && npm run test:db:setup",
-    "test:integration:full": "npm run test:db:start && sleep 5 && npm run test:db:setup && npm run test:integration && npm run test:db:stop"
+    "test:integration:full": "npm run test:db:start && sleep 5 && npm run test:db:setup && npm run test:integration && npm run test:db:stop",
+    "mock-server": "node mock-server.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -64,6 +65,8 @@
     "postcss": "^8.5.6",
     "prisma": "^6.12.0",
     "prismjs": "^1.30.0",
+    "pusher": "^5.2.0",
+    "pusher-js": "^8.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.59.0",

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/nextauth';
 import { db } from '@/lib/db';
 import { swarmApiRequestAuth } from '@/services/swarm/api/swarm';
-import { saveOrUpdateSwarm } from '@/services/swarm/db';
+import { saveOrUpdateSwarm, ServiceConfig } from '@/services/swarm/db';;
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,15 +43,8 @@ export async function GET(request: NextRequest) {
 
     await saveOrUpdateSwarm({
       workspaceId: swarm.workspaceId,
-      services: apiResult.data
+      services: apiResult?.data as unknown as ServiceConfig[]
     })
-
-    const rawData = apiResult.data
-
-    swarm
-    console.log("--------------------------------apiResult--------------------------------")
-    console.log(JSON.stringify(apiResult.data, null, 2))
-    console.log("--------------------------------apiResult--------------------------------")
 
 
     return NextResponse.json({

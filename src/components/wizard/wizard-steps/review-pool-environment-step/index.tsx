@@ -22,8 +22,8 @@ const generateContainerEnv = (envVars: EnvironmentVariable[]) => {
   const containerEnv: Record<string, string> = {};
 
   envVars.forEach(envVar => {
-    if (envVar.key && envVar.value) {
-      containerEnv[envVar.key] = envVar.value;
+    if (envVar.name && envVar.value) {
+      containerEnv[envVar.name] = envVar.value;
     }
   });
 

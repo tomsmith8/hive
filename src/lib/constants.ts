@@ -58,7 +58,7 @@ export const WORKSPACE_ERRORS = {
 } as const; 
 
 // Swarm creation defaults
-export const SWARM_DEFAULT_INSTANCE_TYPE = 'm5.xlarge';
+export const SWARM_DEFAULT_INSTANCE_TYPE = 'm6i.xlarge';
 export const SWARM_DEFAULT_ENV_VARS = {
   JARVIS_FEATURE_FLAG_WFA_SCHEMAS: 'true',
   JARVIS_FEATURE_FLAG_CODEGRAPH_SCHEMAS: 'true',

@@ -1,5 +1,5 @@
 import { BaseServiceClass } from '@/lib/base-service';
-import { CreateCustomerResponse, ServiceConfig } from '@/types';
+import { ServiceConfig } from '@/types';
 import { config, env } from '@/lib/env';
 
 export class StakworkService extends BaseServiceClass {
@@ -11,6 +11,10 @@ export class StakworkService extends BaseServiceClass {
 
   async createProject<T = unknown>(
     input: {
+      title: string;
+      description: string;
+      budget: number;
+      skills: string[];
       name: string;
       workflow_id: number;
       workflow_params: { set_var: { attributes: { vars: unknown } } };
@@ -38,13 +42,8 @@ export class StakworkService extends BaseServiceClass {
    * @param input - Object with fields: name, workflow_id, workflow_params (with set_var/attributes/vars)
    * @returns API response as JSON
    */
-  async createCustomer(customerName: string): Promise<CreateCustomerResponse> {
+  async createCustomer(customerName: string): Promise<unknown> {
     const endpoint = `/customers`;
-    // Compose headers as required by Stakwork
-
-    console.log('--------------------------------createCustomer--------------------------------')
-    console.log(this.config)
-    console.log('--------------------------------createCustomer--------------------------------')
 
     const headers = this.config.headers || {
       'Content-Type': 'application/json',
@@ -54,7 +53,7 @@ export class StakworkService extends BaseServiceClass {
     // Use the correct HTTP method
     const client = this.getClient();
     const requestFn = () => {
-      return client.post<T>(endpoint, { customer: { name: customerName } }, headers, this.serviceName);
+      return client.post<unknown>(endpoint, { customer: { name: customerName } }, headers, this.serviceName);
     };
 
     return this.handleRequest(requestFn, `stakworkRequest ${endpoint}`);

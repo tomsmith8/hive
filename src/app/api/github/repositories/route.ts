@@ -65,19 +65,25 @@ export async function GET() {
     });
   } catch (error: unknown) {
     console.error("Error fetching repositories:", error);
-    
-    if (error && typeof error === 'object' && 'response' in error && 
-        error.response && typeof error.response === 'object' && 'status' in error.response && 
-        error.response.status === 401) {
+
+    if (
+      error &&
+      typeof error === "object" &&
+      "response" in error &&
+      error.response &&
+      typeof error.response === "object" &&
+      "status" in error.response &&
+      error.response.status === 401
+    ) {
       return NextResponse.json(
         { error: "GitHub token expired or invalid" },
         { status: 401 }
       );
     }
-    
+
     return NextResponse.json(
       { error: "Failed to fetch repositories" },
       { status: 500 }
     );
   }
-} 
+}

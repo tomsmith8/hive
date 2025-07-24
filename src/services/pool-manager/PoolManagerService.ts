@@ -1,11 +1,11 @@
 import { BaseServiceClass } from '@/lib/base-service';
-import { ServiceConfig } from '@/types';
+import { PoolUserResponse, ServiceConfig } from '@/types';
 import { CreateUserRequest, CreatePoolRequest, GetPoolRequest, DeletePoolRequest, UpdatePoolRequest, Pool, PoolUser } from '@/types';
 import { fetchPoolEnvVars, updatePoolEnvVarsApi } from '@/services/pool-manager/api/envVars';
 import { createUserApi, createPoolApi, getPoolApi, deletePoolApi, updatePoolApi } from '@/services/pool-manager/api/pool';
 
 interface IPoolManagerService {
-  createUser: (user: CreateUserRequest) => Promise<PoolUser>;
+  createUser: (user: CreateUserRequest) => Promise<PoolUserResponse>;
   createPool: (pool: CreatePoolRequest) => Promise<Pool>;
   getPool: (pool: GetPoolRequest) => Promise<Pool>;
   updatePool: (pool: UpdatePoolRequest) => Promise<Pool>;
@@ -25,7 +25,7 @@ export class PoolManagerService extends BaseServiceClass implements IPoolManager
     return createPoolApi(this.getClient(), pool, this.serviceName);
   }
 
-  async createUser(user: CreateUserRequest): Promise<PoolUser> {
+  async createUser(user: CreateUserRequest): Promise<PoolUserResponse> {
     return createUserApi(this.getClient(), user, this.serviceName);
   }
 
