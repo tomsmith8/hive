@@ -114,7 +114,8 @@ export async function getWorkspaceBySlug(slug: string, userId: string): Promise<
     createdAt: workspace.createdAt.toISOString(),
     updatedAt: workspace.updatedAt.toISOString(),
     userRole: membership.role as WorkspaceRole,
-    owner: workspace.owner
+    owner: workspace.owner,
+    hasKey: !!workspace.stakworkApiKey
   };
 }
 
