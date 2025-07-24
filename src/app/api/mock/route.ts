@@ -2,47 +2,68 @@ import axios from "axios";
 import { generateResponseBasedOnMessage } from "./responses";
 import { NextRequest, NextResponse } from "next/server";
 
+// Disable caching for real-time messaging
+export const fetchCache = "force-no-store";
+
 export async function POST(req: NextRequest) {
   try {
     const { message, taskId, userId } = await req.json();
 
-    console.log("📨 Received message:", { message, taskId, userId });
+    console.log("📨 Mock received message:", {
+      message,
+      taskId,
+      userId,
+      timestamp: new Date().toISOString(),
+    });
 
-    // Simulate processing time
-    const delay = 1111;
+    try {
+      // Generate mock response
+      const mockResponse = generateResponseBasedOnMessage(message);
 
-    setTimeout(async () => {
-      try {
-        // Generate mock response
-        const mockResponse = generateResponseBasedOnMessage(message);
+      console.log("🤖 Mock generated response:", {
+        originalMessage: message,
+        response: mockResponse.message,
+        taskId,
+        timestamp: new Date().toISOString(),
+      });
 
-        console.log("🤖 Generated response:", mockResponse.message);
+      // Use the request host for internal API calls
+      const host = req.headers.get("host") || "localhost:3000";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      const baseUrl = `${protocol}://${host}`;
 
-        // Use the request host for internal API calls
-        const host = req.headers.get("host") || "localhost:3000";
-        const protocol = host.includes("localhost") ? "http" : "https";
-        const baseUrl = `${protocol}://${host}`;
+      console.log("🔗 Mock base URL:", baseUrl);
 
-        console.log("🔗 Base URL:", baseUrl);
+      const responsePayload = {
+        taskId: taskId,
+        message: mockResponse.message,
+        contextTags: mockResponse.contextTags,
+        sourceWebsocketID: mockResponse.sourceWebsocketID,
+        artifacts: mockResponse.artifacts?.map((artifact) => ({
+          type: artifact.type,
+          content: artifact.content,
+        })),
+      };
 
-        const responsePayload = {
-          taskId: taskId,
-          message: mockResponse.message,
-          contextTags: mockResponse.contextTags,
-          sourceWebsocketID: mockResponse.sourceWebsocketID,
-          artifacts: mockResponse.artifacts?.map((artifact) => ({
-            type: artifact.type,
-            content: artifact.content,
-          })),
-        };
+      console.log("🚀 Mock sending response to API:", {
+        taskId,
+        messagePreview: mockResponse.message.substring(0, 50) + "...",
+        timestamp: new Date().toISOString(),
+      });
 
-        await axios.post(`${baseUrl}/api/chat/response`, responsePayload);
+      await axios.post(`${baseUrl}/api/chat/response`, responsePayload);
 
-        console.log("✅ Response sent back to main app");
-      } catch (error) {
-        console.error("❌ Error sending response:", error);
-      }
-    }, delay);
+      console.log("✅ Mock response sent successfully:", {
+        taskId,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("❌ Mock error sending response:", {
+        error,
+        taskId,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // Immediately respond to the original request
     return NextResponse.json({
@@ -50,7 +71,7 @@ export async function POST(req: NextRequest) {
       message: "Message received, response will be generated shortly",
     });
   } catch (error) {
-    console.error("❌ Error processing message:", error);
+    console.error("❌ Mock error processing message:", error);
     return NextResponse.json(
       { error: "Failed to process message" },
       { status: 500 }

@@ -18,6 +18,7 @@ import {
   Option,
   createChatMessage,
   ArtifactType,
+  FormContent,
 } from "@/lib/chat";
 import {
   FormArtifact,
@@ -25,7 +26,12 @@ import {
   BrowserArtifactPanel,
 } from "./artifacts";
 import { useParams } from "next/navigation";
-import { useSSEConnection } from "@/hooks/useSSEConnection";
+import { usePusherConnection } from "@/hooks/usePusherConnection";
+
+// Generate unique IDs to prevent collisions
+function generateUniqueId() {
+  return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
 
 function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   const [value, setValue] = useState("");
@@ -51,7 +57,7 @@ function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-[80vh] md:h-[90vh] bg-background">
+    <div className="flex flex-col items-center justify-center w-full h-[92vh] md:h-[97vh] bg-background">
       <h1 className="text-4xl font-bold text-foreground mb-10 text-center">
         What do you want to do?
       </h1>
@@ -109,16 +115,15 @@ export default function TaskChatPage() {
     setMessages((prev) => [...prev, message]);
   }, []);
 
-  // Use the SSE connection hook
-  const { isConnected, error: sseError } = useSSEConnection({
+  // Use the Pusher connection hook
+  const { isConnected, error: connectionError } = usePusherConnection({
     taskId: currentTaskId,
-    enabled: started,
     onMessage: handleSSEMessage,
   });
 
-  // Show SSE connection errors as toasts
+  // Show connection errors as toasts
   useEffect(() => {
-    if (sseError) {
+    if (connectionError) {
       toast({
         title: "Connection Error",
         description:
@@ -128,7 +133,7 @@ export default function TaskChatPage() {
     }
     // toast in deps causes infinite re-render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sseError]);
+  }, [connectionError]);
 
   const loadTaskMessages = useCallback(async (taskId: string) => {
     try {
@@ -140,8 +145,6 @@ export default function TaskChatPage() {
       }
 
       const result = await response.json();
-
-      console.log("result", result);
 
       if (result.success && result.data.messages) {
         setMessages(result.data.messages);
@@ -228,32 +231,34 @@ export default function TaskChatPage() {
   const sendMessage = async (
     messageText: string,
     options?: {
-      replyId?: string;
       taskId?: string;
+      replyId?: string;
+      webhook?: string;
     }
   ) => {
     if (isLoading) return;
 
     const newMessage: ChatMessage = createChatMessage({
-      id: Date.now().toString(),
+      id: generateUniqueId(),
       message: messageText,
       role: ChatRole.USER,
       status: ChatStatus.SENDING,
+      replyId: options?.replyId,
     });
 
     setMessages((msgs) => [...msgs, newMessage]);
     setIsLoading(true);
 
-    console.log("Sending message:", messageText);
+    // console.log("Sending message:", messageText, options);
+
     try {
       const body: { [k: string]: string | string[] | null } = {
         taskId: options?.taskId || currentTaskId,
         message: messageText,
         contextTags: [],
+        ...(options?.replyId && { replyId: options.replyId }),
+        ...(options?.webhook && { webhook: options.webhook }),
       };
-      if (options?.replyId) {
-        body.replyId = options.replyId;
-      }
       const response = await fetch("/api/chat/message", {
         method: "POST",
         headers: {
@@ -271,9 +276,12 @@ export default function TaskChatPage() {
         throw new Error(result.error || "Failed to send message");
       }
 
-      // Replace the temporary message with the complete message from backend
+      // Update the temporary message status instead of replacing entirely
+      // This prevents re-animation since React sees it as the same message
       setMessages((msgs) =>
-        msgs.map((msg) => (msg.id === newMessage.id ? result.data : msg))
+        msgs.map((msg) =>
+          msg.id === newMessage.id ? { ...msg, status: ChatStatus.SENT } : msg
+        )
       );
     } catch (error) {
       console.error("Error sending message:", error);
@@ -295,18 +303,21 @@ export default function TaskChatPage() {
     }
   };
 
-  const handleArtifactAction = async (action: Option, response?: string) => {
-    console.log("Action triggered:", action, response);
+  const handleArtifactAction = async (
+    messageId: string,
+    action: Option,
+    webhook: string
+  ) => {
+    // console.log("Action triggered:", action);
 
     // Find the original message that contains artifacts
-    const originalMessage = messages.find((msg) =>
-      msg.artifacts?.some((artifact) => artifact.type === "FORM")
-    );
+    const originalMessage = messages.find((msg) => msg.id === messageId);
 
     if (originalMessage) {
       // Send the artifact action response to the backend
       await sendMessage(action.optionResponse, {
         replyId: originalMessage.id,
+        webhook: webhook,
       });
     }
   };
@@ -351,7 +362,7 @@ export default function TaskChatPage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -60 }}
           transition={{ duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }}
-          className="h-[80vh] md:h-[90vh] flex gap-4"
+          className="h-[92vh] md:h-[97vh] flex gap-4"
         >
           {/* Main Chat Area */}
           <motion.div
@@ -366,64 +377,88 @@ export default function TaskChatPage() {
           >
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-muted/40">
-              {messages.map((msg) => (
-                <motion.div
-                  key={msg.id}
-                  className="space-y-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <div
-                    className={`flex items-end gap-3 ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
-                  >
-                    {msg.role === "ASSISTANT" && (
-                      <Avatar>
-                        <AvatarImage src="" alt="Assistant" />
-                        <AvatarFallback>A</AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm ${
-                        msg.role === "USER"
-                          ? "bg-primary text-primary-foreground rounded-br-none"
-                          : "bg-background text-foreground rounded-bl-none border"
-                      }`}
-                    >
-                      {msg.message}
-                    </div>
-                    {msg.role === "USER" && (
-                      <Avatar>
-                        <AvatarImage src="" alt="You" />
-                        <AvatarFallback>Y</AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
+              {messages
+                .filter((msg) => !msg.replyId) // Hide messages that are replies
+                .map((msg) => {
+                  // Find if this message has been replied to
+                  const replyMessage = messages.find(
+                    (m) => m.replyId === msg.id
+                  );
 
-                  {/* Only Form Artifacts in Chat */}
-                  {msg.artifacts
-                    ?.filter((a) => a.type === "FORM")
-                    .map((artifact) => (
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      className="space-y-3"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
                       <div
-                        key={artifact.id}
-                        className={`flex ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
+                        className={`flex items-end gap-3 ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
                       >
-                        <div className="max-w-md">
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                          >
-                            <FormArtifact
-                              artifact={artifact}
-                              onAction={handleArtifactAction}
-                            />
-                          </motion.div>
+                        {msg.role === "ASSISTANT" && (
+                          <Avatar>
+                            <AvatarImage src="" alt="Assistant" />
+                            <AvatarFallback>A</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div
+                          className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm ${
+                            msg.role === "USER"
+                              ? "bg-primary text-primary-foreground rounded-br-none"
+                              : "bg-background text-foreground rounded-bl-none border"
+                          }`}
+                        >
+                          {msg.message}
                         </div>
+                        {msg.role === "USER" && (
+                          <Avatar>
+                            <AvatarImage src="" alt="You" />
+                            <AvatarFallback>Y</AvatarFallback>
+                          </Avatar>
+                        )}
                       </div>
-                    ))}
-                </motion.div>
-              ))}
+
+                      {/* Only Form Artifacts in Chat */}
+                      {msg.artifacts
+                        ?.filter((a) => a.type === "FORM")
+                        .map((artifact) => {
+                          // Find which option was selected by matching replyMessage content with optionResponse
+                          let selectedOption = null;
+                          if (replyMessage && artifact.content) {
+                            const formContent = artifact.content as FormContent;
+                            selectedOption = formContent.options?.find(
+                              (option: Option) =>
+                                option.optionResponse === replyMessage.message
+                            );
+                          }
+
+                          return (
+                            <div
+                              key={artifact.id}
+                              className={`flex ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
+                            >
+                              <div className="max-w-md">
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.2 }}
+                                >
+                                  <FormArtifact
+                                    messageId={msg.id}
+                                    artifact={artifact}
+                                    onAction={handleArtifactAction}
+                                    selectedOption={selectedOption}
+                                    isDisabled={!!replyMessage}
+                                  />
+                                </motion.div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </motion.div>
+                  );
+                })}
               <div ref={messagesEndRef} />
             </div>
 

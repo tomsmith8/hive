@@ -1,15 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Settings, 
-  Menu,
-  CheckSquare,
-  Network
-} from "lucide-react";
+import { Home, Settings, Menu, CheckSquare, Network } from "lucide-react";
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { NavUser } from "./NavUser";
@@ -46,6 +42,8 @@ export function Sidebar({ user }: SidebarProps) {
   } = useWorkspace();
   const [isOpen, setIsOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const pathname = usePathname();
+  const isTaskPage = pathname.includes("/task/");
 
   const handleWorkspaceChange = () => {
     // Optionally implement logic if needed
@@ -69,7 +67,8 @@ export function Sidebar({ user }: SidebarProps) {
 
   const handleNavigate = (href: string) => {
     if (workspaceSlug) {
-      const fullPath = `/w/${workspaceSlug}${href}`;
+      const fullPath =
+        href === "" ? `/w/${workspaceSlug}` : `/w/${workspaceSlug}${href}`;
       router.push(fullPath);
     } else {
       // Fallback to workspaces page if no workspace detected
@@ -110,11 +109,13 @@ export function Sidebar({ user }: SidebarProps) {
       <Separator />
       {/* User Popover */}
       <div className="p-4">
-        <NavUser user={{
-          name: user.name || "User",
-          email: user.email || "",
-          avatar: user.image || "",
-        }} />
+        <NavUser
+          user={{
+            name: user.name || "User",
+            email: user.email || "",
+            avatar: user.image || "",
+          }}
+        />
       </div>
     </div>
   );
@@ -124,7 +125,13 @@ export function Sidebar({ user }: SidebarProps) {
       {/* Mobile Sidebar */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="md:hidden">
+          <Button
+            variant="outline"
+            size="icon"
+            className={
+              isTaskPage ? "block absolute left-3 top-2 z-50" : "md:hidden"
+            }
+          >
             <Menu className="h-4 w-4" />
           </Button>
         </SheetTrigger>
@@ -133,11 +140,13 @@ export function Sidebar({ user }: SidebarProps) {
         </SheetContent>
       </Sheet>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-80 md:flex-col md:fixed md:inset-y-0 md:z-50">
+      <div
+        className={`${isTaskPage ? "hidden" : "hidden md:flex"} md:w-80 md:flex-col md:fixed md:inset-y-0 md:z-50`}
+      >
         <div className="flex flex-col flex-grow bg-sidebar border-sidebar-border border-r">
           <SidebarContent />
         </div>
       </div>
     </>
   );
-} 
+}

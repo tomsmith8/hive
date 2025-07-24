@@ -7,9 +7,14 @@ import {
   Artifact,
 } from "@/lib/chat";
 
+// Generate unique IDs to prevent collisions
+function generateUniqueId() {
+  return `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
 export function makeRes(message: string, artifacts: Artifact[] = []) {
   return createChatMessage({
-    id: Date.now().toString(),
+    id: generateUniqueId(),
     message: message,
     role: ChatRole.ASSISTANT,
     status: ChatStatus.SENT,
