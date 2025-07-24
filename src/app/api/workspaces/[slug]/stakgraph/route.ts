@@ -9,6 +9,7 @@ import { ServiceConfig } from "@/types";
 import { config } from "@/lib/env";
 import { saveOrUpdateSwarm, select as swarmSelect } from "@/services/swarm/db";
 import type { SwarmSelectResult } from "@/types/swarm";
+import { SwarmStatus } from "@prisma/client";
 
 // Validation schema for stakgraph settings
 const stakgraphSettingsSchema = z.object({
@@ -226,20 +227,18 @@ export async function PUT(
     const settings = validationResult.data;
 
     // Save or update Swarm using shared service
-    const swarm = await saveOrUpdateSwarm(
-      {
-        workspaceId: workspace.id,
-        name: workspace.name, // Use workspace name for swarm name
-        repositoryName: settings.name,
-        repositoryDescription: settings.description,
-        repositoryUrl: settings.repositoryUrl,
-        swarmUrl: settings.swarmUrl,
-        swarmSecretAlias: settings.swarmSecretAlias,
-        poolName: settings.poolName,
-        services: settings.services,
-      },
-      true
-    );
+    const swarm = await saveOrUpdateSwarm({
+      workspaceId: workspace.id,
+      name: workspace.name, // Use workspace name for swarm name
+      repositoryName: settings.name,
+      repositoryDescription: settings.description,
+      repositoryUrl: settings.repositoryUrl,
+      swarmUrl: settings.swarmUrl,
+      status: SwarmStatus.ACTIVE, // auto active
+      swarmSecretAlias: settings.swarmSecretAlias,
+      poolName: settings.poolName,
+      services: settings.services,
+    });
 
     const user = await db.user.findUnique({
       where: {
