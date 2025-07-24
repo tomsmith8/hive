@@ -60,10 +60,7 @@ export const select = {
   containerFiles: true,
 };
 
-export async function saveOrUpdateSwarm(
-  params: SaveOrUpdateSwarmParams,
-  swarmIsActive: boolean = false
-) {
+export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   let swarm = await db.swarm.findUnique({
     where: { workspaceId: params.workspaceId },
   });
@@ -78,7 +75,6 @@ export async function saveOrUpdateSwarm(
     data.environmentVariables = JSON.stringify(params.environmentVariables);
   if (params.status !== undefined) data.status = params.status;
   if (params.swarmUrl !== undefined) data.swarmUrl = params.swarmUrl;
-  if (swarmIsActive) data.status = SwarmStatus.ACTIVE;
   if (params.repositoryName !== undefined)
     data.repositoryName = params.repositoryName;
   if (params.repositoryDescription !== undefined)
