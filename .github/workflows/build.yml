@@ -53,3 +53,4 @@ jobs:
           SWARM_SUPER_ADMIN_URL: "dummy"
           POOL_MANAGER_API_USERNAME: "dummy"
           POOL_MANAGER_API_PASSWORD: "dummy"
+          STAKWORK_CUSTOMERS_EMAIL: "dummy"
