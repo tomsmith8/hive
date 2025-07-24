@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
 import { useWorkspaceForm } from "@/hooks/useWorkspaceForm";
 import { FormField } from "./FormField";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 export function WorkspaceForm() {
   const {
@@ -16,9 +17,11 @@ export function WorkspaceForm() {
     submitForm,
   } = useWorkspaceForm();
 
+  const { refreshWorkspaces } = useWorkspace();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await submitForm();
+    refreshWorkspaces();
   };
 
   return (
@@ -41,7 +44,7 @@ export function WorkspaceForm() {
             label="Workspace URL"
             placeholder="my-workspace"
             value={formData.slug}
-            onChange={value => updateField("slug", value.toLowerCase())}
+            onChange={(value) => updateField("slug", value.toLowerCase())}
             error={errors.slug}
             helpText="This will be your workspace's unique URL. Only lowercase letters, numbers, and hyphens allowed."
             disabled={loading}
@@ -54,7 +57,7 @@ export function WorkspaceForm() {
             type="textarea"
             placeholder="Describe what this workspace will be used for..."
             value={formData.description}
-            onChange={value => updateField("description", value)}
+            onChange={(value) => updateField("description", value)}
             helpText="Help your team understand the purpose of this workspace."
             disabled={loading}
             rows={3}
@@ -66,9 +69,9 @@ export function WorkspaceForm() {
             </div>
           )}
 
-          <Button 
-            type="submit" 
-            disabled={loading || !formData.name || !formData.slug} 
+          <Button
+            type="submit"
+            disabled={loading || !formData.name || !formData.slug}
             className="w-full h-12 text-base font-medium"
           >
             {loading ? (
@@ -84,4 +87,4 @@ export function WorkspaceForm() {
       </CardContent>
     </Card>
   );
-} 
+}
