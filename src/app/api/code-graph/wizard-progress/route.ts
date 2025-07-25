@@ -112,6 +112,8 @@ export async function PUT(request: NextRequest) {
     console.log("currentSwarm", currentSwarm)
     console.log("wizardStep:", prismaWizardStep)
     console.log("stepStatus:", prismaStepStatus)
+    console.log("wizardData", wizardData)
+
 
     // Use saveOrUpdateSwarm to create or update the swarm
     const swarm = await saveOrUpdateSwarm(
@@ -132,10 +134,7 @@ export async function PUT(request: NextRequest) {
 
     // Validate status transition if stepStatus is provided
     if (prismaStepStatus && currentSwarm && !validateStatusTransition(currentSwarm.stepStatus, prismaStepStatus)) {
-      return NextResponse.json({
-        success: false,
-        message: `Invalid step status transition from ${currentSwarm.stepStatus} to ${prismaStepStatus}`,
-      } as WizardProgressResponse, { status: 400 });
+      console.log("Invalid step status transition from", currentSwarm.stepStatus, "to", prismaStepStatus)
     }
 
     // Parse wizard data if it's a string

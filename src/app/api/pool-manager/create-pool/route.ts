@@ -92,10 +92,12 @@ export async function POST(request: NextRequest) {
             console.log((session.user.name || '').toLowerCase())
             console.log("--------------------------------createUser--------------------------------")
 
+            const sanitizedName = (session.user.name || '').replace(/\s+/g, '');
+
             const { user: poolUser } = await poolManager.createUser({
                 email: session.user.email,
                 password,
-                username: `${(session.user.name || '')}-${swarmId}`.toLowerCase(),
+                username: `${sanitizedName}-${swarmId}`.toLowerCase(),
             });
 
             poolApiKey = poolUser.authentication_token;

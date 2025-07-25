@@ -17,7 +17,7 @@ export async function createSwarmApi(
 
 export async function fetchSwarmDetails(swarmId: string): Promise<{ ok: boolean; data?: unknown; status: number }> {
   const maxRetries = 5;
-  let delay = 1500; // start with 500ms
+  let delay = 500; // start with 500ms
   let lastError: { ok: boolean; data?: unknown; status: number } | undefined = undefined;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
