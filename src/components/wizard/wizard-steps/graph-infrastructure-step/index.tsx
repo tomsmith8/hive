@@ -25,6 +25,7 @@ export function GraphInfrastructureStep({
   const setCurrentStepStatus = useWizardStore((s) => s.setCurrentStepStatus);
   const currentStepStatus = useWizardStore((s) => s.currentStepStatus);
   const createSwarm = useWizardStore((s) => s.createSwarm);
+  const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
 
   const swarmIsLoading = useWizardStore((s) => s.swarmIsLoading);
   const isPending = currentStepStatus === "PENDING";
@@ -41,10 +42,26 @@ export function GraphInfrastructureStep({
     }
   };
 
-  const handleComplete = useCallback(() => {
-    setCurrentStepStatus('COMPLETED');
-    onNext();
-  }, [onNext, setCurrentStepStatus]);
+  const handleComplete = useCallback(async () => {
+
+    try {
+      await updateWizardProgress({
+        wizardStep: 'GRAPH_INFRASTRUCTURE',
+        stepStatus: 'COMPLETED',
+        wizardData: {},
+      });
+
+      setCurrentStepStatus('COMPLETED');
+      onNext();
+
+    } catch (error) {
+      setCurrentStepStatus('FAILED');
+      throw error;
+    }
+
+
+
+  }, [onNext, setCurrentStepStatus, updateWizardProgress]);
 
   // Swarm polling effect
   useEffect(() => {

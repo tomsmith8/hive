@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
-import { poolManagerService } from "@/lib/service-factory";
 import { type ApiError } from "@/types";
 import { db } from "@/lib/db";
 import { generateRandomPassword } from "@/utils/randomPassword";

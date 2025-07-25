@@ -17,7 +17,7 @@ export default function CodeGraphPage() {
   const currentStep = useWizardStore((s) => s.currentStep);
   const currentStepStatus = useWizardStore((s) => s.currentStepStatus);
   const error = useWizardStore((s) => s.error);
-  const hasSwarm = useWizardStore((s) => s.hasSwarm);
+  const swarmId = useWizardStore((s) => s.swarmId);
   const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
   const workspaceSlug = useWizardStore((s) => s.workspaceSlug);
   const setWorkspaceSlug = useWizardStore((s) => s.setWorkspaceSlug);
@@ -25,11 +25,9 @@ export default function CodeGraphPage() {
   const setCurrentStepStatus = useWizardStore((s) => s.setCurrentStepStatus);
   const setWorkspaceId = useWizardStore((s) => s.setWorkspaceId);
   const setHasKey = useWizardStore((s) => s.setHasKey);
-
   const resetWizard = useWizardStore((s) => s.resetWizard);
 
   useEffect(() => {
-    console.log(workspace?.slug)
     if (workspace?.slug && workspace?.id) {
       resetWizard();
       setWorkspaceSlug(workspace.slug);
@@ -38,10 +36,9 @@ export default function CodeGraphPage() {
     }
 
     return () => {
-      console.log("unmounting")
       resetWizard();
     }
-  }, [workspace?.id, workspace?.slug, workspace?.hasKey, setWorkspaceSlug, resetWizard]);
+  }, [workspace?.id, workspace?.slug, workspace?.hasKey, setWorkspaceSlug, resetWizard, setWorkspaceId, setHasKey, setCurrentStep, setCurrentStepStatus]);
 
 
 
@@ -56,7 +53,7 @@ export default function CodeGraphPage() {
     if (currentStepIndex < 10) {
       const newStep = (currentStepIndex + 1);
 
-      if (hasSwarm) {
+      if (swarmId) {
         // Update persisted state
         const newWizardStep = STEPS_ARRAY[newStep];
         try {
@@ -67,6 +64,9 @@ export default function CodeGraphPage() {
               step: newStep,
             }
           });
+
+          setCurrentStep(newWizardStep);
+          setCurrentStepStatus('PENDING');
         } catch (error) {
           console.error('Failed to update wizard progress:', error);
         }
@@ -76,7 +76,7 @@ export default function CodeGraphPage() {
         setCurrentStepStatus('PENDING');
       }
     }
-  }, [currentStep, hasSwarm, updateWizardProgress, setCurrentStep]);
+  }, [currentStep, swarmId, updateWizardProgress, setCurrentStep, setCurrentStepStatus]);
 
   const handleBack = useCallback(async () => {
     const currentStepIndex = STEPS_ARRAY.indexOf(currentStep);
@@ -84,7 +84,7 @@ export default function CodeGraphPage() {
     if (currentStepIndex > 1) {
       const newStep = (currentStepIndex - 1);
 
-      if (hasSwarm) {
+      if (swarmId) {
         // Update persisted state
         const newWizardStep = STEPS_ARRAY[newStep];
         try {
@@ -104,7 +104,7 @@ export default function CodeGraphPage() {
         setCurrentStepStatus('COMPLETED');
       }
     }
-  }, [currentStep, hasSwarm, updateWizardProgress, setCurrentStep]);
+  }, [currentStep, swarmId, updateWizardProgress, setCurrentStep, setCurrentStepStatus]);
 
 
   // Loading state
@@ -148,9 +148,7 @@ export default function CodeGraphPage() {
   }
 
   // Get current step status for display
-  const stepStatus = hasSwarm ? currentStepStatus : undefined;
 
-  console.log(currentStepStatus, currentStep)
 
   return (
     <div className="min-h-screen bg-background">

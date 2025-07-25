@@ -8,7 +8,6 @@ import { ServiceDataConfig } from '@/components/stakgraph/types';
 type WizardStepStatus = 'PENDING' | 'STARTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
 const initialState = {
-
   loading: false,
   error: null,
   currentStep: 'WELCOME',
@@ -25,6 +24,7 @@ const initialState = {
   swarmIsLoading: false,
   ingestRefId: '',
   poolName: '',
+  swarmId: '',
 }
 
 export const STEPS_ARRAY = [
@@ -172,6 +172,8 @@ export const useWizardStore = create<WizardStore>()(
         throw new Error(json.message || 'Failed to create swarm');
       }
 
+      console.log(json);
+
       const { swarmId } = json.data;
 
       const swarmData = {
@@ -190,6 +192,7 @@ export const useWizardStore = create<WizardStore>()(
           wizardData: swarmData,
         });
 
+        set({ swarmId, swarmName: state.projectName, currentStep: 'GRAPH_INFRASTRUCTURE', currentStepStatus: 'PROCESSING' });
 
         if (!res.ok) throw new Error('Failed to create swarm');
 

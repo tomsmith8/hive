@@ -1,18 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useCallback, useRef } from "react";
 import { useWizardStore } from "@/stores/useWizardStore";
 
 interface IngestCodeStepStepProps {
   onNext: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export function IngestCodeStep({
   onNext,
-  onBack,
 }: IngestCodeStepStepProps) {
   const swarmId = useWizardStore((s) => s.swarmId);
   const workspaceId = useWizardStore((s) => s.workspaceId);
@@ -23,6 +20,8 @@ export function IngestCodeStep({
   const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
   const ingestRefId = useWizardStore((s) => s.ingestRefId);
   const isPending = currentStepStatus === "PENDING";
+
+  const ingestHasBeenSet = useRef(false);
 
   const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -59,7 +58,6 @@ export function IngestCodeStep({
       const data = await res.json();
 
       if (data.success || data.status === "ACTIVE") {
-        console.log("poll success", data);
         setServices(data.data);
       } else {
         console.log("polling response (not ready):", data);
@@ -89,6 +87,11 @@ export function IngestCodeStep({
 
         if (data.status === "Complete") {
           await handleServices();
+          await updateWizardProgress({
+            wizardStep: "INGEST_CODE",
+            stepStatus: "COMPLETED",
+            wizardData: {},
+          });
           setCurrentStepStatus("COMPLETED");
           onNext();
         } else {
@@ -96,6 +99,7 @@ export function IngestCodeStep({
         }
       } catch (error) {
         console.error("Failed to get ingest status:", error);
+        setCurrentStepStatus("FAILED");
       }
     };
 
@@ -108,13 +112,14 @@ export function IngestCodeStep({
         pollTimeoutRef.current = null;
       }
     };
-  }, [ingestRefId, swarmId, workspaceId, handleServices, setCurrentStepStatus, onNext]);
+  }, [ingestRefId, swarmId, workspaceId, handleServices, setCurrentStepStatus, onNext, updateWizardProgress]);
 
   useEffect(() => {
-    if (isPending) {
+    if (isPending && !ingestHasBeenSet.current) {
       handleIngestStart();
+      ingestHasBeenSet.current = true;
     }
-  }, [isPending, handleIngestStart]);
+  }, [isPending, handleIngestStart, ingestHasBeenSet]);
 
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">

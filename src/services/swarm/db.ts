@@ -64,7 +64,7 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   let swarm = await db.swarm.findUnique({ where: { workspaceId: params.workspaceId } });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   console.log("params", params)
-  
+
   const data: Record<string, any> = {};
   if (params.name !== undefined) data.name = params.name;
   if (params.instanceType !== undefined) data.instanceType = params.instanceType;
@@ -80,7 +80,20 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   if (params.swarmSecretAlias !== undefined) data.swarmSecretAlias = params.swarmSecretAlias;
   if (params.wizardStep !== undefined) data.wizardStep = params.wizardStep;
   if (params.stepStatus !== undefined) data.stepStatus = params.stepStatus;
-  if (params.wizardData !== undefined) data.wizardData = params.wizardData;
+  if (params.wizardData !== undefined) {
+
+    console.log("params.wizardData", params.wizardData)
+    console.log("data.wizardData", data.wizardData)
+    const previousWizardData = swarm?.wizardData || {}
+
+    const newWizardData = {
+      ...(previousWizardData as object),
+      ...params.wizardData,
+    } as unknown;
+
+    data.wizardData = newWizardData;
+  }
+
   if (params.services !== undefined) {
     data.services = params.services;
   }
@@ -93,22 +106,22 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
     swarm = await db.swarm.update({ where: { workspaceId: params.workspaceId }, data, select });
   } else {
     const createData = {
-        workspaceId: params.workspaceId,
-        name: params.name || '',
-        instanceType: params.instanceType || '',
-        environmentVariables: params.environmentVariables ? JSON.stringify(params.environmentVariables) : '[]',
-        status: params.status || SwarmStatus.PENDING,
-        swarmUrl: params.swarmUrl || null,
-        repositoryName: params.repositoryName || '',
-        repositoryDescription: params.repositoryDescription || '',
-        repositoryUrl: params.repositoryUrl || '',
-        swarmApiKey: params.swarmApiKey || '',
-        poolName: params.poolName || '',
-        services: params.services ? params.services : [],
-        swarmSecretAlias: params.swarmSecretAlias || '',
-        wizardStep: params.wizardStep,
-        stepStatus: params.stepStatus,
-        wizardData: params.wizardData,
+      workspaceId: params.workspaceId,
+      name: params.name || '',
+      instanceType: params.instanceType || '',
+      environmentVariables: params.environmentVariables ? JSON.stringify(params.environmentVariables) : '[]',
+      status: params.status || SwarmStatus.PENDING,
+      swarmUrl: params.swarmUrl || null,
+      repositoryName: params.repositoryName || '',
+      repositoryDescription: params.repositoryDescription || '',
+      repositoryUrl: params.repositoryUrl || '',
+      swarmApiKey: params.swarmApiKey || '',
+      poolName: params.poolName || '',
+      services: params.services ? params.services : [],
+      swarmSecretAlias: params.swarmSecretAlias || '',
+      wizardStep: params.wizardStep,
+      stepStatus: params.stepStatus,
+      wizardData: params.wizardData,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
     console.log("[saveOrUpdateSwarm] Create data:", createData);
