@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
         content: artifact.content as unknown,
       })) as Artifact[],
     };
-    
+
     const githubAuth = await db.gitHubAuth.findUnique({ where: { userId } });
 
     // Check if Stakwork environment variables are defined
@@ -324,7 +324,7 @@ export async function POST(request: NextRequest) {
       config.STAKWORK_WORKFLOW_ID;
 
     // Extract data for Stakwork payload
-    const userName = githubAuth?.githubUsername;
+    const userName = githubAuth?.githubUsername || null;
     const accessToken =
       user.accounts.find((account) => account.access_token)?.access_token ||
       null;
