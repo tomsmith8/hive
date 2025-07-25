@@ -4,11 +4,12 @@ import { authOptions } from "@/lib/auth/nextauth";
 import { getWorkspaceBySlug } from "@/services/workspace";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { PoolManagerService } from '@/services/pool-manager';
-import { ServiceConfig } from '@/types';
-import { config } from '@/lib/env';
-import { saveOrUpdateSwarm, select as swarmSelect } from '@/services/swarm/db';
-import type { SwarmSelectResult } from '@/types/swarm';
+import { PoolManagerService } from "@/services/pool-manager";
+import { ServiceConfig } from "@/types";
+import { config } from "@/lib/env";
+import { saveOrUpdateSwarm, select as swarmSelect } from "@/services/swarm/db";
+import type { SwarmSelectResult } from "@/types/swarm";
+import { SwarmStatus } from "@prisma/client";
 
 // Validation schema for stakgraph settings
 const stakgraphSettingsSchema = z.object({
@@ -18,20 +19,31 @@ const stakgraphSettingsSchema = z.object({
   swarmUrl: z.string().url("Invalid swarm URL"),
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   poolName: z.string().min(1, "Pool name is required"),
-  environmentVariables: z.array(z.object({
-    key: z.string(),
-    value: z.string()
-  })).default([]),
-  services: z.array(z.object({
-    name: z.string().min(1, "Service name is required"),
-    port: z.preprocess((val) => Number(val), z.number().int().min(1, "Port is required")),
-    scripts: z.object({
-      start: z.string().min(1, "Start script is required"),
-      install: z.string().optional(),
-      build: z.string().optional(),
-      test: z.string().optional(),
-    }),
-  })).default([]),
+  environmentVariables: z
+    .array(
+      z.object({
+        key: z.string(),
+        value: z.string(),
+      })
+    )
+    .default([]),
+  services: z
+    .array(
+      z.object({
+        name: z.string().min(1, "Service name is required"),
+        port: z.preprocess(
+          (val) => Number(val),
+          z.number().int().min(1, "Port is required")
+        ),
+        scripts: z.object({
+          start: z.string().min(1, "Start script is required"),
+          install: z.string().optional(),
+          build: z.string().optional(),
+          test: z.string().optional(),
+        }),
+      })
+    )
+    .default([]),
 });
 
 export async function GET(
@@ -44,7 +56,11 @@ export async function GET(
 
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, message: "Authentication required", error: "UNAUTHORIZED" },
+        {
+          success: false,
+          message: "Authentication required",
+          error: "UNAUTHORIZED",
+        },
         { status: 401 }
       );
     }
@@ -52,7 +68,11 @@ export async function GET(
     const userId = (session.user as { id?: string })?.id;
     if (!userId) {
       return NextResponse.json(
-        { success: false, message: "Invalid user session", error: "INVALID_SESSION" },
+        {
+          success: false,
+          message: "Invalid user session",
+          error: "INVALID_SESSION",
+        },
         { status: 401 }
       );
     }
@@ -61,27 +81,35 @@ export async function GET(
     const workspace = await getWorkspaceBySlug(slug, userId);
     if (!workspace) {
       return NextResponse.json(
-        { success: false, message: "Workspace not found", error: "WORKSPACE_NOT_FOUND" },
+        {
+          success: false,
+          message: "Workspace not found",
+          error: "WORKSPACE_NOT_FOUND",
+        },
         { status: 404 }
       );
     }
 
     // Get the swarm associated with this workspace
-    const swarm = await db.swarm.findUnique({
+    const swarm = (await db.swarm.findUnique({
       where: { workspaceId: workspace.id },
-      select: swarmSelect
-    }) as SwarmSelectResult | null;
+      select: swarmSelect,
+    })) as SwarmSelectResult | null;
 
     if (!swarm) {
       return NextResponse.json(
-        { success: false, message: "No swarm found for this workspace", error: "SWARM_NOT_FOUND" },
+        {
+          success: false,
+          message: "No swarm found for this workspace",
+          error: "SWARM_NOT_FOUND",
+        },
         { status: 200 }
       );
     }
 
     const user = await db.user.findUnique({
       where: {
-        email: session?.user?.email || '',
+        email: session?.user?.email || "",
       },
     });
 
@@ -91,10 +119,15 @@ export async function GET(
     let environmentVariables: Array<{ key: string; value: string }> = [];
     if (swarm.poolName && poolApiKey) {
       try {
-        const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
-        environmentVariables = await poolManager.getPoolEnvVars(swarm.poolName, poolApiKey);
+        const poolManager = new PoolManagerService(
+          config as unknown as ServiceConfig
+        );
+        environmentVariables = await poolManager.getPoolEnvVars(
+          swarm.poolName,
+          poolApiKey
+        );
       } catch (err) {
-        console.error('Failed to fetch env vars from Pool Manager:', err);
+        console.error("Failed to fetch env vars from Pool Manager:", err);
         // Optionally, you can return an error or fallback to empty array
       }
     }
@@ -110,16 +143,22 @@ export async function GET(
         swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.poolName || "",
         environmentVariables,
-        services: typeof swarm.services === 'string' ? JSON.parse(swarm.services) : (swarm.services || []),
+        services:
+          typeof swarm.services === "string"
+            ? JSON.parse(swarm.services)
+            : swarm.services || [],
         status: swarm.status,
-        lastUpdated: swarm.updatedAt
-      }
+        lastUpdated: swarm.updatedAt,
+      },
     });
-
   } catch (error) {
     console.error("Error retrieving stakgraph settings:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error", error: "INTERNAL_ERROR" },
+      {
+        success: false,
+        message: "Internal server error",
+        error: "INTERNAL_ERROR",
+      },
       { status: 500 }
     );
   }
@@ -135,7 +174,11 @@ export async function PUT(
 
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, message: "Authentication required", error: "UNAUTHORIZED" },
+        {
+          success: false,
+          message: "Authentication required",
+          error: "UNAUTHORIZED",
+        },
         { status: 401 }
       );
     }
@@ -143,7 +186,11 @@ export async function PUT(
     const userId = (session.user as { id?: string })?.id;
     if (!userId) {
       return NextResponse.json(
-        { success: false, message: "Invalid user session", error: "INVALID_SESSION" },
+        {
+          success: false,
+          message: "Invalid user session",
+          error: "INVALID_SESSION",
+        },
         { status: 401 }
       );
     }
@@ -152,7 +199,11 @@ export async function PUT(
     const workspace = await getWorkspaceBySlug(slug, userId);
     if (!workspace) {
       return NextResponse.json(
-        { success: false, message: "Workspace not found", error: "WORKSPACE_NOT_FOUND" },
+        {
+          success: false,
+          message: "Workspace not found",
+          error: "WORKSPACE_NOT_FOUND",
+        },
         { status: 404 }
       );
     }
@@ -167,7 +218,7 @@ export async function PUT(
           success: false,
           message: "Validation failed",
           error: "VALIDATION_ERROR",
-          details: validationResult.error.flatten().fieldErrors
+          details: validationResult.error.flatten().fieldErrors,
         },
         { status: 400 }
       );
@@ -183,6 +234,7 @@ export async function PUT(
       repositoryDescription: settings.description,
       repositoryUrl: settings.repositoryUrl,
       swarmUrl: settings.swarmUrl,
+      status: SwarmStatus.ACTIVE, // auto active
       swarmSecretAlias: settings.swarmSecretAlias,
       poolName: settings.poolName,
       services: settings.services,
@@ -190,22 +242,36 @@ export async function PUT(
 
     const user = await db.user.findUnique({
       where: {
-        email: session?.user?.email || '',
+        email: session?.user?.email || "",
       },
     });
 
     const poolApiKey = user?.poolApiKey;
 
     // After updating/creating the swarm, update environment variables in Pool Manager if poolName, poolApiKey, and environmentVariables are present
-    if (settings.poolName && poolApiKey && Array.isArray(settings.environmentVariables)) {
+    if (
+      settings.poolName &&
+      poolApiKey &&
+      Array.isArray(settings.environmentVariables)
+    ) {
       try {
-        const poolManager = new PoolManagerService(config as unknown as ServiceConfig);
+        const poolManager = new PoolManagerService(
+          config as unknown as ServiceConfig
+        );
         // Fetch current env vars from Pool Manager
-        const currentEnvVars = await poolManager.getPoolEnvVars(settings.poolName, poolApiKey);
+        const currentEnvVars = await poolManager.getPoolEnvVars(
+          settings.poolName,
+          poolApiKey
+        );
         // Always send all vars, with correct masked/changed status
-        await poolManager.updatePoolEnvVars(settings.poolName, poolApiKey, settings.environmentVariables, currentEnvVars);
+        await poolManager.updatePoolEnvVars(
+          settings.poolName,
+          poolApiKey,
+          settings.environmentVariables,
+          currentEnvVars
+        );
       } catch (err) {
-        console.error('Failed to update env vars in Pool Manager:', err);
+        console.error("Failed to update env vars in Pool Manager:", err);
         // Optionally, return error or continue
       }
     }
@@ -223,17 +289,23 @@ export async function PUT(
         poolName: typedSwarm.poolName,
         poolApiKey: typedSwarm.poolApiKey || "",
         swarmSecretAlias: typedSwarm.swarmSecretAlias || "",
-        services: typeof typedSwarm.services === 'string' ? JSON.parse(typedSwarm.services) : (typedSwarm.services || []),
+        services:
+          typeof typedSwarm.services === "string"
+            ? JSON.parse(typedSwarm.services)
+            : typedSwarm.services || [],
         status: typedSwarm.status,
-        updatedAt: typedSwarm.updatedAt
-      }
+        updatedAt: typedSwarm.updatedAt,
+      },
     });
-
   } catch (error) {
     console.error("Error saving stakgraph settings:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to save stakgraph settings", error: "INTERNAL_ERROR" },
+      {
+        success: false,
+        message: "Failed to save stakgraph settings",
+        error: "INTERNAL_ERROR",
+      },
       { status: 500 }
     );
   }
-} 
+}
