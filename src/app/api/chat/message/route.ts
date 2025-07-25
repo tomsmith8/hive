@@ -91,7 +91,8 @@ async function buildVarsPayload(
   accessToken: string | null,
   swarmUrl: string | null,
   swarmSecretAlias: string | null,
-  poolName: string | null
+  poolName: string | null,
+  repo2GraphUrl: string
 ) {
   return {
     taskId,
@@ -99,10 +100,12 @@ async function buildVarsPayload(
     contextTags,
     webhookUrl: `${baseUrl}/api/chat/response`,
     alias: userName,
+    username: userName,
     accessToken,
     swarmUrl,
     swarmSecretAlias,
     poolName,
+    repo2graph_url: repo2GraphUrl
   };
 }
 
@@ -116,6 +119,7 @@ async function callStakwork(
   swarmSecretAlias: string | null,
   poolName: string | null,
   request: NextRequest,
+  repo2GraphUrl: string,
   webhook?: string
 ) {
   try {
@@ -139,7 +143,8 @@ async function callStakwork(
       accessToken,
       swarmUrl,
       swarmSecretAlias,
-      poolName
+      poolName,
+      repo2GraphUrl
     );
     const stakworkPayload: StakworkWorkflowPayload = {
       name: "hive_autogen",
@@ -241,6 +246,8 @@ export async function POST(request: NextRequest) {
                 swarmUrl: true,
                 swarmSecretAlias: true,
                 poolName: true,
+                name: true,
+                id: true
               },
             },
             members: {
@@ -327,6 +334,8 @@ export async function POST(request: NextRequest) {
         content: artifact.content as unknown,
       })) as Artifact[],
     };
+    
+    const githubAuth = await db.gitHubAuth.findUnique({ where: { userId } });
 
     // Check if Stakwork environment variables are defined
     const useStakwork =
@@ -335,14 +344,15 @@ export async function POST(request: NextRequest) {
       config.STAKWORK_WORKFLOW_ID;
 
     // Extract data for Stakwork payload
-    const userName = user.name;
+    const userName = githubAuth?.githubUsername;
     const accessToken =
       user.accounts.find((account) => account.access_token)?.access_token ||
       null;
     const swarm = task.workspace.swarm;
     const swarmUrl = swarm?.swarmUrl || null;
     const swarmSecretAlias = swarm?.swarmSecretAlias || null;
-    const poolName = swarm?.poolName || null;
+    const poolName = swarm?.id || null;
+    const repo2GraphUrl = `https://repo2graph.${swarm?.name}`
 
     // Call appropriate service based on environment configuration
     if (useStakwork) {
@@ -356,6 +366,7 @@ export async function POST(request: NextRequest) {
         swarmSecretAlias,
         poolName,
         request,
+        repo2GraphUrl,
         webhook
       );
     } else {
