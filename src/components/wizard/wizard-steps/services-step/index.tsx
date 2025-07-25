@@ -1,11 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ServicesForm from "@/components/stakgraph/forms/ServicesForm";
-import { ServiceDataConfig, ServicesData } from "@/components/stakgraph/types";
-import { WizardStep } from "@/types/wizard";
+import { ServiceDataConfig } from "@/components/stakgraph/types";
 import { useWizardStore } from "@/stores/useWizardStore";
 import { useCallback, useState } from "react";
-import { ServiceConfig } from "@/types";
 
 interface ServicesStepProps {
   onNext: () => void;
@@ -22,8 +20,6 @@ export const ServicesStep = ({
   const workspaceId = useWizardStore((s) => s.workspaceId);
   const swarmId = useWizardStore((s) => s.swarmId);
   const [loading, setLoading] = useState(false);
-
-  console.log(services)
 
   const onServicesChange = useCallback((data: ServiceDataConfig[]) => {
     setServices(data);

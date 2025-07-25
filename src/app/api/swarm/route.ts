@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
             data: { id, swarm_id },
         });
     }
+
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user) {
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             message: `${name}-Swarm was created successfully`,
-            data: { id: updatedSwarm.id, swarm_id },
+            data: { id: updatedSwarm.id, swarmId: swarm_id },
         });
     } catch (error) {
         console.error("Error creating Swarm:", error);

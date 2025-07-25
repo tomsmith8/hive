@@ -26,7 +26,7 @@ const VALID_STATUS_TRANSITIONS: Record<StepStatus, StepStatus[]> = {
   PENDING: ['STARTED', 'PROCESSING'],
   STARTED: ['PROCESSING', 'COMPLETED', 'FAILED'],
   PROCESSING: ['COMPLETED', 'FAILED'],
-  COMPLETED: ['STARTED'], // Can go back to restart a step
+  COMPLETED: ['STARTED', 'PENDING'], // Can go back to restart a step
   FAILED: ['STARTED', 'PROCESSING']
 };
 

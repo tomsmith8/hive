@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { repo_url, workspaceId, swarmId, use_lsp, commit } = body;
+    const { workspaceId, swarmId } = body;
 
     if (!swarmId) {
       return NextResponse.json(
@@ -68,8 +68,6 @@ export async function POST(request: NextRequest) {
     console.log("*************");
     console.log(swarm);
 
-    //const final_repo_url =
-    //    repo_url || swarm.wizardData?.selectedRepo?.html_url;
     let final_repo_url;
 
     if (
@@ -78,8 +76,21 @@ export async function POST(request: NextRequest) {
       "selectedRepo" in swarm.wizardData
     ) {
       final_repo_url =
-        repo_url ||
         (swarm.wizardData as WizardData).selectedRepo?.html_url;
+    }
+
+    if (!final_repo_url) {
+      return NextResponse.json(
+        { success: false, message: "No repository URL found" },
+        { status: 400 }
+      );
+    }
+
+    if (!repoWorkspaceId) {
+      return NextResponse.json(
+        { success: false, message: "No repository workspace ID found" },
+        { status: 400 }
+      );
     }
 
     console.log("repositoryupsertstart");
@@ -100,23 +111,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log("repositoryupsertcomplete");
 
     const dataApi = {
       repo_url: final_repo_url,
       username,
-      pat,
-      use_lsp: null,
-      commit: null,
+      pat
     };
 
-    if (use_lsp) {
-      dataApi["use_lsp"] = use_lsp;
-    }
-
-    if (commit) {
-      dataApi["commit"] = commit;
-    }
 
     console.log("dataApi", dataApi);
 
