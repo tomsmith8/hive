@@ -82,30 +82,6 @@ async function callMock(
   }
 }
 
-async function buildVarsPayload(
-  taskId: string,
-  message: string,
-  baseUrl: string,
-  contextTags: ContextTag[],
-  userName: string | null,
-  accessToken: string | null,
-  swarmUrl: string | null,
-  swarmSecretAlias: string | null,
-  poolName: string | null
-) {
-  return {
-    taskId,
-    message,
-    contextTags,
-    webhookUrl: `${baseUrl}/api/chat/response`,
-    alias: userName,
-    accessToken,
-    swarmUrl,
-    swarmSecretAlias,
-    poolName,
-  };
-}
-
 async function callStakwork(
   taskId: string,
   message: string,
@@ -130,17 +106,22 @@ async function callStakwork(
     }
 
     const baseUrl = getBaseUrl(request);
-    const vars = await buildVarsPayload(
+    let webhookUrl = `${baseUrl}/api/chat/response`;
+    if (process.env.CUSTOM_WEBHOOK_URL) {
+      webhookUrl = process.env.CUSTOM_WEBHOOK_URL;
+    }
+    // stakwork workflow vars
+    const vars = {
       taskId,
       message,
-      baseUrl,
       contextTags,
-      userName,
+      webhookUrl,
+      alias: userName,
       accessToken,
       swarmUrl,
       swarmSecretAlias,
-      poolName
-    );
+      poolName,
+    };
     const stakworkPayload: StakworkWorkflowPayload = {
       name: "hive_autogen",
       workflow_id: parseInt(config.STAKWORK_WORKFLOW_ID),
