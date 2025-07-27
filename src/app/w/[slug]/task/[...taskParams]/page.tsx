@@ -27,6 +27,7 @@ import {
 } from "./artifacts";
 import { useParams } from "next/navigation";
 import { usePusherConnection } from "@/hooks/usePusherConnection";
+import { useChatForm } from "@/hooks/useChatForm";
 
 // Generate unique IDs to prevent collisions
 function generateUniqueId() {
@@ -109,6 +110,9 @@ export default function TaskChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<ArtifactType | null>(null);
+
+  // Use hook to check for active chat form and get webhook
+  const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
 
   // Handle incoming SSE messages
   const handleSSEMessage = useCallback((message: ChatMessage) => {
@@ -212,19 +216,16 @@ export default function TaskChatPage() {
       setStarted(true);
       await sendMessage(msg);
     }
-
-    // Remove the auto-reply since we'll get real-time messages via SSE
-    // setTimeout(() => {
-    //   const msg = assistantMessage();
-    //   setMessages((prev) => [...prev, msg]);
-    // }, 1000);
   };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    await sendMessage(input.trim());
+    await sendMessage(
+      input.trim(),
+      chatWebhook ? { webhook: chatWebhook } : undefined
+    );
     setInput("");
   };
 
@@ -326,15 +327,19 @@ export default function TaskChatPage() {
   const allArtifacts = messages.flatMap((msg) => msg.artifacts || []);
   const codeArtifacts = allArtifacts.filter((a) => a.type === "CODE");
   const browserArtifacts = allArtifacts.filter((a) => a.type === "BROWSER");
+  const ideArtifacts = allArtifacts.filter((a) => a.type === "IDE");
   const hasNonFormArtifacts =
-    codeArtifacts.length > 0 || browserArtifacts.length > 0;
+    codeArtifacts.length > 0 ||
+    browserArtifacts.length > 0 ||
+    ideArtifacts.length > 0;
 
   const availableTabs: ArtifactType[] = useMemo(() => {
     const tabs: ArtifactType[] = [];
     if (codeArtifacts.length > 0) tabs.push("CODE");
     if (browserArtifacts.length > 0) tabs.push("BROWSER");
+    if (ideArtifacts.length > 0) tabs.push("IDE");
     return tabs;
-  }, [codeArtifacts.length, browserArtifacts.length]);
+  }, [codeArtifacts.length, browserArtifacts.length, ideArtifacts.length]);
 
   // Auto-select first tab when artifacts become available
   useEffect(() => {
@@ -342,6 +347,15 @@ export default function TaskChatPage() {
       setActiveTab(availableTabs[0]);
     }
   }, [availableTabs, activeTab]);
+
+  const inputDisabled = isLoading || !isConnected;
+  if (hasActiveChatForm) {
+    // TODO: rm this and only enable if ready below
+  }
+  // const inputDisabled =
+  //   isLoading ||
+  //   !isConnected ||
+  //   (started && messages.length > 0 && !hasActiveChatForm);
 
   return (
     <AnimatePresence mode="wait">
@@ -366,10 +380,10 @@ export default function TaskChatPage() {
         >
           {/* Main Chat Area */}
           <motion.div
-            className="flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden"
+            className="flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden max-w-2xl"
             layout
             initial={{ width: "100%" }}
-            animate={{ width: hasNonFormArtifacts ? "50%" : "100%" }}
+            animate={{ width: hasNonFormArtifacts ? "35%" : "100%" }}
             transition={{
               duration: 0.6,
               ease: [0.4, 0.0, 0.2, 1],
@@ -473,19 +487,11 @@ export default function TaskChatPage() {
                 onChange={(e) => setInput(e.target.value)}
                 className="flex-1"
                 autoFocus
+                disabled={inputDisabled}
               />
               <Button type="submit" disabled={!input.trim() || isLoading}>
                 {isLoading ? "Sending..." : "Send"}
               </Button>
-              {/* Connection status indicator */}
-              <div className="flex items-center ml-2">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    isConnected ? "bg-green-500" : "bg-gray-400"
-                  }`}
-                  title={isConnected ? "Connected" : "Disconnected"}
-                />
-              </div>
             </form>
           </motion.div>
 
@@ -495,7 +501,7 @@ export default function TaskChatPage() {
               <motion.div
                 layout
                 initial={{ opacity: 0, x: 100, width: 0 }}
-                animate={{ opacity: 1, x: 0, width: "50%" }}
+                animate={{ opacity: 1, x: 0, width: "65%" }}
                 exit={{ opacity: 0, x: 100, width: 0 }}
                 transition={{
                   duration: 0.4,
@@ -525,6 +531,9 @@ export default function TaskChatPage() {
                       {browserArtifacts.length > 0 && (
                         <TabsTrigger value="BROWSER">Live Preview</TabsTrigger>
                       )}
+                      {ideArtifacts.length > 0 && (
+                        <TabsTrigger value="IDE">IDE</TabsTrigger>
+                      )}
                     </TabsList>
                   </motion.div>
 
@@ -552,6 +561,19 @@ export default function TaskChatPage() {
                         hidden={activeTab !== "BROWSER"}
                       >
                         <BrowserArtifactPanel artifacts={browserArtifacts} />
+                      </TabsContent>
+                    )}
+                    {ideArtifacts.length > 0 && (
+                      <TabsContent
+                        value="IDE"
+                        className="h-full mt-0"
+                        forceMount
+                        hidden={activeTab !== "IDE"}
+                      >
+                        <BrowserArtifactPanel
+                          artifacts={ideArtifacts}
+                          ide={true}
+                        />
                       </TabsContent>
                     )}
                   </motion.div>
