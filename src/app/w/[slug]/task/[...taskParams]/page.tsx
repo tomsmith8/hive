@@ -380,10 +380,10 @@ export default function TaskChatPage() {
         >
           {/* Main Chat Area */}
           <motion.div
-            className="flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden"
+            className="flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden max-w-2xl"
             layout
             initial={{ width: "100%" }}
-            animate={{ width: hasNonFormArtifacts ? "50%" : "100%" }}
+            animate={{ width: hasNonFormArtifacts ? "35%" : "100%" }}
             transition={{
               duration: 0.6,
               ease: [0.4, 0.0, 0.2, 1],
@@ -492,15 +492,6 @@ export default function TaskChatPage() {
               <Button type="submit" disabled={!input.trim() || isLoading}>
                 {isLoading ? "Sending..." : "Send"}
               </Button>
-              {/* Connection status indicator */}
-              <div className="flex items-center ml-2">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    isConnected ? "bg-green-500" : "bg-gray-400"
-                  }`}
-                  title={isConnected ? "Connected" : "Disconnected"}
-                />
-              </div>
             </form>
           </motion.div>
 
@@ -510,7 +501,7 @@ export default function TaskChatPage() {
               <motion.div
                 layout
                 initial={{ opacity: 0, x: 100, width: 0 }}
-                animate={{ opacity: 1, x: 0, width: "50%" }}
+                animate={{ opacity: 1, x: 0, width: "65%" }}
                 exit={{ opacity: 0, x: 100, width: 0 }}
                 transition={{
                   duration: 0.4,
