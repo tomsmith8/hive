@@ -35,7 +35,7 @@ export function ChatArea({
 
   return (
     <motion.div
-      className="flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden max-w-2xl"
+      className={`flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden ${hasNonFormArtifacts ? "max-w-2xl" : ""}`}
       layout
       initial={{ width: "100%" }}
       animate={{ width: hasNonFormArtifacts ? "35%" : "100%" }}
