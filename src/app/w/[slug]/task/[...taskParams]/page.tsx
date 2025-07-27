@@ -27,6 +27,7 @@ import {
 } from "./artifacts";
 import { useParams } from "next/navigation";
 import { usePusherConnection } from "@/hooks/usePusherConnection";
+import { useChatForm } from "@/hooks/useChatForm";
 
 // Generate unique IDs to prevent collisions
 function generateUniqueId() {
@@ -109,6 +110,9 @@ export default function TaskChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<ArtifactType | null>(null);
+
+  // Use hook to check for active chat form and get webhook
+  const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
 
   // Handle incoming SSE messages
   const handleSSEMessage = useCallback((message: ChatMessage) => {
@@ -218,7 +222,10 @@ export default function TaskChatPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    await sendMessage(input.trim());
+    await sendMessage(
+      input.trim(),
+      chatWebhook ? { webhook: chatWebhook } : undefined
+    );
     setInput("");
   };
 
@@ -341,7 +348,10 @@ export default function TaskChatPage() {
     }
   }, [availableTabs, activeTab]);
 
-  const inputDisabled = isLoading || !isConnected;
+  const inputDisabled =
+    isLoading ||
+    !isConnected ||
+    (started && messages.length > 0 && !hasActiveChatForm);
 
   return (
     <AnimatePresence mode="wait">
