@@ -1,13 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRef, useEffect, useState, useMemo, useCallback } from "react";
-import { ArrowUp } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,78 +8,18 @@ import {
   ChatMessage,
   ChatRole,
   ChatStatus,
-  Option,
   createChatMessage,
-  ArtifactType,
-  FormContent,
+  Option,
 } from "@/lib/chat";
-import {
-  FormArtifact,
-  CodeArtifactPanel,
-  BrowserArtifactPanel,
-} from "./artifacts";
 import { useParams } from "next/navigation";
 import { usePusherConnection } from "@/hooks/usePusherConnection";
 import { useChatForm } from "@/hooks/useChatForm";
+import { useProjectLogWebSocket } from "@/hooks/useProjectLogWebSocket";
+import { TaskStartInput, ChatArea, ArtifactsPanel } from "./components";
 
 // Generate unique IDs to prevent collisions
 function generateUniqueId() {
   return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-function TaskStartInput({ onStart }: { onStart: (task: string) => void }) {
-  const [value, setValue] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && value.trim()) {
-      e.preventDefault();
-      onStart(value.trim());
-    }
-  };
-
-  const hasText = value.trim().length > 0;
-
-  const handleClick = () => {
-    if (hasText) {
-      onStart(value.trim());
-    }
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center w-full h-[92vh] md:h-[97vh] bg-background">
-      <h1 className="text-4xl font-bold text-foreground mb-10 text-center">
-        What do you want to do?
-      </h1>
-      <Card className="relative w-full max-w-2xl p-0 bg-card rounded-3xl shadow-sm border-0 group">
-        <Textarea
-          ref={textareaRef}
-          placeholder="Describe a task"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="resize-none min-h-[180px] text-lg bg-transparent border-0 focus:ring-0 focus-visible:ring-0 px-8 pt-8 pb-16 rounded-3xl shadow-none"
-          autoFocus
-        />
-        <Button
-          type="button"
-          variant="default"
-          size="icon"
-          className="absolute bottom-6 right-8 z-10 rounded-full shadow-lg transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ring/60"
-          style={{ width: 32, height: 32 }}
-          disabled={!hasText}
-          onClick={handleClick}
-          tabIndex={0}
-        >
-          <ArrowUp className="w-4 h-4" />
-        </Button>
-      </Card>
-    </div>
-  );
 }
 
 export default function TaskChatPage() {
@@ -101,15 +34,13 @@ export default function TaskChatPage() {
   const isNewTask = taskParams?.[0] === "new";
   const taskIdFromUrl = !isNewTask ? taskParams?.[0] : null;
 
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(
     taskIdFromUrl
   );
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<ArtifactType | null>(null);
 
   // Use hook to check for active chat form and get webhook
   const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
@@ -176,11 +107,8 @@ export default function TaskChatPage() {
     }
   }, [taskIdFromUrl, loadTaskMessages]);
 
-  useEffect(() => {
-    if (started) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, started]);
+  // Connect to project log WebSocket when projectId is available
+  useProjectLogWebSocket(projectId, currentTaskId, true);
 
   const handleStart = async (msg: string) => {
     if (isNewTask) {
@@ -218,15 +146,11 @@ export default function TaskChatPage() {
     }
   };
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
+  const handleSend = async (message: string) => {
     await sendMessage(
-      input.trim(),
+      message,
       chatWebhook ? { webhook: chatWebhook } : undefined
     );
-    setInput("");
   };
 
   const sendMessage = async (
@@ -277,6 +201,11 @@ export default function TaskChatPage() {
         throw new Error(result.error || "Failed to send message");
       }
 
+      if (result.data?.project_id) {
+        console.log("Project ID:", result.data.project_id);
+        setProjectId(result.data.project_id);
+      }
+
       // Update the temporary message status instead of replacing entirely
       // This prevents re-animation since React sees it as the same message
       setMessages((msgs) =>
@@ -325,28 +254,7 @@ export default function TaskChatPage() {
 
   // Separate artifacts by type
   const allArtifacts = messages.flatMap((msg) => msg.artifacts || []);
-  const codeArtifacts = allArtifacts.filter((a) => a.type === "CODE");
-  const browserArtifacts = allArtifacts.filter((a) => a.type === "BROWSER");
-  const ideArtifacts = allArtifacts.filter((a) => a.type === "IDE");
-  const hasNonFormArtifacts =
-    codeArtifacts.length > 0 ||
-    browserArtifacts.length > 0 ||
-    ideArtifacts.length > 0;
-
-  const availableTabs: ArtifactType[] = useMemo(() => {
-    const tabs: ArtifactType[] = [];
-    if (codeArtifacts.length > 0) tabs.push("CODE");
-    if (browserArtifacts.length > 0) tabs.push("BROWSER");
-    if (ideArtifacts.length > 0) tabs.push("IDE");
-    return tabs;
-  }, [codeArtifacts.length, browserArtifacts.length, ideArtifacts.length]);
-
-  // Auto-select first tab when artifacts become available
-  useEffect(() => {
-    if (availableTabs.length > 0 && !activeTab) {
-      setActiveTab(availableTabs[0]);
-    }
-  }, [availableTabs, activeTab]);
+  const hasNonFormArtifacts = allArtifacts.some((a) => a.type !== "FORM");
 
   const inputDisabled = isLoading || !isConnected;
   if (hasActiveChatForm) {
@@ -378,208 +286,17 @@ export default function TaskChatPage() {
           transition={{ duration: 0.4, ease: [0.4, 0.0, 0.2, 1] }}
           className="h-[92vh] md:h-[97vh] flex gap-4"
         >
-          {/* Main Chat Area */}
-          <motion.div
-            className="flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden max-w-2xl"
-            layout
-            initial={{ width: "100%" }}
-            animate={{ width: hasNonFormArtifacts ? "35%" : "100%" }}
-            transition={{
-              duration: 0.6,
-              ease: [0.4, 0.0, 0.2, 1],
-            }}
-          >
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-muted/40">
-              {messages
-                .filter((msg) => !msg.replyId) // Hide messages that are replies
-                .map((msg) => {
-                  // Find if this message has been replied to
-                  const replyMessage = messages.find(
-                    (m) => m.replyId === msg.id
-                  );
+          <ChatArea
+            messages={messages}
+            onSend={handleSend}
+            onArtifactAction={handleArtifactAction}
+            inputDisabled={inputDisabled}
+            isLoading={isLoading}
+            hasNonFormArtifacts={hasNonFormArtifacts}
+          />
 
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      className="space-y-3"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <div
-                        className={`flex items-end gap-3 ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
-                      >
-                        {msg.role === "ASSISTANT" && (
-                          <Avatar>
-                            <AvatarImage src="" alt="Assistant" />
-                            <AvatarFallback>A</AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div
-                          className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm ${
-                            msg.role === "USER"
-                              ? "bg-primary text-primary-foreground rounded-br-none"
-                              : "bg-background text-foreground rounded-bl-none border"
-                          }`}
-                        >
-                          {msg.message}
-                        </div>
-                        {msg.role === "USER" && (
-                          <Avatar>
-                            <AvatarImage src="" alt="You" />
-                            <AvatarFallback>Y</AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-
-                      {/* Only Form Artifacts in Chat */}
-                      {msg.artifacts
-                        ?.filter((a) => a.type === "FORM")
-                        .map((artifact) => {
-                          // Find which option was selected by matching replyMessage content with optionResponse
-                          let selectedOption = null;
-                          if (replyMessage && artifact.content) {
-                            const formContent = artifact.content as FormContent;
-                            selectedOption = formContent.options?.find(
-                              (option: Option) =>
-                                option.optionResponse === replyMessage.message
-                            );
-                          }
-
-                          return (
-                            <div
-                              key={artifact.id}
-                              className={`flex ${msg.role === "USER" ? "justify-end" : "justify-start"}`}
-                            >
-                              <div className="max-w-md">
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.2 }}
-                                >
-                                  <FormArtifact
-                                    messageId={msg.id}
-                                    artifact={artifact}
-                                    onAction={handleArtifactAction}
-                                    selectedOption={selectedOption}
-                                    isDisabled={!!replyMessage}
-                                  />
-                                </motion.div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </motion.div>
-                  );
-                })}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Bar */}
-            <form
-              onSubmit={handleSend}
-              className="flex gap-2 px-6 py-4 border-t bg-background sticky bottom-0 z-10"
-            >
-              <Input
-                placeholder="Type your message..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="flex-1"
-                autoFocus
-                disabled={inputDisabled}
-              />
-              <Button type="submit" disabled={!input.trim() || isLoading}>
-                {isLoading ? "Sending..." : "Send"}
-              </Button>
-            </form>
-          </motion.div>
-
-          {/* Artifacts Panel */}
           <AnimatePresence>
-            {hasNonFormArtifacts && (
-              <motion.div
-                layout
-                initial={{ opacity: 0, x: 100, width: 0 }}
-                animate={{ opacity: 1, x: 0, width: "65%" }}
-                exit={{ opacity: 0, x: 100, width: 0 }}
-                transition={{
-                  duration: 0.4,
-                  ease: [0.4, 0.0, 0.2, 1],
-                }}
-                className="bg-background rounded-xl border shadow-sm overflow-hidden flex flex-col"
-              >
-                <Tabs
-                  value={activeTab as string}
-                  className="flex-1 flex flex-col min-h-0"
-                  onValueChange={(value) => {
-                    setActiveTab(value as ArtifactType);
-                  }}
-                >
-                  <motion.div
-                    className="px-6 py-4 border-b bg-background/80 backdrop-blur"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <TabsList
-                      className={`grid w-full grid-cols-${availableTabs.length}`}
-                    >
-                      {codeArtifacts.length > 0 && (
-                        <TabsTrigger value="CODE">Code</TabsTrigger>
-                      )}
-                      {browserArtifacts.length > 0 && (
-                        <TabsTrigger value="BROWSER">Live Preview</TabsTrigger>
-                      )}
-                      {ideArtifacts.length > 0 && (
-                        <TabsTrigger value="IDE">IDE</TabsTrigger>
-                      )}
-                    </TabsList>
-                  </motion.div>
-
-                  <motion.div
-                    className="flex-1 overflow-hidden min-h-0"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    {codeArtifacts.length > 0 && (
-                      <TabsContent
-                        value="CODE"
-                        className="h-full mt-0"
-                        forceMount
-                        hidden={activeTab !== "CODE"}
-                      >
-                        <CodeArtifactPanel artifacts={codeArtifacts} />
-                      </TabsContent>
-                    )}
-                    {browserArtifacts.length > 0 && (
-                      <TabsContent
-                        value="BROWSER"
-                        className="h-full mt-0"
-                        forceMount
-                        hidden={activeTab !== "BROWSER"}
-                      >
-                        <BrowserArtifactPanel artifacts={browserArtifacts} />
-                      </TabsContent>
-                    )}
-                    {ideArtifacts.length > 0 && (
-                      <TabsContent
-                        value="IDE"
-                        className="h-full mt-0"
-                        forceMount
-                        hidden={activeTab !== "IDE"}
-                      >
-                        <BrowserArtifactPanel
-                          artifacts={ideArtifacts}
-                          ide={true}
-                        />
-                      </TabsContent>
-                    )}
-                  </motion.div>
-                </Tabs>
-              </motion.div>
-            )}
+            {hasNonFormArtifacts && <ArtifactsPanel artifacts={allArtifacts} />}
           </AnimatePresence>
         </motion.div>
       )}

@@ -123,8 +123,8 @@ async function callStakwork(
       swarmUrl,
       swarmSecretAlias,
       poolName,
-      repo2graph_url: repo2GraphUrl
-    }
+      repo2graph_url: repo2GraphUrl,
+    };
 
     const stakworkPayload: StakworkWorkflowPayload = {
       name: "hive_autogen",
@@ -163,7 +163,7 @@ async function callStakwork(
 
     const result = await response.json();
     console.log("Stakwork result", result);
-    return { success: true, data: result };
+    return { success: result.success, data: result.data };
   } catch (error) {
     console.error("Error calling Stakwork:", error);
     return { success: false, error: String(error) };
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
                 swarmSecretAlias: true,
                 poolName: true,
                 name: true,
-                id: true
+                id: true,
               },
             },
             members: {
@@ -332,7 +332,7 @@ export async function POST(request: NextRequest) {
     const swarmUrl = swarm?.swarmUrl || null;
     const swarmSecretAlias = swarm?.swarmSecretAlias || null;
     const poolName = swarm?.id || null;
-    const repo2GraphUrl = `https://repo2graph.${swarm?.name}`
+    const repo2GraphUrl = `https://repo2graph.${swarm?.name}`;
 
     // Call appropriate service based on environment configuration
     if (useStakwork) {
