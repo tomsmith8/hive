@@ -28,6 +28,7 @@ import {
 import { useParams } from "next/navigation";
 import { usePusherConnection } from "@/hooks/usePusherConnection";
 import { useChatForm } from "@/hooks/useChatForm";
+import { useProjectLogWebSocket } from "@/hooks/useProjectLogWebSocket";
 
 // Generate unique IDs to prevent collisions
 function generateUniqueId() {
@@ -101,6 +102,7 @@ export default function TaskChatPage() {
   const isNewTask = taskParams?.[0] === "new";
   const taskIdFromUrl = !isNewTask ? taskParams?.[0] : null;
 
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
@@ -181,6 +183,9 @@ export default function TaskChatPage() {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, started]);
+
+  // Connect to project log WebSocket when projectId is available
+  useProjectLogWebSocket(projectId, currentTaskId, true);
 
   const handleStart = async (msg: string) => {
     if (isNewTask) {
@@ -275,6 +280,11 @@ export default function TaskChatPage() {
       const result = await response.json();
       if (!result.success) {
         throw new Error(result.error || "Failed to send message");
+      }
+
+      if (result.data?.project_id) {
+        console.log("Project ID:", result.data.project_id);
+        setProjectId(result.data.project_id);
       }
 
       // Update the temporary message status instead of replacing entirely
