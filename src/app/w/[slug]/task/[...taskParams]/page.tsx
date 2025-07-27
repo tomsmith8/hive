@@ -348,10 +348,14 @@ export default function TaskChatPage() {
     }
   }, [availableTabs, activeTab]);
 
-  const inputDisabled =
-    isLoading ||
-    !isConnected ||
-    (started && messages.length > 0 && !hasActiveChatForm);
+  const inputDisabled = isLoading || !isConnected;
+  if (hasActiveChatForm) {
+    // TODO: rm this and only enable if ready below
+  }
+  // const inputDisabled =
+  //   isLoading ||
+  //   !isConnected ||
+  //   (started && messages.length > 0 && !hasActiveChatForm);
 
   return (
     <AnimatePresence mode="wait">
