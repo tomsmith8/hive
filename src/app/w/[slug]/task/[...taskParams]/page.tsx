@@ -212,12 +212,6 @@ export default function TaskChatPage() {
       setStarted(true);
       await sendMessage(msg);
     }
-
-    // Remove the auto-reply since we'll get real-time messages via SSE
-    // setTimeout(() => {
-    //   const msg = assistantMessage();
-    //   setMessages((prev) => [...prev, msg]);
-    // }, 1000);
   };
 
   const handleSend = async (e: React.FormEvent) => {
@@ -326,15 +320,19 @@ export default function TaskChatPage() {
   const allArtifacts = messages.flatMap((msg) => msg.artifacts || []);
   const codeArtifacts = allArtifacts.filter((a) => a.type === "CODE");
   const browserArtifacts = allArtifacts.filter((a) => a.type === "BROWSER");
+  const ideArtifacts = allArtifacts.filter((a) => a.type === "IDE");
   const hasNonFormArtifacts =
-    codeArtifacts.length > 0 || browserArtifacts.length > 0;
+    codeArtifacts.length > 0 ||
+    browserArtifacts.length > 0 ||
+    ideArtifacts.length > 0;
 
   const availableTabs: ArtifactType[] = useMemo(() => {
     const tabs: ArtifactType[] = [];
     if (codeArtifacts.length > 0) tabs.push("CODE");
     if (browserArtifacts.length > 0) tabs.push("BROWSER");
+    if (ideArtifacts.length > 0) tabs.push("IDE");
     return tabs;
-  }, [codeArtifacts.length, browserArtifacts.length]);
+  }, [codeArtifacts.length, browserArtifacts.length, ideArtifacts.length]);
 
   // Auto-select first tab when artifacts become available
   useEffect(() => {
@@ -342,6 +340,8 @@ export default function TaskChatPage() {
       setActiveTab(availableTabs[0]);
     }
   }, [availableTabs, activeTab]);
+
+  const inputDisabled = isLoading || !isConnected;
 
   return (
     <AnimatePresence mode="wait">
@@ -473,6 +473,7 @@ export default function TaskChatPage() {
                 onChange={(e) => setInput(e.target.value)}
                 className="flex-1"
                 autoFocus
+                disabled={inputDisabled}
               />
               <Button type="submit" disabled={!input.trim() || isLoading}>
                 {isLoading ? "Sending..." : "Send"}
@@ -525,6 +526,9 @@ export default function TaskChatPage() {
                       {browserArtifacts.length > 0 && (
                         <TabsTrigger value="BROWSER">Live Preview</TabsTrigger>
                       )}
+                      {ideArtifacts.length > 0 && (
+                        <TabsTrigger value="IDE">IDE</TabsTrigger>
+                      )}
                     </TabsList>
                   </motion.div>
 
@@ -552,6 +556,19 @@ export default function TaskChatPage() {
                         hidden={activeTab !== "BROWSER"}
                       >
                         <BrowserArtifactPanel artifacts={browserArtifacts} />
+                      </TabsContent>
+                    )}
+                    {ideArtifacts.length > 0 && (
+                      <TabsContent
+                        value="IDE"
+                        className="h-full mt-0"
+                        forceMount
+                        hidden={activeTab !== "IDE"}
+                      >
+                        <BrowserArtifactPanel
+                          artifacts={ideArtifacts}
+                          ide={true}
+                        />
                       </TabsContent>
                     )}
                   </motion.div>

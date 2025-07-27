@@ -5,7 +5,13 @@ import { useState } from "react";
 import { Monitor, RefreshCw, ExternalLink } from "lucide-react";
 import { Artifact, BrowserContent } from "@/lib/chat";
 
-export function BrowserArtifactPanel({ artifacts }: { artifacts: Artifact[] }) {
+export function BrowserArtifactPanel({
+  artifacts,
+  ide,
+}: {
+  artifacts: Artifact[];
+  ide?: boolean;
+}) {
   const [activeTab, setActiveTab] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -49,34 +55,36 @@ export function BrowserArtifactPanel({ artifacts }: { artifacts: Artifact[] }) {
               key={artifact.id}
               className={`h-full flex flex-col ${activeTab === index ? "block" : "hidden"}`}
             >
-              <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Monitor className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-sm font-medium truncate">
-                    {content.url}
-                  </span>
+              {!ide && (
+                <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Monitor className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm font-medium truncate">
+                      {content.url}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleTabOut(content.url)}
+                      className="h-8 w-8 p-0"
+                      title="Open in new tab"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRefresh}
+                      className="h-8 w-8 p-0"
+                      title="Refresh"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleTabOut(content.url)}
-                    className="h-8 w-8 p-0"
-                    title="Open in new tab"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRefresh}
-                    className="h-8 w-8 p-0"
-                    title="Refresh"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+              )}
               <div className="flex-1 overflow-hidden">
                 <iframe
                   key={`${artifact.id}-${refreshKey}`}
