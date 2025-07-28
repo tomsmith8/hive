@@ -303,7 +303,7 @@ export default function TaskChatPage() {
           exit={{ opacity: 0, y: -60 }}
           transition={{ duration: 0.6, ease: [0.4, 0.0, 0.2, 1] }}
         >
-          <TaskStartInput onStart={handleStart} />
+          <TaskStartInput onStart={handleStart} onModeChange={setTaskMode} />
         </motion.div>
       ) : (
         <motion.div

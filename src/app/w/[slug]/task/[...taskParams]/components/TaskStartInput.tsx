@@ -8,9 +8,10 @@ import { ArrowUp } from "lucide-react";
 
 interface TaskStartInputProps {
   onStart: (task: string) => void;
+  onModeChange: (mode: string) => void;
 }
 
-export function TaskStartInput({ onStart }: TaskStartInputProps) {
+export function TaskStartInput({ onStart, onModeChange }: TaskStartInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isLive, setIsLive] = useState(false);
@@ -79,11 +80,15 @@ export function TaskStartInput({ onStart }: TaskStartInputProps) {
               type="radio"
               name="mode"
               value="live"
+              style={{
+                accentColor: 'var(--color-green-500)',
+              }}
               checked={isLive}
               onChange={() => {
                 setIsLive(true);
                 if (typeof window !== "undefined") {
                   localStorage.setItem("task_mode", "live");
+                  onModeChange("live");
                 }
                 // Optionally trigger a callback or state update here
               }}
@@ -96,11 +101,15 @@ export function TaskStartInput({ onStart }: TaskStartInputProps) {
               type="radio"
               name="mode"
               value="test"
+              style={{
+                accentColor: 'var(--color-green-500)',
+              }}
               checked={!isLive}
               onChange={() => {
                 setIsLive(false);
                 if (typeof window !== "undefined") {
                   localStorage.setItem("task_mode", "test");
+                  onModeChange("test");
                 }
                 // Optionally trigger a callback or state update here
               }}
