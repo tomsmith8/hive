@@ -17,8 +17,15 @@ export async function POST(req: NextRequest) {
     });
 
     try {
+      // Use the request host for internal API calls
+      const host = req.headers.get("host") || "localhost:3000";
+      const protocol = host.includes("localhost") ? "http" : "https";
+      const baseUrl = `${protocol}://${host}`;
+
+      console.log("🔗 Mock base URL:", baseUrl);
+
       // Generate mock response
-      const mockResponse = generateResponseBasedOnMessage(message);
+      const mockResponse = generateResponseBasedOnMessage(message, baseUrl);
 
       console.log("🤖 Mock generated response:", {
         originalMessage: message,
@@ -26,13 +33,6 @@ export async function POST(req: NextRequest) {
         taskId,
         timestamp: new Date().toISOString(),
       });
-
-      // Use the request host for internal API calls
-      const host = req.headers.get("host") || "localhost:3000";
-      const protocol = host.includes("localhost") ? "http" : "https";
-      const baseUrl = `${protocol}://${host}`;
-
-      console.log("🔗 Mock base URL:", baseUrl);
 
       const responsePayload = {
         taskId: taskId,
