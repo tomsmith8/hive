@@ -4,7 +4,6 @@ type StaktrakMessageType =
   | "staktrak-setup"
   | "staktrak-results"
   | "staktrak-selection"
-  | "staktrak-popup"
   | "staktrak-page-navigation";
 
 interface StaktrakMessageData {
@@ -35,6 +34,7 @@ export const useStaktrak = (initialUrl?: string) => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(
     initialUrl || null
   );
+  const [isSetup, setIsSetup] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isAssertionMode, setIsAssertionMode] = useState(false);
 
@@ -72,6 +72,7 @@ export const useStaktrak = (initialUrl?: string) => {
           case "staktrak-setup":
             // TODO: Handle staktrak setup
             console.log("Staktrak setup:", staktrakEvent.data.data);
+            setIsSetup(true);
             break;
           case "staktrak-results":
             // TODO: Handle staktrak results
@@ -80,10 +81,6 @@ export const useStaktrak = (initialUrl?: string) => {
           case "staktrak-selection":
             // TODO: Handle staktrak selection
             console.log("Staktrak selection:", staktrakEvent.data.data);
-            break;
-          case "staktrak-popup":
-            // TODO: Handle staktrak popup
-            console.log("Staktrak popup:", staktrakEvent.data.data);
             break;
           case "staktrak-page-navigation":
             console.log("Staktrak page navigation:", staktrakEvent.data.data);
@@ -104,6 +101,7 @@ export const useStaktrak = (initialUrl?: string) => {
 
   return {
     currentUrl,
+    isSetup,
     isRecording,
     isAssertionMode,
     iframeRef,
