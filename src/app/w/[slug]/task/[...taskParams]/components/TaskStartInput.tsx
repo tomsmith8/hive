@@ -81,7 +81,7 @@ export function TaskStartInput({ onStart, onModeChange }: TaskStartInputProps) {
               name="mode"
               value="live"
               style={{
-                accentColor: 'var(--color-green-500)',
+                accentColor: "var(--color-green-500)",
               }}
               checked={isLive}
               onChange={() => {
@@ -102,7 +102,7 @@ export function TaskStartInput({ onStart, onModeChange }: TaskStartInputProps) {
               name="mode"
               value="test"
               style={{
-                accentColor: 'var(--color-green-500)',
+                accentColor: "var(--color-green-500)",
               }}
               checked={!isLive}
               onChange={() => {

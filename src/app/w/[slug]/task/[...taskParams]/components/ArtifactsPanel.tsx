@@ -57,20 +57,26 @@ export function ArtifactsPanel({ artifacts }: ArtifactsPanelProps) {
         }}
       >
         <motion.div
-          className="px-6 py-4 border-b bg-background/80 backdrop-blur"
+          className="border-b bg-background/80 backdrop-blur"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
           <TabsList className={`grid w-full grid-cols-${availableTabs.length}`}>
             {codeArtifacts.length > 0 && (
-              <TabsTrigger value="CODE">Code / Files</TabsTrigger>
+              <TabsTrigger className="cursor-pointer" value="CODE">
+                Code / Files
+              </TabsTrigger>
             )}
             {browserArtifacts.length > 0 && (
-              <TabsTrigger value="BROWSER">Live Preview</TabsTrigger>
+              <TabsTrigger className="cursor-pointer" value="BROWSER">
+                Live Preview
+              </TabsTrigger>
             )}
             {ideArtifacts.length > 0 && (
-              <TabsTrigger value="IDE">IDE</TabsTrigger>
+              <TabsTrigger className="cursor-pointer" value="IDE">
+                IDE
+              </TabsTrigger>
             )}
           </TabsList>
         </motion.div>

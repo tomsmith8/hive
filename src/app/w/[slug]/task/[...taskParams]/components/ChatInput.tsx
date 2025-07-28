@@ -34,7 +34,9 @@ export function ChatInput({
 
   return (
     <div>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">{mode}</div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {mode}
+      </div>
 
       <form
         onSubmit={handleSubmit}
