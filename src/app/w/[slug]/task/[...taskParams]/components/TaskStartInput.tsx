@@ -13,6 +13,16 @@ interface TaskStartInputProps {
 export function TaskStartInput({ onStart }: TaskStartInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    const mode = localStorage.getItem("task_mode");
+    if (mode === "live") {
+      setIsLive(true);
+    } else {
+      setIsLive(false);
+    }
+  }, []);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -61,6 +71,45 @@ export function TaskStartInput({ onStart }: TaskStartInputProps) {
           <ArrowUp className="w-4 h-4" />
         </Button>
       </Card>
+      <div className="flex justify-center mt-6">
+        <fieldset className="flex gap-6 items-center bg-muted rounded-xl px-4 py-2">
+          <legend className="sr-only">Mode</legend>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="mode"
+              value="live"
+              checked={isLive}
+              onChange={() => {
+                setIsLive(true);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("task_mode", "live");
+                }
+                // Optionally trigger a callback or state update here
+              }}
+              className="accent-primary"
+            />
+            <span className="text-sm text-foreground">Live</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="mode"
+              value="test"
+              checked={!isLive}
+              onChange={() => {
+                setIsLive(false);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("task_mode", "test");
+                }
+                // Optionally trigger a callback or state update here
+              }}
+              className="accent-primary"
+            />
+            <span className="text-sm text-foreground">Test</span>
+          </label>
+        </fieldset>
+      </div>
     </div>
   );
 }

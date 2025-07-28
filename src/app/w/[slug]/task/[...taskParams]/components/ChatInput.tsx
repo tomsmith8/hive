@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,12 @@ export function ChatInput({
   isLoading = false,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
+  const [mode, setMode] = useState("live");
+
+  useEffect(() => {
+    const mode = localStorage.getItem("task_mode");
+    setMode(mode || "live");
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,21 +33,25 @@ export function ChatInput({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex gap-2 px-6 py-4 border-t bg-background sticky bottom-0 z-10"
-    >
-      <Input
-        placeholder="Type your message..."
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        className="flex-1"
-        autoFocus
-        disabled={disabled}
-      />
-      <Button type="submit" disabled={!input.trim() || isLoading || disabled}>
-        {isLoading ? "Sending..." : "Send"}
-      </Button>
-    </form>
+    <div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">{mode}</div>
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex gap-2 px-6 py-4 border-t bg-background sticky bottom-0 z-10"
+      >
+        <Input
+          placeholder="Type your message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-1"
+          autoFocus
+          disabled={disabled}
+        />
+        <Button type="submit" disabled={!input.trim() || isLoading || disabled}>
+          {isLoading ? "Sending..." : "Send"}
+        </Button>
+      </form>
+    </div>
   );
 }
