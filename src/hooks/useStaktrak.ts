@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+
+type StaktrakMessageType =
+  | "staktrak-setup"
+  | "staktrak-results"
+  | "staktrak-selection"
+  | "staktrak-popup"
+  | "staktrak-page-navigation";
 
 interface StaktrakMessageData {
-  type:
-    | "staktrak-setup"
-    | "staktrak-results"
-    | "staktrak-selection"
-    | "staktrak-popup"
-    | "staktrak-page-navigation";
+  type: StaktrakMessageType;
   data?: unknown;
 }
 
@@ -14,14 +16,50 @@ interface StaktrakMessageEvent extends MessageEvent {
   data: StaktrakMessageData;
 }
 
+type StaktrakCommandType =
+  | "staktrak-start"
+  | "staktrak-stop"
+  | "staktrak-enable-selection"
+  | "staktrak-disable-selection";
+
+function sendCommand(
+  iframeRef: React.RefObject<HTMLIFrameElement | null>,
+  command: StaktrakCommandType
+) {
+  if (iframeRef?.current && iframeRef.current.contentWindow) {
+    iframeRef.current.contentWindow.postMessage({ type: command }, "*");
+  }
+}
+
 export const useStaktrak = (initialUrl?: string) => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(
     initialUrl || null
   );
+  const [isRecording, setIsRecording] = useState(false);
+  const [isAssertionMode, setIsAssertionMode] = useState(false);
 
-  const clearSelectedTextDisplay = () => {
-    // TODO: Implement text selection clearing logic
-    console.log("Clearing selected text display");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const startRecording = () => {
+    sendCommand(iframeRef, "staktrak-start");
+    setIsRecording(true);
+    setIsAssertionMode(false);
+  };
+
+  const stopRecording = () => {
+    sendCommand(iframeRef, "staktrak-stop");
+    setIsRecording(false);
+    setIsAssertionMode(false);
+  };
+
+  const enableAssertionMode = () => {
+    setIsAssertionMode(true);
+    sendCommand(iframeRef, "staktrak-enable-selection");
+  };
+
+  const disableAssertionMode = () => {
+    setIsAssertionMode(false);
+    sendCommand(iframeRef, "staktrak-disable-selection");
   };
 
   useEffect(() => {
@@ -61,12 +99,17 @@ export const useStaktrak = (initialUrl?: string) => {
     window.addEventListener("message", handleMessage);
     return () => {
       window.removeEventListener("message", handleMessage);
-      clearSelectedTextDisplay();
     };
   }, []);
 
   return {
     currentUrl,
-    clearSelectedTextDisplay,
+    isRecording,
+    isAssertionMode,
+    iframeRef,
+    startRecording,
+    stopRecording,
+    enableAssertionMode,
+    disableAssertionMode,
   };
 };

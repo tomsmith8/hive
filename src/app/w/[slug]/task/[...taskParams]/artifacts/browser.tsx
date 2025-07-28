@@ -21,7 +21,7 @@ export function BrowserArtifactPanel({
   const activeContent = activeArtifact?.content as BrowserContent;
 
   // Use staktrak hook with the active artifact's initial URL
-  const { currentUrl } = useStaktrak(activeContent?.url);
+  const { currentUrl, iframeRef } = useStaktrak(activeContent?.url);
 
   // Use currentUrl from staktrak hook, fallback to content.url
   const displayUrl = currentUrl || activeContent?.url;
@@ -103,6 +103,7 @@ export function BrowserArtifactPanel({
               <div className="flex-1 overflow-hidden">
                 <iframe
                   key={`${artifact.id}-${refreshKey}`}
+                  ref={isActive ? iframeRef : undefined}
                   src={tabUrl}
                   className="w-full h-full border-0"
                   title={`Live Preview ${index + 1}`}
