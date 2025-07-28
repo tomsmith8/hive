@@ -5,6 +5,7 @@ import SessionProvider from "@/providers/SessionProvider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastProvider } from "@/components/ui/toast-provider";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,16 +21,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
+      <Script src="/js/staktrak.js" />
+      <body
+        className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}
+      >
         <ToastProvider>
-          <ThemeProvider
-            defaultTheme="system"
-            storageKey="theme"
-          >
+          <ThemeProvider defaultTheme="system" storageKey="theme">
             <SessionProvider>
-              <WorkspaceProvider>
-                {children}
-              </WorkspaceProvider>
+              <WorkspaceProvider>{children}</WorkspaceProvider>
             </SessionProvider>
           </ThemeProvider>
         </ToastProvider>
