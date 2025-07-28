@@ -309,7 +309,6 @@ var userBehaviour = (() => {
             document.visibilityState,
             getTimeStamp()
           ]);
-          this.processResults();
         };
         document.addEventListener("visibilitychange", visibilityHandler);
         this.memory.listeners.push(
@@ -583,8 +582,10 @@ var userBehaviour = (() => {
       }
     }
     stop() {
-      if (!this.isRunning)
+      if (!this.isRunning) {
+        console.log("StakTrak is not running");
         return this;
+      }
       this.cleanup();
       this.processResults();
       this.isRunning = false;
@@ -607,7 +608,6 @@ var userBehaviour = (() => {
   };
   var userBehaviour = new UserBehaviorTracker();
   var initializeStakTrak = () => {
-    console.log("StakTrak initializing");
     userBehaviour.makeConfig({
       processData: (results) => console.log("StakTrak recording processed:", results)
     }).listen();

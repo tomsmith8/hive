@@ -25,6 +25,7 @@ function sendCommand(
   iframeRef: React.RefObject<HTMLIFrameElement | null>,
   command: StaktrakCommandType
 ) {
+  console.log("Sending command:", command);
   if (iframeRef?.current && iframeRef.current.contentWindow) {
     iframeRef.current.contentWindow.postMessage({ type: command }, "*");
   }
@@ -70,8 +71,6 @@ export const useStaktrak = (initialUrl?: string) => {
 
         switch (staktrakEvent.data.type) {
           case "staktrak-setup":
-            // TODO: Handle staktrak setup
-            console.log("Staktrak setup:", staktrakEvent.data.data);
             setIsSetup(true);
             break;
           case "staktrak-results":
