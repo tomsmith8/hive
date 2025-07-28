@@ -334,9 +334,10 @@ export async function POST(request: NextRequest) {
     const poolName = swarm?.id || null;
     const repo2GraphUrl = `https://repo2graph.${swarm?.name}`;
 
+    let stakworkData = null;
     // Call appropriate service based on environment configuration
     if (useStakwork) {
-      await callStakwork(
+      stakworkData = await callStakwork(
         taskId,
         message,
         contextTags,
@@ -350,13 +351,13 @@ export async function POST(request: NextRequest) {
         webhook
       );
     } else {
-      await callMock(taskId, message, userId, request);
+      stakworkData = await callMock(taskId, message, userId, request);
     }
 
     return NextResponse.json(
       {
         success: true,
-        data: clientMessage,
+        data: stakworkData.data
       },
       { status: 201 }
     );
