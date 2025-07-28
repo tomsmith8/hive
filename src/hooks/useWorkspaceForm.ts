@@ -84,7 +84,7 @@ export function useWorkspaceForm() {
       }
       
       // After successful creation, redirect to tasks page
-      router.push(`/w/${formData.slug}/tasks`);
+      router.push(`/w/${formData.slug}/code-graph`);
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
