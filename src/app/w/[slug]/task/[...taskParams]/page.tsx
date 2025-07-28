@@ -28,9 +28,7 @@ export default function TaskChatPage() {
   const { toast } = useToast();
   const params = useParams();
 
-  const [taskMode, setTaskMode] = useState('live');
-
-
+  const [taskMode, setTaskMode] = useState("live");
 
   const slug = params.slug as string;
   const taskParams = params.taskParams as string[];
@@ -53,29 +51,31 @@ export default function TaskChatPage() {
 
   useEffect(() => {
     const mode = localStorage.getItem("task_mode");
-    setTaskMode(mode || 'live');
+    setTaskMode(mode || "live");
   }, []);
 
-  const { 
-    logs, 
-    lastLogLine, 
-    clearLogs, 
-    isConnected: logConnected 
-  } = useProjectLogWebSocket(projectId, currentTaskId, true);
+  const { logs, lastLogLine, clearLogs } = useProjectLogWebSocket(
+    projectId,
+    currentTaskId,
+    true
+  );
 
   // Handle incoming SSE messages
-  const handleSSEMessage = useCallback((message: ChatMessage) => {
-    setMessages((prev) => [...prev, message]);
-    
-    // Clear logs when we get a new message (similar to old implementation)
-    if (message.artifacts?.length === 0) {
-      clearLogs();
-    }
-    
-    // Hide chain visibility when message processing is complete
-    setIsChainVisible(false);
-    setIsActionSend(false);
-  }, [clearLogs]);
+  const handleSSEMessage = useCallback(
+    (message: ChatMessage) => {
+      setMessages((prev) => [...prev, message]);
+
+      // Clear logs when we get a new message (similar to old implementation)
+      if (message.artifacts?.length === 0) {
+        clearLogs();
+      }
+
+      // Hide chain visibility when message processing is complete
+      setIsChainVisible(false);
+      setIsActionSend(false);
+    },
+    [clearLogs]
+  );
 
   // Use the Pusher connection hook
   const { isConnected, error: connectionError } = usePusherConnection({

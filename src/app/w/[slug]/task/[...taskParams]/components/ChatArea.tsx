@@ -38,7 +38,6 @@ export function ChatArea({
   hasNonFormArtifacts = false,
   isChainVisible = false,
   lastLogLine = "",
-  logs = [],
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -87,18 +86,23 @@ export function ChatArea({
                 Hive
               </div>
               <div className="text-sm">
-                {lastLogLine 
-                  ? lastLogLine 
-                  : `I've got your message. Let me have a think.`
-                }
+                {lastLogLine
+                  ? lastLogLine
+                  : `I've got your message. Let me have a think.`}
               </div>
               {/* Optional: Add a subtle loading indicator */}
               {isChainVisible && (
                 <div className="flex items-center mt-2 text-xs text-muted-foreground">
                   <div className="flex space-x-1">
                     <div className="w-1 h-1 bg-current rounded-full animate-pulse"></div>
-                    <div className="w-1 h-1 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-1 h-1 bg-current rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                    <div
+                      className="w-1 h-1 bg-current rounded-full animate-pulse"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                    <div
+                      className="w-1 h-1 bg-current rounded-full animate-pulse"
+                      style={{ animationDelay: "0.4s" }}
+                    ></div>
                   </div>
                   <span className="ml-2">Processing...</span>
                 </div>

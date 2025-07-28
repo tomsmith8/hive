@@ -181,13 +181,13 @@ var userBehaviour = (() => {
     listen() {
       this.setupMessageHandling();
       this.setupPageNavigation();
+      window.parent.postMessage({ type: "staktrak-setup" }, "*");
     }
     start() {
       this.cleanup();
       this.resetResults();
       this.setupEventListeners();
       this.isRunning = true;
-      window.parent.postMessage({ type: "staktrak-setup" }, "*");
       return this;
     }
     resetResults() {
@@ -309,7 +309,6 @@ var userBehaviour = (() => {
             document.visibilityState,
             getTimeStamp()
           ]);
-          this.processResults();
         };
         document.addEventListener("visibilitychange", visibilityHandler);
         this.memory.listeners.push(
@@ -583,8 +582,10 @@ var userBehaviour = (() => {
       }
     }
     stop() {
-      if (!this.isRunning)
+      if (!this.isRunning) {
+        console.log("StakTrak is not running");
         return this;
+      }
       this.cleanup();
       this.processResults();
       this.isRunning = false;
@@ -607,7 +608,6 @@ var userBehaviour = (() => {
   };
   var userBehaviour = new UserBehaviorTracker();
   var initializeStakTrak = () => {
-    console.log("StakTrak initializing");
     userBehaviour.makeConfig({
       processData: (results) => console.log("StakTrak recording processed:", results)
     }).listen();

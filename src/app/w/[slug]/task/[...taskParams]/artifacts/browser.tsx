@@ -2,7 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Monitor, RefreshCw, ExternalLink } from "lucide-react";
+import {
+  Monitor,
+  RefreshCw,
+  ExternalLink,
+  Circle,
+  Square,
+  Target,
+} from "lucide-react";
 import { Artifact, BrowserContent } from "@/lib/chat";
 import { useStaktrak } from "@/hooks/useStaktrak";
 
@@ -20,8 +27,18 @@ export function BrowserArtifactPanel({
   const activeArtifact = artifacts[activeTab];
   const activeContent = activeArtifact?.content as BrowserContent;
 
-  // Use staktrak hook with the active artifact's initial URL
-  const { currentUrl } = useStaktrak(activeContent?.url);
+  // Use staktrak hook with all the functions
+  const {
+    currentUrl,
+    iframeRef,
+    isSetup,
+    isRecording,
+    isAssertionMode,
+    startRecording,
+    stopRecording,
+    enableAssertionMode,
+    disableAssertionMode,
+  } = useStaktrak(activeContent?.url);
 
   // Use currentUrl from staktrak hook, fallback to content.url
   const displayUrl = currentUrl || activeContent?.url;
@@ -32,6 +49,22 @@ export function BrowserArtifactPanel({
 
   const handleTabOut = (url: string) => {
     window.open(url, "_blank");
+  };
+
+  const handleRecordToggle = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const handleAssertionToggle = () => {
+    if (isAssertionMode) {
+      disableAssertionMode();
+    } else {
+      enableAssertionMode();
+    }
   };
 
   if (artifacts.length === 0) return null;
@@ -79,6 +112,46 @@ export function BrowserArtifactPanel({
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
+                    {isSetup && isRecording && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleAssertionToggle}
+                        className={`h-8 w-8 p-0 ${
+                          isAssertionMode
+                            ? "bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        }`}
+                        title={
+                          isAssertionMode
+                            ? "Disable assertion mode"
+                            : "Enable assertion mode"
+                        }
+                      >
+                        <Target className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {isSetup && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRecordToggle}
+                        className={`h-8 w-8 p-0 ${
+                          isRecording
+                            ? "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
+                            : "hover:bg-accent hover:text-accent-foreground"
+                        }`}
+                        title={
+                          isRecording ? "Stop recording" : "Start recording"
+                        }
+                      >
+                        {isRecording ? (
+                          <Square className="w-4 h-4" />
+                        ) : (
+                          <Circle className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -103,7 +176,8 @@ export function BrowserArtifactPanel({
               <div className="flex-1 overflow-hidden">
                 <iframe
                   key={`${artifact.id}-${refreshKey}`}
-                  src={tabUrl}
+                  ref={isActive ? iframeRef : undefined}
+                  src={content.url}
                   className="w-full h-full border-0"
                   title={`Live Preview ${index + 1}`}
                 />
