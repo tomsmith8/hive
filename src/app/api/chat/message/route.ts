@@ -93,7 +93,8 @@ async function callStakwork(
   poolName: string | null,
   request: NextRequest,
   repo2GraphUrl: string,
-  webhook?: string
+  webhook?: string,
+  mode?: string
 ) {
   try {
     // Validate that all required Stakwork environment variables are set
@@ -126,9 +127,15 @@ async function callStakwork(
       repo2graph_url: repo2GraphUrl,
     };
 
+    const stakworkWorkflowIds = config.STAKWORK_WORKFLOW_ID.split(",");
+
+    console.log("config.STAKWORK_WORKFLOW_ID", config.STAKWORK_WORKFLOW_ID);
+    console.log("mode", mode);
+
+    const workflowId = mode === "live" ? stakworkWorkflowIds[0] : stakworkWorkflowIds[1];
     const stakworkPayload: StakworkWorkflowPayload = {
       name: "hive_autogen",
-      workflow_id: parseInt(config.STAKWORK_WORKFLOW_ID),
+      workflow_id: parseInt(workflowId),
       workflow_params: {
         set_var: {
           attributes: {
@@ -194,6 +201,7 @@ export async function POST(request: NextRequest) {
       artifacts = [] as ArtifactRequest[],
       webhook,
       replyId,
+      mode,
     } = body;
 
     // Validate required fields
@@ -348,7 +356,8 @@ export async function POST(request: NextRequest) {
         poolName,
         request,
         repo2GraphUrl,
-        webhook
+        webhook,
+        mode
       );
     } else {
       stakworkData = await callMock(taskId, message, userId, request);

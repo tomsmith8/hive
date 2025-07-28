@@ -28,6 +28,10 @@ export default function TaskChatPage() {
   const { toast } = useToast();
   const params = useParams();
 
+  const [taskMode, setTaskMode] = useState('live');
+
+
+
   const slug = params.slug as string;
   const taskParams = params.taskParams as string[];
 
@@ -46,6 +50,11 @@ export default function TaskChatPage() {
 
   // Use hook to check for active chat form and get webhook
   const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
+
+  useEffect(() => {
+    const mode = localStorage.getItem("task_mode");
+    setTaskMode(mode || 'live');
+  }, []);
 
   const { 
     logs, 
@@ -196,6 +205,7 @@ export default function TaskChatPage() {
         taskId: options?.taskId || currentTaskId,
         message: messageText,
         contextTags: [],
+        mode: taskMode,
         ...(options?.replyId && { replyId: options.replyId }),
         ...(options?.webhook && { webhook: options.webhook }),
       };
