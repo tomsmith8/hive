@@ -103,26 +103,29 @@ export function generateChatFormResponse() {
   );
 }
 
-export function generateBrowserResponse() {
+export function generateBrowserResponse(baseUrl: string) {
   const messageId = generateUniqueId();
 
-  return makeRes("Here's a live preview of the Sphinx Chat community site:", [
+  return makeRes("Here's a live preview of the site:", [
     createArtifact({
       id: "browser-artifact-1",
       messageId: messageId,
       type: ArtifactType.BROWSER,
       content: {
-        url: "https://community.sphinx.chat",
+        url: baseUrl,
       },
     }),
   ]);
 }
 
-export function generateResponseBasedOnMessage(message: string) {
+export function generateResponseBasedOnMessage(
+  message: string,
+  baseUrl: string
+) {
   const messageText = message.toLowerCase();
 
   if (messageText.includes("browser")) {
-    return generateBrowserResponse();
+    return generateBrowserResponse(baseUrl);
   } else if (messageText.includes("code")) {
     return generateCodeResponse();
   } else if (messageText.includes("chat")) {
