@@ -125,9 +125,6 @@ export default function TaskChatPage() {
     }
   }, [taskIdFromUrl, loadTaskMessages]);
 
-  // Connect to project log WebSocket when projectId is available
-  useProjectLogWebSocket(projectId, currentTaskId, true);
-
   const handleStart = async (msg: string) => {
     if (isNewTask) {
       // Create new task
