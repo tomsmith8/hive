@@ -64,7 +64,7 @@ export function ArtifactsPanel({ artifacts }: ArtifactsPanelProps) {
         >
           <TabsList className={`grid w-full grid-cols-${availableTabs.length}`}>
             {codeArtifacts.length > 0 && (
-              <TabsTrigger value="CODE">Code</TabsTrigger>
+              <TabsTrigger value="CODE">Code / Files</TabsTrigger>
             )}
             {browserArtifacts.length > 0 && (
               <TabsTrigger value="BROWSER">Live Preview</TabsTrigger>
