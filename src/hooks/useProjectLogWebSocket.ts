@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface LogEntry {
   timestamp: string;
@@ -13,6 +13,20 @@ export const useProjectLogWebSocket = (
   isVerboseLoggingEnabled: boolean = false
 ) => {
   const wsRef = useRef<WebSocket | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [lastLogLine, setLastLogLine] = useState<string>('');
+
+  const addLogEntry = useCallback((logEntry: LogEntry) => {
+    setLogs(prevLogs => [...prevLogs, logEntry]);
+    setLastLogLine(logEntry.message);
+  }, []);
+
+  // Clear logs function
+  const clearLogs = useCallback(() => {
+    setLogs([]);
+    setLastLogLine('');
+  }, []);
+
 
   useEffect(() => {
     if (!projectId || !chatId) {
@@ -56,6 +70,9 @@ export const useProjectLogWebSocket = (
             chatId,
             message: messageData.message,
           };
+
+          addLogEntry(logEntry);
+
           console.log("Project Log:", logEntry);
         }
       };
@@ -79,9 +96,12 @@ export const useProjectLogWebSocket = (
         wsRef.current = null;
       }
     };
-  }, [projectId, chatId, isVerboseLoggingEnabled]);
+  }, [projectId, chatId, isVerboseLoggingEnabled, addLogEntry]);
 
   return {
+    logs,
+    lastLogLine,
+    clearLogs,
     isConnected: wsRef.current?.readyState === WebSocket.OPEN,
     disconnect: () => {
       if (wsRef.current) {

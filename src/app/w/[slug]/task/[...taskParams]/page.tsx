@@ -41,14 +41,32 @@ export default function TaskChatPage() {
     taskIdFromUrl
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isChainVisible, setIsChainVisible] = useState(false);
+  const [isActionSend, setIsActionSend] = useState(false);
 
   // Use hook to check for active chat form and get webhook
   const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
 
+  const { 
+    logs, 
+    lastLogLine, 
+    clearLogs, 
+    isConnected: logConnected 
+  } = useProjectLogWebSocket(projectId, currentTaskId, true);
+
   // Handle incoming SSE messages
   const handleSSEMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
-  }, []);
+    
+    // Clear logs when we get a new message (similar to old implementation)
+    if (message.artifacts?.length === 0) {
+      clearLogs();
+    }
+    
+    // Hide chain visibility when message processing is complete
+    setIsChainVisible(false);
+    setIsActionSend(false);
+  }, [clearLogs]);
 
   // Use the Pusher connection hook
   const { isConnected, error: connectionError } = usePusherConnection({
@@ -204,6 +222,8 @@ export default function TaskChatPage() {
       if (result.data?.project_id) {
         console.log("Project ID:", result.data.project_id);
         setProjectId(result.data.project_id);
+        setIsChainVisible(true);
+        clearLogs();
       }
 
       // Update the temporary message status instead of replacing entirely
@@ -244,6 +264,7 @@ export default function TaskChatPage() {
     const originalMessage = messages.find((msg) => msg.id === messageId);
 
     if (originalMessage) {
+      setIsActionSend(true);
       // Send the artifact action response to the backend
       await sendMessage(action.optionResponse, {
         replyId: originalMessage.id,
@@ -293,6 +314,9 @@ export default function TaskChatPage() {
             inputDisabled={inputDisabled}
             isLoading={isLoading}
             hasNonFormArtifacts={hasNonFormArtifacts}
+            isChainVisible={isChainVisible || isActionSend}
+            lastLogLine={lastLogLine}
+            logs={logs}
           />
 
           <AnimatePresence>
