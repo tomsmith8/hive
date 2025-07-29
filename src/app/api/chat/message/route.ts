@@ -337,7 +337,9 @@ export async function POST(request: NextRequest) {
       user.accounts.find((account) => account.access_token)?.access_token ||
       null;
     const swarm = task.workspace.swarm;
-    const swarmUrl = swarm?.swarmUrl || null;
+    let swarmUrl = swarm?.swarmUrl || null;
+    swarmUrl = swarmUrl.replace("/api", ":8444/api");
+
     const swarmSecretAlias = swarm?.swarmSecretAlias || null;
     const poolName = swarm?.id || null;
     const repo2GraphUrl = `https://${swarm?.name}:3355`;
