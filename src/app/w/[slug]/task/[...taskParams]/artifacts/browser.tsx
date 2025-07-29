@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Monitor,
   RefreshCw,
@@ -19,6 +19,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Prism from "prismjs";
+import "prismjs/components/prism-javascript";
+import "./prism-dark-plus.css";
 
 interface PlaywrightTestModalProps {
   isOpen: boolean;
@@ -32,6 +35,19 @@ function PlaywrightTestModal({
   playwrightTest,
 }: PlaywrightTestModalProps) {
   const [copied, setCopied] = useState(false);
+  const codeRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (isOpen && playwrightTest) {
+      // Wait for the DOM element to be rendered
+      const timeoutId = setTimeout(() => {
+        if (codeRef.current) {
+          Prism.highlightElement(codeRef.current);
+        }
+      }, 50);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [playwrightTest, isOpen]);
 
   const handleCopy = async () => {
     try {
@@ -46,27 +62,29 @@ function PlaywrightTestModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="w-[98vw] h-[70vh] flex flex-col !max-w-none"
-        style={{ width: "94vw" }}
+        className="w-[98vw] h-[70vh] flex flex-col"
+        style={{ width: "94vw", maxWidth: "1200px" }}
       >
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Generated Playwright Test</DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col flex-1 min-h-0 gap-3">
-          <div className="flex justify-end flex-shrink-0">
+          <DialogTitle className="flex items-center justify-between">
+            Generated Playwright Test
             <Button
               variant="outline"
               size="sm"
               onClick={handleCopy}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 mr-6"
             >
               <Copy className="w-4 h-4" />
               {copied ? "Copied!" : "Copy Test"}
             </Button>
-          </div>
-          <div className="flex-1 min-h-0 border rounded-lg bg-muted/30 overflow-hidden">
-            <pre className="h-full w-full p-4 overflow-auto text-sm font-mono whitespace-pre-wrap">
-              <code>{playwrightTest}</code>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-auto">
+            <pre className="text-sm bg-background/50 p-4 rounded border">
+              <code ref={codeRef} className="language-javascript">
+                {playwrightTest}
+              </code>
             </pre>
           </div>
         </div>
