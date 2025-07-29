@@ -340,7 +340,7 @@ export async function POST(request: NextRequest) {
     const swarmUrl = swarm?.swarmUrl || null;
     const swarmSecretAlias = swarm?.swarmSecretAlias || null;
     const poolName = swarm?.id || null;
-    const repo2GraphUrl = `https://repo2graph.${swarm?.name}`;
+    const repo2GraphUrl = `https://${swarm?.name}:3355`;
 
     let stakworkData = null;
     // Call appropriate service based on environment configuration

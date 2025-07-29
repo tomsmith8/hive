@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     console.log("dataApi", dataApi);
 
-    const stakgraphUrl = `https://stakgraph.${swarm.name}`;
+    const stakgraphUrl = `https://${swarm.name}:7799`;
 
     console.log(">>>>>>>>.stakgraphUrl", stakgraphUrl);
 
@@ -243,7 +243,7 @@ export async function GET(request: NextRequest) {
 
 
 
-    const stakgraphUrl = `https://stakgraph.${swarm.name}`;
+    const stakgraphUrl = `https://${swarm.name}:7799`;
 
     // Proxy to stakgraph microservice
     const apiResult = await swarmApiRequest({
