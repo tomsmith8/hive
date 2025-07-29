@@ -9,9 +9,71 @@ import {
   Circle,
   Square,
   Target,
+  Copy,
 } from "lucide-react";
 import { Artifact, BrowserContent } from "@/lib/chat";
 import { useStaktrak } from "@/hooks/useStaktrak";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface PlaywrightTestModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  playwrightTest: string;
+}
+
+function PlaywrightTestModal({
+  isOpen,
+  onClose,
+  playwrightTest,
+}: PlaywrightTestModalProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(playwrightTest);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        className="w-[98vw] h-[70vh] flex flex-col !max-w-none"
+        style={{ width: "94vw" }}
+      >
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle>Generated Playwright Test</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+          <div className="flex justify-end flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              className="flex items-center gap-2"
+            >
+              <Copy className="w-4 h-4" />
+              {copied ? "Copied!" : "Copy Test"}
+            </Button>
+          </div>
+          <div className="flex-1 min-h-0 border rounded-lg bg-muted/30 overflow-hidden">
+            <pre className="h-full w-full p-4 overflow-auto text-sm font-mono whitespace-pre-wrap">
+              <code>{playwrightTest}</code>
+            </pre>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function BrowserArtifactPanel({
   artifacts,
@@ -38,6 +100,9 @@ export function BrowserArtifactPanel({
     stopRecording,
     enableAssertionMode,
     disableAssertionMode,
+    showPlaywrightModal,
+    generatedPlaywrightTest,
+    closePlaywrightModal,
   } = useStaktrak(activeContent?.url);
 
   // Use currentUrl from staktrak hook, fallback to content.url
@@ -186,6 +251,12 @@ export function BrowserArtifactPanel({
           );
         })}
       </div>
+
+      <PlaywrightTestModal
+        isOpen={showPlaywrightModal}
+        onClose={closePlaywrightModal}
+        playwrightTest={generatedPlaywrightTest}
+      />
     </div>
   );
 }

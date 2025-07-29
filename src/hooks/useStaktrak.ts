@@ -21,6 +21,36 @@ type StaktrakCommandType =
   | "staktrak-enable-selection"
   | "staktrak-disable-selection";
 
+interface PlaywrightTrackingData {
+  clicks?: {
+    clickDetails?: number[][];
+  };
+  inputChanges?: Array<{
+    elementSelector: string;
+    value: string;
+    action?: string;
+    timestamp: number;
+  }>;
+  assertions?: Array<{
+    type: string;
+    selector: string;
+    value: string;
+    timestamp: number;
+  }>;
+  userInfo?: {
+    windowSize: [number, number];
+  };
+  formElementChanges?: Array<{
+    elementSelector: string;
+    type: string;
+    value: string;
+    checked?: boolean;
+    text?: string;
+    timestamp: number;
+  }>;
+  focusChanges?: unknown[];
+}
+
 function sendCommand(
   iframeRef: React.RefObject<HTMLIFrameElement | null>,
   command: StaktrakCommandType
@@ -31,6 +61,17 @@ function sendCommand(
   }
 }
 
+declare global {
+  interface Window {
+    PlaywrightGenerator?: {
+      generatePlaywrightTest: (
+        url: string,
+        trackingData: PlaywrightTrackingData
+      ) => string;
+    };
+  }
+}
+
 export const useStaktrak = (initialUrl?: string) => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(
     initialUrl || null
@@ -38,6 +79,9 @@ export const useStaktrak = (initialUrl?: string) => {
   const [isSetup, setIsSetup] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isAssertionMode, setIsAssertionMode] = useState(false);
+  const [showPlaywrightModal, setShowPlaywrightModal] = useState(false);
+  const [generatedPlaywrightTest, setGeneratedPlaywrightTest] =
+    useState<string>("");
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -63,6 +107,11 @@ export const useStaktrak = (initialUrl?: string) => {
     sendCommand(iframeRef, "staktrak-disable-selection");
   };
 
+  const closePlaywrightModal = () => {
+    setShowPlaywrightModal(false);
+    setGeneratedPlaywrightTest("");
+  };
+
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       // console.log("****** message received:", event.data);
@@ -74,8 +123,22 @@ export const useStaktrak = (initialUrl?: string) => {
             setIsSetup(true);
             break;
           case "staktrak-results":
-            // TODO: Handle staktrak results
             console.log("Staktrak results:", staktrakEvent.data.data);
+
+            // Generate Playwright test when results are received
+            if (window.PlaywrightGenerator && initialUrl) {
+              try {
+                const playwrightTest =
+                  window.PlaywrightGenerator.generatePlaywrightTest(
+                    initialUrl,
+                    staktrakEvent.data.data as PlaywrightTrackingData
+                  );
+                setGeneratedPlaywrightTest(playwrightTest);
+                setShowPlaywrightModal(true);
+              } catch (error) {
+                console.error("Error generating Playwright test:", error);
+              }
+            }
             break;
           case "staktrak-selection":
             // TODO: Handle staktrak selection
@@ -96,7 +159,7 @@ export const useStaktrak = (initialUrl?: string) => {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, []);
+  }, [initialUrl]);
 
   return {
     currentUrl,
@@ -108,5 +171,8 @@ export const useStaktrak = (initialUrl?: string) => {
     stopRecording,
     enableAssertionMode,
     disableAssertionMode,
+    showPlaywrightModal,
+    generatedPlaywrightTest,
+    closePlaywrightModal,
   };
 };
