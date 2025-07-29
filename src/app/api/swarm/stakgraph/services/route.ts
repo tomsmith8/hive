@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     // Proxy to stakgraph microservice
     const apiResult = await swarmApiRequestAuth({
-      swarmUrl: `https://repo2graph.${swarm.name}`,
+      swarmUrl: `https://${swarm.name}:3355`,
       endpoint: '/services',
       method: 'GET',
       apiKey: swarm.swarmApiKey
