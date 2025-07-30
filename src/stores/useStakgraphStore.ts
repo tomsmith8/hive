@@ -7,6 +7,7 @@ import {
   SwarmData,
   EnvironmentData,
   ServicesData,
+  ServiceDataConfig,
 } from "@/components/stakgraph/types";
 import { EnvironmentVariable } from "@/types/wizard";
 import { ToastProps } from "@/components/ui/toast";
@@ -53,7 +54,7 @@ type StakgraphStore = {
   handleRepositoryChange: (data: Partial<RepositoryData>) => void;
   handleSwarmChange: (data: Partial<SwarmData>) => void;
   handleEnvironmentChange: (data: Partial<EnvironmentData>) => void;
-  handleServicesChange: (data: Partial<ServicesData>) => void;
+  handleServicesChange: (services: ServiceDataConfig[]) => void;
   handleEnvVarsChange: (
     newEnvVars: Array<{ name: string; value: string; show?: boolean }>
   ) => void;
@@ -91,6 +92,9 @@ export const useStakgraphStore = create<StakgraphStore>()(
           const result = await response.json();
           if (result.success && result.data) {
             const settings = result.data;
+
+            console.log("result.data>>>>", result.data);
+
             const newFormData = {
               name: settings.name || "",
               description: settings.description || "",
@@ -103,6 +107,8 @@ export const useStakgraphStore = create<StakgraphStore>()(
               status: settings.status,
               lastUpdated: settings.lastUpdated,
             };
+
+            console.log("newFormData", newFormData);
 
             set({ formData: newFormData });
 
@@ -158,9 +164,6 @@ export const useStakgraphStore = create<StakgraphStore>()(
 
       if (!state.formData.name.trim()) {
         newErrors.name = "Name is required";
-      }
-      if (!state.formData.description.trim()) {
-        newErrors.description = "Description is required";
       }
       if (!state.formData.repositoryUrl.trim()) {
         newErrors.repositoryUrl = "Repository URL is required";
@@ -345,10 +348,11 @@ export const useStakgraphStore = create<StakgraphStore>()(
       }
     },
 
-    handleServicesChange: (data: Partial<ServicesData>) => {
+    handleServicesChange: (services: ServiceDataConfig[]) => {
       const state = get();
+      console.log("Store receiving services:", services); // Debug log
       set({
-        formData: { ...state.formData, ...data },
+        formData: { ...state.formData, services: services },
         saved: false,
       });
     },
