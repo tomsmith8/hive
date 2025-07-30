@@ -54,15 +54,15 @@ export async function GET(request: NextRequest) {
       apiKey: swarm.swarmApiKey,
     });
 
-    await saveOrUpdateSwarm({
-      workspaceId: swarm.workspaceId,
-      services: apiResult?.data as unknown as ServiceConfig[],
-    });
-
     // Transform response format: wrap array in {services: [...]} for new format
     const responseData = Array.isArray(apiResult.data)
-      ? { services: apiResult.data }
-      : apiResult.data;
+      ? { services: apiResult.data as ServiceConfig[] }
+      : (apiResult.data as { services: ServiceConfig[] });
+
+    await saveOrUpdateSwarm({
+      workspaceId: swarm.workspaceId,
+      services: responseData.services,
+    });
 
     return NextResponse.json(
       {
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       },
       { status: apiResult.status },
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { success: false, message: "Failed to ingest code" },
       { status: 500 },
