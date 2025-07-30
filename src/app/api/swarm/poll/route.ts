@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       const swarm_id_num = match ? match[1] : swarm_id;
       const swarmSecretAlias = `{{SWARM_${swarm_id_num}_API_KEY}}`;
 
-      await 2({
+      await saveOrUpdateSwarm({
         workspaceId: swarm.workspaceId,
         status: SwarmStatus.ACTIVE,
         swarmApiKey: xApiKey,
