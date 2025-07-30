@@ -75,12 +75,6 @@ export const StakworkSetupStep = ({
           <Label htmlFor="stakworkName" className="text-sm font-medium text-gray-700">
             Stakwork Customer
           </Label>
-          {/* <Input
-            id="stakworkName"
-            value={workspaceName}
-            readOnly
-            className="mt-2 bg-gray-100 cursor-not-allowed"
-          /> */}
         </div>
         <div className="flex justify-between pt-4">
           <Button variant="outline" type="button" onClick={onBack}>

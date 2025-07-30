@@ -97,10 +97,29 @@ export async function POST(request: NextRequest) {
       message: `${name}-Swarm was created successfully`,
       data: { id: updatedSwarm.id, swarmId: swarm_id },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error creating Swarm:", error);
+
+    // Use type guard to check if error is an object and has `status`
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      typeof (error as { status: number }).status === "number"
+    ) {
+      const status = (error as { status: number }).status;
+      const errorMessage =
+        "message" in error ? error.message : "Failed to create swarm";
+
+      return NextResponse.json(
+        { success: false, message: errorMessage },
+        { status }
+      );
+    }
+
+    // Fallback for unknown error types
     return NextResponse.json(
-      { success: false, message: "Failed to create swarm" },
+      { success: false, message: "Unknown error while creating swarm" },
       { status: 500 }
     );
   }

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { WizardStateData, WizardStep } from '@/types/wizard';
 import { Repository } from '@/types';
 import { EnvironmentVariable } from '@/types/wizard';
 import { ServiceDataConfig } from '@/components/stakgraph/types';
@@ -155,37 +154,38 @@ export const useWizardStore = create<WizardStore>()(
     createSwarm: async () => {
       const state = get();
       set({ swarmIsLoading: true });
-
-      const res = await fetch("/api/swarm", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          workspaceId: state.workspaceId,
-          name: state.projectName,
-        }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || 'Failed to create swarm');
-      }
-
-      console.log(json);
-
-      const { swarmId } = json.data;
-
-      const swarmData = {
-        name: state.projectName,
-        selectedRepo: state.selectedRepo,
-        projectName: state.projectName,
-        repoName: state.repoName,
-        swarmId,
-      };
-
-
       try {
+
+
+        const res = await fetch("/api/swarm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            workspaceId: state.workspaceId,
+            name: state.projectName,
+          }),
+        });
+
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || 'Failed to create swarm');
+        }
+
+        console.log(json);
+
+        const { swarmId } = json.data;
+
+        const swarmData = {
+          name: state.projectName,
+          selectedRepo: state.selectedRepo,
+          projectName: state.projectName,
+          repoName: state.repoName,
+          swarmId,
+        };
+
+
         await state.updateWizardProgress({
           wizardStep: 'GRAPH_INFRASTRUCTURE',
           stepStatus: 'PROCESSING',
