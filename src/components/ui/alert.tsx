@@ -20,12 +20,12 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         className={cn(
           "relative w-full rounded-lg p-4 flex items-start gap-3",
           alertVariants[variant],
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 Alert.displayName = "Alert";
 

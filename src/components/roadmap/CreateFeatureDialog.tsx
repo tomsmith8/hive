@@ -26,7 +26,7 @@ interface CreateFeatureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateFeature: (
-    feature: Omit<Feature, "id" | "createdAt" | "updatedAt">
+    feature: Omit<Feature, "id" | "createdAt" | "updatedAt">,
   ) => void;
 }
 

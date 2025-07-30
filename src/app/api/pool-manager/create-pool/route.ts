@@ -48,16 +48,16 @@ export async function POST(request: NextRequest) {
     const password = generateRandomPassword(12);
 
     console.log(
-      "--------------------------------password--------------------------------"
+      "--------------------------------password--------------------------------",
     );
     console.log(password);
     console.log(
-      "--------------------------------password--------------------------------"
+      "--------------------------------password--------------------------------",
     );
 
     if (!poolApiKey) {
       console.log(
-        "--------------------------------login--------------------------------"
+        "--------------------------------login--------------------------------",
       );
       const loginResponse = await fetch(
         "https://workspaces.sphinx.chat/api/auth/login",
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
             username: "admin",
             password: env.POOL_MANAGER_API_PASSWORD,
           }),
-        }
+        },
       );
 
       const loginData = await loginResponse.json();
@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
       });
 
       console.log(
-        "--------------------------------createUser--------------------------------"
+        "--------------------------------createUser--------------------------------",
       );
       console.log(session.user.email);
       console.log(password);
       console.log((session.user.name || "").toLowerCase());
       console.log(
-        "--------------------------------createUser--------------------------------"
+        "--------------------------------createUser--------------------------------",
       );
 
       const sanitizedName = (session.user.name || "").replace(/\s+/g, "");
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     if (!swarm.id) {
       return NextResponse.json(
         { error: "Missing required field: name" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -155,11 +155,11 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(
-      "--------------------------------createPool--------------------------------"
+      "--------------------------------createPool--------------------------------",
     );
     console.log(poolApiKey);
     console.log(
-      "--------------------------------createPool--------------------------------"
+      "--------------------------------createPool--------------------------------",
     );
 
     const pool = await poolManager.createPool({
@@ -200,13 +200,13 @@ export async function POST(request: NextRequest) {
           service: apiError.service,
           details: apiError.details,
         },
-        { status: apiError.status }
+        { status: apiError.status },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to create pool" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

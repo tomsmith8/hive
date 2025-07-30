@@ -25,7 +25,7 @@ export async function fakePollSwarm(request: NextRequest) {
   if (!id || !fakeSwarms[id]) {
     return NextResponse.json(
       { success: false, message: "Swarm not found (FAKE)" },
-      { status: 404 }
+      { status: 404 },
     );
   }
   const fake = fakeSwarms[id];

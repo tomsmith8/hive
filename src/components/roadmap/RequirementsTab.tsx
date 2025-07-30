@@ -48,7 +48,7 @@ export function RequirementsTab({
   };
 
   const handleCreateRequirement = (
-    requirementData: Omit<Requirement, "id">
+    requirementData: Omit<Requirement, "id">,
   ) => {
     const newRequirement: Requirement = {
       ...requirementData,
@@ -68,7 +68,7 @@ export function RequirementsTab({
     const updatedFeature = {
       ...feature,
       requirements: feature.requirements.map((req) =>
-        req.id === updatedRequirement.id ? updatedRequirement : req
+        req.id === updatedRequirement.id ? updatedRequirement : req,
       ),
     };
 
@@ -82,7 +82,7 @@ export function RequirementsTab({
       const updatedFeature = {
         ...feature,
         requirements: feature.requirements.filter(
-          (req) => req.id !== requirementId
+          (req) => req.id !== requirementId,
         ),
       };
 
@@ -223,7 +223,7 @@ export function RequirementsTab({
                             {requirement.acceptanceCriteria.map(
                               (criteria, index) => (
                                 <li key={index}>{criteria}</li>
-                              )
+                              ),
                             )}
                           </ul>
                         </div>

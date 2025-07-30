@@ -48,7 +48,7 @@ export function UserStoriesTab({
     const updatedFeature = {
       ...feature,
       userStories: feature.userStories.map((story) =>
-        story.id === updatedStory.id ? updatedStory : story
+        story.id === updatedStory.id ? updatedStory : story,
       ),
     };
 
@@ -62,7 +62,7 @@ export function UserStoriesTab({
       const updatedFeature = {
         ...feature,
         userStories: feature.userStories.filter(
-          (story) => story.id !== storyId
+          (story) => story.id !== storyId,
         ),
       };
 

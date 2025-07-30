@@ -126,7 +126,7 @@ export const authOptions: NextAuthOptions = {
                   headers: {
                     Authorization: `token ${account.access_token}`,
                   },
-                }
+                },
               );
 
               githubAuth = await db.gitHubAuth.upsert({
@@ -186,7 +186,7 @@ export const authOptions: NextAuthOptions = {
           } else if (account && !account.access_token) {
             // Account exists but token is revoked - this is expected after disconnection
             console.log(
-              "GitHub account exists but token is revoked - user needs to re-authenticate"
+              "GitHub account exists but token is revoked - user needs to re-authenticate",
             );
           }
         }
@@ -226,7 +226,7 @@ export const authOptions: NextAuthOptions = {
  * Returns { username, pat } or null if not found.
  */
 export async function getGithubUsernameAndPAT(
-  userId: string
+  userId: string,
 ): Promise<{ username: string; pat: string } | null> {
   // Get GitHub username from GitHubAuth
   const githubAuth = await db.gitHubAuth.findUnique({ where: { userId } });

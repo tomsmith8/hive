@@ -16,7 +16,7 @@ export function WizardProgress({
   const currentStepIndex = STEPS_ARRAY.indexOf(currentStep);
   const progressPercentage = Math.max(
     0,
-    (currentStepIndex / (totalSteps - 1)) * 100
+    (currentStepIndex / (totalSteps - 1)) * 100,
   );
 
   const getStepIcon = (isActive: boolean, isPast: boolean) => {
@@ -63,7 +63,7 @@ export function WizardProgress({
 
     return Array.from(
       { length: end - adjustedStart + 1 },
-      (_, i) => adjustedStart + i
+      (_, i) => adjustedStart + i,
     );
   };
 

@@ -31,7 +31,7 @@ export function useStakwork() {
         return null;
       }
     },
-    []
+    [],
   );
 
   const clearError = useCallback(() => {

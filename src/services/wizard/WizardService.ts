@@ -14,7 +14,7 @@ export class WizardService extends BaseServiceClass {
     return this.handleRequest(async () => {
       console.log("/*/**//**/*/*/*/*/*/*/*/-*-/*-//*--*/-*/");
       const response: { data: WizardStateResponse } = await this.client.get(
-        `/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`
+        `/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`,
       );
       return response.data;
     }, "getWizardState");
@@ -22,12 +22,12 @@ export class WizardService extends BaseServiceClass {
 
   // Update wizard progress
   async updateWizardProgress(
-    data: WizardProgressRequest
+    data: WizardProgressRequest,
   ): Promise<WizardProgressResponse> {
     return this.handleRequest(async () => {
       const response: { data: WizardProgressResponse } = await this.client.put(
         "/api/code-graph/wizard-progress",
-        data
+        data,
       );
       return response.data;
     }, "updateWizardProgress");
@@ -38,7 +38,7 @@ export class WizardService extends BaseServiceClass {
     return this.handleRequest(async () => {
       const response: { data: WizardResetResponse } = await this.client.post(
         "/api/code-graph/wizard-reset",
-        { workspaceSlug }
+        { workspaceSlug },
       );
       return response.data;
     }, "resetWizard");
@@ -55,7 +55,7 @@ export class WizardService extends BaseServiceClass {
 
   // Poll swarm
   async pollSwarm(
-    swarmId: string
+    swarmId: string,
   ): Promise<{ success: boolean; status: string }> {
     return this.handleRequest(async () => {
       const response: { data: { success: boolean; status: string } } =

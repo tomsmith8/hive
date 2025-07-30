@@ -10,11 +10,11 @@ export abstract class BaseServiceClass implements BaseService {
     this.config = config;
 
     console.log(
-      "--------------------------------config--------------------------------"
+      "--------------------------------config--------------------------------",
     );
     console.log(config);
     console.log(
-      "--------------------------------config--------------------------------"
+      "--------------------------------config--------------------------------",
     );
 
     this.client = new HttpClient({
@@ -38,7 +38,7 @@ export abstract class BaseServiceClass implements BaseService {
 
   protected async handleRequest<T>(
     requestFn: () => Promise<T>,
-    context: string = "request"
+    context: string = "request",
   ): Promise<T> {
     try {
       return await requestFn();

@@ -13,7 +13,7 @@ export function useWorkspaceAccess() {
 
   if (context === undefined) {
     throw new Error(
-      "useWorkspaceAccess must be used within a WorkspaceProvider"
+      "useWorkspaceAccess must be used within a WorkspaceProvider",
     );
   }
 

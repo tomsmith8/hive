@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest) {
     if (!name) {
       return NextResponse.json(
         { error: "Missing required field: name" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,13 +42,13 @@ export async function PUT(request: NextRequest) {
           service: apiError.service,
           details: apiError.details,
         },
-        { status: apiError.status }
+        { status: apiError.status },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to update pool" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

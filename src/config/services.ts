@@ -73,7 +73,7 @@ export function validateServiceConfigs(): void {
 
 // Get service config by name
 export function getServiceConfig(
-  serviceName: keyof typeof serviceConfigs
+  serviceName: keyof typeof serviceConfigs,
 ): ServiceConfig {
   const config = serviceConfigs[serviceName];
   if (!config) {

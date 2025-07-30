@@ -21,7 +21,7 @@ export class HttpClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    service: string = "unknown"
+    service: string = "unknown",
   ): Promise<T> {
     const url = `${this.config.baseURL}${endpoint}`;
     console.log("[HttpClient] Requesting:", url);
@@ -38,7 +38,7 @@ export class HttpClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
-      this.config.timeout || 10000
+      this.config.timeout || 10000,
     );
     config.signal = controller.signal;
 
@@ -108,7 +108,7 @@ export class HttpClient {
   async get<T>(
     endpoint: string,
     headers?: Record<string, string>,
-    service?: string
+    service?: string,
   ): Promise<T> {
     return this.request<T>(endpoint, { method: "GET", headers }, service);
   }
@@ -117,15 +117,15 @@ export class HttpClient {
     endpoint: string,
     body?: unknown,
     headers?: Record<string, string>,
-    service?: string
+    service?: string,
   ): Promise<T> {
     console.log(
-      "--------------------------------post--------------------------------"
+      "--------------------------------post--------------------------------",
     );
     console.log(headers);
     console.log(body);
     console.log(
-      "--------------------------------post--------------------------------"
+      "--------------------------------post--------------------------------",
     );
 
     return this.request<T>(
@@ -135,7 +135,7 @@ export class HttpClient {
         body: body ? JSON.stringify(body) : undefined,
         headers,
       },
-      service
+      service,
     );
   }
 
@@ -143,7 +143,7 @@ export class HttpClient {
     endpoint: string,
     body?: unknown,
     headers?: Record<string, string>,
-    service?: string
+    service?: string,
   ): Promise<T> {
     return this.request<T>(
       endpoint,
@@ -152,7 +152,7 @@ export class HttpClient {
         body: body ? JSON.stringify(body) : undefined,
         headers,
       },
-      service
+      service,
     );
   }
 
@@ -160,7 +160,7 @@ export class HttpClient {
     endpoint: string,
     body?: unknown,
     headers?: Record<string, string>,
-    service?: string
+    service?: string,
   ): Promise<T> {
     return this.request<T>(
       endpoint,
@@ -169,14 +169,14 @@ export class HttpClient {
         body: body ? JSON.stringify(body) : undefined,
         headers,
       },
-      service
+      service,
     );
   }
 
   async delete<T>(
     endpoint: string,
     headers?: Record<string, string>,
-    service?: string
+    service?: string,
   ): Promise<T> {
     return this.request<T>(endpoint, { method: "DELETE", headers }, service);
   }

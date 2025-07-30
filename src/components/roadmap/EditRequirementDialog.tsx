@@ -64,7 +64,7 @@ export function EditRequirementDialog({
       setAcceptanceCriteria(
         requirement.acceptanceCriteria.length > 0
           ? requirement.acceptanceCriteria
-          : [""]
+          : [""],
       );
     }
   }, [requirement]);
@@ -96,7 +96,7 @@ export function EditRequirementDialog({
       priority: formData.priority,
       status: formData.status,
       acceptanceCriteria: acceptanceCriteria.filter(
-        (criteria) => criteria.trim() !== ""
+        (criteria) => criteria.trim() !== "",
       ),
       source: formData.source.trim() || undefined,
     });

@@ -76,7 +76,7 @@ export function CreateRequirementDialog({
       priority: formData.priority,
       status: formData.status,
       acceptanceCriteria: acceptanceCriteria.filter(
-        (criteria) => criteria.trim() !== ""
+        (criteria) => criteria.trim() !== "",
       ),
       source: formData.source.trim() || undefined,
     });

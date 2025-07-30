@@ -139,7 +139,7 @@ export const useWizardStore = create<WizardStore>()(
       set({ loading: true, error: null });
       try {
         const res = await fetch(
-          `/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`
+          `/api/code-graph/wizard-state?workspace=${encodeURIComponent(workspaceSlug)}`,
         );
         const json = await res.json();
         console.log(json);
@@ -269,5 +269,5 @@ export const useWizardStore = create<WizardStore>()(
     setSwarmIsLoading: (isLoading) => set({ swarmIsLoading: isLoading }),
     setIngestRefId: (id) => set({ ingestRefId: id }),
     resetWizard: () => set(initialState),
-  }))
+  })),
 );

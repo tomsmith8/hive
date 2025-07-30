@@ -33,7 +33,7 @@ const VALID_STATUS_TRANSITIONS: Record<StepStatus, StepStatus[]> = {
 
 function validateStepTransition(
   currentStep: SwarmWizardStep,
-  newStep: SwarmWizardStep
+  newStep: SwarmWizardStep,
 ): boolean {
   const currentIndex = WIZARD_STEP_ORDER.indexOf(currentStep);
   const newIndex = WIZARD_STEP_ORDER.indexOf(newStep);
@@ -45,7 +45,7 @@ function validateStepTransition(
 
 function validateStatusTransition(
   currentStatus: StepStatus,
-  newStatus: StepStatus
+  newStatus: StepStatus,
 ): boolean {
   return (
     VALID_STATUS_TRANSITIONS[currentStatus]?.includes(newStatus) ||
@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
           success: false,
           message: "Unauthorized",
         } as WizardProgressResponse,
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -75,12 +75,12 @@ export async function PUT(request: NextRequest) {
     const prismaWizardStep = enumFromString(
       SwarmWizardStep,
       wizardStep,
-      SwarmWizardStep.WELCOME
+      SwarmWizardStep.WELCOME,
     );
     const prismaStepStatus = enumFromString(
       StepStatus,
       stepStatus,
-      StepStatus.PENDING
+      StepStatus.PENDING,
     );
 
     if (!workspaceSlug) {
@@ -89,14 +89,14 @@ export async function PUT(request: NextRequest) {
           success: false,
           message: "Workspace slug is required",
         } as WizardProgressResponse,
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate workspace access
     const validatedSlug = await validateUserWorkspaceAccess(
       session,
-      workspaceSlug
+      workspaceSlug,
     );
     if (!validatedSlug) {
       return NextResponse.json(
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
           success: false,
           message: "Access denied to workspace",
         } as WizardProgressResponse,
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -125,7 +125,7 @@ export async function PUT(request: NextRequest) {
           success: false,
           message: "Workspace not found",
         } as WizardProgressResponse,
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -166,7 +166,7 @@ export async function PUT(request: NextRequest) {
           success: false,
           message: `Invalid wizard step transition from ${currentSwarm.wizardStep} to ${prismaWizardStep}`,
         } as WizardProgressResponse,
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -180,7 +180,7 @@ export async function PUT(request: NextRequest) {
         "Invalid step status transition from",
         currentSwarm.stepStatus,
         "to",
-        prismaStepStatus
+        prismaStepStatus,
       );
     }
 
@@ -216,7 +216,7 @@ export async function PUT(request: NextRequest) {
         message: "Internal server error",
         error: error instanceof Error ? error.message : "Unknown error",
       } as WizardProgressResponse,
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

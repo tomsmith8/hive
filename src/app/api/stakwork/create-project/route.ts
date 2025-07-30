@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         {
           error: "Missing required fields: title, description, budget, skills",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -56,13 +56,13 @@ export async function POST(request: NextRequest) {
           service: apiError.service,
           details: apiError.details,
         },
-        { status: apiError.status }
+        { status: apiError.status },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to create project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

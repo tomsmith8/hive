@@ -5,18 +5,18 @@ import { env } from "@/lib/env";
 export async function createSwarmApi(
   client: HttpClient,
   swarm: CreateSwarmRequest,
-  serviceName: string
+  serviceName: string,
 ): Promise<CreateSwarmResponse> {
   return client.post<CreateSwarmResponse>(
     `/api/super/new_swarm`,
     swarm,
     { "x-super-token": env.SWARM_SUPERADMIN_API_KEY as string },
-    serviceName
+    serviceName,
   );
 }
 
 export async function fetchSwarmDetails(
-  swarmId: string
+  swarmId: string,
 ): Promise<{ ok: boolean; data?: unknown; status: number }> {
   const maxRetries = 5;
   let delay = 500; // start with 500ms

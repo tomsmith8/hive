@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
           success: false,
           message: "Missing required fields: workspaceId or swarmId",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
     if (!swarm) {
       return NextResponse.json(
         { success: false, message: "Swarm not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
     if (!swarm.swarmUrl || !swarm.swarmApiKey) {
       return NextResponse.json(
         { success: false, message: "Swarm URL or API key not set" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -70,12 +70,12 @@ export async function GET(request: NextRequest) {
         status: apiResult.status,
         data: responseData,
       },
-      { status: apiResult.status }
+      { status: apiResult.status },
     );
   } catch (error) {
     return NextResponse.json(
       { success: false, message: "Failed to ingest code" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

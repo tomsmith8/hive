@@ -23,7 +23,7 @@ function validateWorkspaceSlugFormat(slug: string): boolean {
   // Check against reserved slugs
   if (
     RESERVED_WORKSPACE_SLUGS.includes(
-      slug as (typeof RESERVED_WORKSPACE_SLUGS)[number]
+      slug as (typeof RESERVED_WORKSPACE_SLUGS)[number],
     )
   ) {
     return false;
@@ -64,7 +64,7 @@ export default withAuth(
       pathname.startsWith("/favicon.ico") ||
       (firstSegment &&
         RESERVED_WORKSPACE_SLUGS.includes(
-          firstSegment as (typeof RESERVED_WORKSPACE_SLUGS)[number]
+          firstSegment as (typeof RESERVED_WORKSPACE_SLUGS)[number],
         ))
     ) {
       return NextResponse.next();
@@ -83,7 +83,7 @@ export default withAuth(
           console.log("Invalid workspace slug format:", workspaceSlug);
           // Redirect to workspace onboarding for invalid slugs
           return NextResponse.redirect(
-            new URL("/onboarding/workspace", req.url)
+            new URL("/onboarding/workspace", req.url),
           );
         }
 
@@ -101,7 +101,7 @@ export default withAuth(
         pathname.startsWith("/stakgraph")
       ) {
         console.log(
-          "Legacy route detected, redirecting to workspace onboarding..."
+          "Legacy route detected, redirecting to workspace onboarding...",
         );
 
         // Redirect to onboarding page which can handle workspace checking server-side
@@ -130,7 +130,7 @@ export default withAuth(
         if (
           firstSegment &&
           RESERVED_WORKSPACE_SLUGS.includes(
-            firstSegment as (typeof RESERVED_WORKSPACE_SLUGS)[number]
+            firstSegment as (typeof RESERVED_WORKSPACE_SLUGS)[number],
           )
         ) {
           // Onboarding routes require authentication
@@ -165,7 +165,7 @@ export default withAuth(
     pages: {
       signIn: "/auth/signin",
     },
-  }
+  },
 );
 
 export const config = {

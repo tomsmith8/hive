@@ -8,7 +8,7 @@ interface ToastContextType {
 }
 
 const ToastContext = React.createContext<ToastContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -32,7 +32,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
         }, toast.duration ?? 3000);
       }
     },
-    []
+    [],
   );
 
   const handleOpenChange = (id: number, open: boolean) => {

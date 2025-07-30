@@ -10,7 +10,7 @@ interface LogEntry {
 export const useProjectLogWebSocket = (
   projectId: string | null,
   chatId: string | null,
-  isVerboseLoggingEnabled: boolean = false
+  isVerboseLoggingEnabled: boolean = false,
 ) => {
   const wsRef = useRef<WebSocket | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -34,7 +34,7 @@ export const useProjectLogWebSocket = (
 
     const connectToLogWebSocket = () => {
       const ws = new WebSocket(
-        "wss://jobs.stakwork.com/cable?channel=ProjectLogChannel"
+        "wss://jobs.stakwork.com/cable?channel=ProjectLogChannel",
       );
 
       ws.onopen = () => {

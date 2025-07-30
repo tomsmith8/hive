@@ -9,7 +9,7 @@
 export function enumFromString<T>(
   enumObj: T,
   value: string | undefined,
-  fallback: T[keyof T]
+  fallback: T[keyof T],
 ): T[keyof T] {
   if (!value) return fallback;
   const values = Object.values(enumObj as object) as string[];

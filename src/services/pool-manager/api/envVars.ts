@@ -3,7 +3,7 @@ import { DevContainerFile } from "@/utils/devContainerUtils";
 
 export async function fetchPoolEnvVars(
   poolName: string,
-  poolApiKey: string
+  poolApiKey: string,
 ): Promise<Array<{ key: string; value: string }>> {
   const url = `${config.POOL_MANAGER_BASE_URL}/pools/${encodeURIComponent(poolName)}`;
   const headers = {
@@ -36,11 +36,11 @@ export async function updatePoolDataApi(
   poolApiKey: string,
   envVars: Array<{ name: string; value: string }>,
   currentEnvVars: Array<{ name: string; value: string; masked?: boolean }>,
-  containerFiles: Record<string, DevContainerFile>
+  containerFiles: Record<string, DevContainerFile>,
 ): Promise<void> {
   const url = `${config.POOL_MANAGER_BASE_URL}/pools/${encodeURIComponent(poolName)}`;
   const currentMap = new Map(
-    currentEnvVars.map((env) => [env.name, env.value])
+    currentEnvVars.map((env) => [env.name, env.value]),
   );
   const envVarsForApi = envVars.map(({ name, value }) => {
     const currentValue = currentMap.get(name);
@@ -55,16 +55,16 @@ export async function updatePoolDataApi(
   const body = JSON.stringify({
     env_vars: envVarsForApi,
     devcontainer_json: Buffer.from(
-      containerFiles["devcontainer_json"].content
+      containerFiles["devcontainer_json"].content,
     ).toString("base64"),
     dockerfile: Buffer.from(containerFiles["dockerfile"].content).toString(
-      "base64"
+      "base64",
     ),
     docker_compose_yml: Buffer.from(
-      containerFiles["docker_compose_yml"].content
+      containerFiles["docker_compose_yml"].content,
     ).toString("base64"),
     pm2_config_js: Buffer.from(
-      containerFiles["pm2_config_js"].content
+      containerFiles["pm2_config_js"].content,
     ).toString("base64"),
   });
 

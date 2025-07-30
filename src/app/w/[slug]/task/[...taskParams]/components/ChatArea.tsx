@@ -19,7 +19,7 @@ interface ChatAreaProps {
   onArtifactAction: (
     messageId: string,
     action: Option,
-    webhook: string
+    webhook: string,
   ) => Promise<void>;
   inputDisabled?: boolean;
   isLoading?: boolean;

@@ -27,7 +27,7 @@ export function usePoolManager() {
         return null;
       }
     },
-    []
+    [],
   );
 
   const clearError = useCallback(() => {

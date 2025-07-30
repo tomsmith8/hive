@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   if (!name || !slug) {
     return NextResponse.json(
       { error: "Missing required fields" },
-      { status: 400 }
+      { status: 400 },
     );
   }
   try {
@@ -63,7 +63,7 @@ export async function DELETE() {
   if (!workspace) {
     return NextResponse.json(
       { error: "No workspace found for user" },
-      { status: 404 }
+      { status: 404 },
     );
   }
   await db.workspace.delete({ where: { id: workspace.id } });

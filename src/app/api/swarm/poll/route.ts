@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!workspaceId && !swarmId) {
       return NextResponse.json(
         { success: false, message: "Missing workspaceId or swarmId" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!swarm) {
       return NextResponse.json(
         { success: false, message: "Swarm not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -41,19 +41,19 @@ export async function POST(request: NextRequest) {
     if (!swarm.swarmUrl) {
       return NextResponse.json(
         { success: false, message: "Swarm URL not set" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     if (!swarm.swarmApiKey) {
       return NextResponse.json(
         { success: false, message: "Swarm API key not set" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Use the new fetchSwarmStats with exponential backoff and super admin key
     const statsResult = await fetchSwarmDetails(
-      (swarm as { swarmId?: string; id: string }).swarmId || swarm.id
+      (swarm as { swarmId?: string; id: string }).swarmId || swarm.id,
     );
     if (
       statsResult.ok &&
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json(
       { success: false, message: "Failed to poll swarm status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
   if (!id) {
     return NextResponse.json(
       { success: false, message: "Missing id parameter" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
   if (!session?.user) {
     return NextResponse.json(
       { success: false, message: "Unauthorized" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
   if (!swarm) {
     return NextResponse.json(
       { success: false, message: "Swarm not found" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 

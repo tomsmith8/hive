@@ -15,7 +15,7 @@ interface ChatMessageProps {
   onArtifactAction: (
     messageId: string,
     action: Option,
-    webhook: string
+    webhook: string,
   ) => Promise<void>;
 }
 
@@ -67,7 +67,8 @@ export function ChatMessage({
           if (replyMessage && artifact.content) {
             const formContent = artifact.content as FormContent;
             selectedOption = formContent.options?.find(
-              (option: Option) => option.optionResponse === replyMessage.message
+              (option: Option) =>
+                option.optionResponse === replyMessage.message,
             );
           }
 

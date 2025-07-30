@@ -17,7 +17,7 @@ export interface WorkspaceResolutionResult {
  * This function handles the post-authentication routing logic
  */
 export async function resolveUserWorkspaceRedirect(
-  session: Session | null
+  session: Session | null,
 ): Promise<WorkspaceResolutionResult> {
   if (!session?.user) {
     return {
@@ -90,7 +90,7 @@ export async function resolveUserWorkspaceRedirect(
  * This is a convenience function that calls resolveUserWorkspaceRedirect and performs the redirect
  */
 export async function handleWorkspaceRedirect(
-  session: Session | null
+  session: Session | null,
 ): Promise<void> {
   const result = await resolveUserWorkspaceRedirect(session);
 
@@ -105,7 +105,7 @@ export async function handleWorkspaceRedirect(
  */
 export async function validateUserWorkspaceAccess(
   session: Session | null,
-  requestedSlug: string
+  requestedSlug: string,
 ): Promise<string | null> {
   if (!session?.user) {
     return null;
@@ -116,7 +116,7 @@ export async function validateUserWorkspaceAccess(
   try {
     const userWorkspaces = await getUserWorkspaces(userId);
     const hasAccess = userWorkspaces.some(
-      (workspace) => workspace.slug === requestedSlug
+      (workspace) => workspace.slug === requestedSlug,
     );
 
     return hasAccess ? requestedSlug : null;

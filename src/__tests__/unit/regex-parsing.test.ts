@@ -19,26 +19,26 @@ describe("Repository Name Regex Parsing", () => {
 
   test("should extract repo name from GitHub URL", () => {
     expect(
-      parseRepositoryName("https://github.com/user/my-awesome-project")
+      parseRepositoryName("https://github.com/user/my-awesome-project"),
     ).toBe("My Awesome Project");
     expect(parseRepositoryName("github.com/user/api_v2_backend")).toBe(
-      "Api V2 Backend"
+      "Api V2 Backend",
     );
     expect(
-      parseRepositoryName("https://github.com/user/ReactComponentLibrary")
+      parseRepositoryName("https://github.com/user/ReactComponentLibrary"),
     ).toBe("React Component Library");
   });
 
   test("should parse simple repo names", () => {
     expect(parseRepositoryName("my-awesome-project")).toBe(
-      "My Awesome Project"
+      "My Awesome Project",
     );
     expect(parseRepositoryName("api_v2_backend")).toBe("Api V2 Backend");
     expect(parseRepositoryName("ReactComponentLibrary")).toBe(
-      "React Component Library"
+      "React Component Library",
     );
     expect(parseRepositoryName("data-science-toolkit")).toBe(
-      "Data Science Toolkit"
+      "Data Science Toolkit",
     );
   });
 });

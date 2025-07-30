@@ -59,7 +59,7 @@ export function EditUserStoryDialog({
         priority: story.priority,
       });
       setAcceptanceCriteria(
-        story.acceptanceCriteria.length > 0 ? story.acceptanceCriteria : [""]
+        story.acceptanceCriteria.length > 0 ? story.acceptanceCriteria : [""],
       );
     }
   }, [story]);
@@ -99,7 +99,7 @@ export function EditUserStoryDialog({
       iWant: formData.iWant.trim(),
       soThat: formData.soThat.trim(),
       acceptanceCriteria: acceptanceCriteria.filter(
-        (criteria) => criteria.trim() !== ""
+        (criteria) => criteria.trim() !== "",
       ),
       priority: formData.priority,
     });

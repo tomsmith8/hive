@@ -27,7 +27,7 @@ export const ServicesStep = ({ onNext, onBack }: ServicesStepProps) => {
     (data: ServiceDataConfig[]) => {
       setServices(data);
     },
-    [services]
+    [services],
   );
 
   const handleNext = useCallback(async () => {

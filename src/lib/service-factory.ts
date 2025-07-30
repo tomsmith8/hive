@@ -16,11 +16,11 @@ export class ServiceFactory {
       const config = getServiceConfig(serviceName);
 
       console.log(
-        "--------------------------------config--------------------------------"
+        "--------------------------------config--------------------------------",
       );
       console.log(config);
       console.log(
-        "--------------------------------config--------------------------------"
+        "--------------------------------config--------------------------------",
       );
 
       switch (serviceName) {

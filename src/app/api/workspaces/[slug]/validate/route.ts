@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,7 +21,7 @@ export async function GET(
           canWrite: false,
           canAdmin: false,
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -38,7 +38,7 @@ export async function GET(
           canWrite: true, // You can enhance this based on role
           canAdmin: false, // You can enhance this based on role
         },
-        { status: 200 }
+        { status: 200 },
       );
     } else {
       return NextResponse.json(
@@ -49,7 +49,7 @@ export async function GET(
           canWrite: false,
           canAdmin: false,
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
   } catch (error: unknown) {
@@ -65,7 +65,7 @@ export async function GET(
         canWrite: false,
         canAdmin: false,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

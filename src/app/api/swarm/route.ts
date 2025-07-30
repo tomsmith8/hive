@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Missing required fields: workspaceId, name",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -66,14 +66,14 @@ export async function POST(request: NextRequest) {
     const thirdPartyName = `${name.toLowerCase()}-Swarm`;
 
     console.log(
-      "--------------------------------swarm-data--------------------------------"
+      "--------------------------------swarm-data--------------------------------",
     );
     console.log(vanity_address);
     console.log(thirdPartyName);
     console.log(instance_type);
     console.log(env);
     console.log(
-      "--------------------------------swarm-data--------------------------------"
+      "--------------------------------swarm-data--------------------------------",
     );
 
     const apiResponse = await swarmService.createSwarm({
@@ -113,14 +113,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { success: false, message: errorMessage },
-        { status }
+        { status },
       );
     }
 
     // Fallback for unknown error types
     return NextResponse.json(
       { success: false, message: "Unknown error while creating swarm" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -131,7 +131,7 @@ export async function PUT(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -144,7 +144,7 @@ export async function PUT(request: NextRequest) {
           success: false,
           message: "Missing required fields: swarmId, envVars, services",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -163,7 +163,7 @@ export async function PUT(request: NextRequest) {
     console.error("Error creating Swarm:", error);
     return NextResponse.json(
       { success: false, message: "Failed to create swarm" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

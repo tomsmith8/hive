@@ -29,14 +29,14 @@ interface IPoolManagerService {
   deletePool: (pool: DeletePoolRequest) => Promise<Pool>;
   getPoolEnvVars: (
     poolName: string,
-    poolApiKey: string
+    poolApiKey: string,
   ) => Promise<Array<{ key: string; value: string }>>;
   updatePoolData: (
     poolName: string,
     poolApiKey: string,
     envVars: Array<{ name: string; value: string }>,
     currentEnvVars: Array<{ name: string; value: string; masked?: boolean }>,
-    containerFiles: Record<string, DevContainerFile>
+    containerFiles: Record<string, DevContainerFile>,
   ) => Promise<void>;
 }
 
@@ -72,7 +72,7 @@ export class PoolManagerService
 
   async getPoolEnvVars(
     poolName: string,
-    poolApiKey: string
+    poolApiKey: string,
   ): Promise<Array<{ key: string; value: string }>> {
     return fetchPoolEnvVars(poolName, poolApiKey);
   }
@@ -82,14 +82,14 @@ export class PoolManagerService
     poolApiKey: string,
     envVars: Array<{ name: string; value: string }>,
     currentEnvVars: Array<{ name: string; value: string; masked?: boolean }>,
-    containerFiles: Record<string, DevContainerFile>
+    containerFiles: Record<string, DevContainerFile>,
   ): Promise<void> {
     return updatePoolDataApi(
       poolName,
       poolApiKey,
       envVars,
       currentEnvVars,
-      containerFiles
+      containerFiles,
     );
   }
 }

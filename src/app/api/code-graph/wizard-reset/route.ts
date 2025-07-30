@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Unauthorized",
         } as WizardResetResponse,
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Workspace slug is required",
         } as WizardResetResponse,
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate workspace access
     const validatedSlug = await validateUserWorkspaceAccess(
       session,
-      workspaceSlug
+      workspaceSlug,
     );
     if (!validatedSlug) {
       return NextResponse.json(
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Access denied to workspace",
         } as WizardResetResponse,
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Workspace not found",
         } as WizardResetResponse,
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "No swarm found for workspace",
         } as WizardResetResponse,
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
         message: "Internal server error",
         error: error instanceof Error ? error.message : "Unknown error",
       } as WizardResetResponse,
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

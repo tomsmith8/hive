@@ -44,7 +44,7 @@ async function callMock(
   taskId: string,
   message: string,
   userId: string,
-  request?: NextRequest
+  request?: NextRequest,
 ) {
   const baseUrl = getBaseUrl(request);
   console.log("Sending message to mock server", {
@@ -68,7 +68,7 @@ async function callMock(
 
     if (!response.ok) {
       console.error(
-        `Failed to send message to mock server: ${response.statusText}`
+        `Failed to send message to mock server: ${response.statusText}`,
       );
       return { success: false, error: response.statusText };
     }
@@ -94,7 +94,7 @@ async function callStakwork(
   request: NextRequest,
   repo2GraphUrl: string,
   webhook?: string,
-  mode?: string
+  mode?: string,
 ) {
   try {
     // Validate that all required Stakwork environment variables are set
@@ -103,7 +103,7 @@ async function callStakwork(
     }
     if (!config.STAKWORK_WORKFLOW_ID) {
       throw new Error(
-        "STAKWORK_WORKFLOW_ID is required for Stakwork integration"
+        "STAKWORK_WORKFLOW_ID is required for Stakwork integration",
       );
     }
 
@@ -164,7 +164,7 @@ async function callStakwork(
 
     if (!response.ok) {
       console.error(
-        `Failed to send message to Stakwork: ${response.statusText}`
+        `Failed to send message to Stakwork: ${response.statusText}`,
       );
       return { success: false, error: response.statusText };
     }
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return NextResponse.json(
         { error: "Invalid user session" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -209,13 +209,13 @@ export async function POST(request: NextRequest) {
     if (!message) {
       return NextResponse.json(
         { error: "Message is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     if (!taskId) {
       return NextResponse.json(
         { error: "taskId is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -316,7 +316,7 @@ export async function POST(request: NextRequest) {
     const clientMessage: ChatMessage = {
       ...chatMessage,
       contextTags: JSON.parse(
-        chatMessage.contextTags as string
+        chatMessage.contextTags as string,
       ) as ContextTag[],
       artifacts: chatMessage.artifacts.map((artifact) => ({
         ...artifact,
@@ -362,7 +362,7 @@ export async function POST(request: NextRequest) {
         request,
         repo2GraphUrl,
         webhook,
-        mode
+        mode,
       );
     } else {
       stakworkData = await callMock(taskId, message, userId, request);
@@ -373,13 +373,13 @@ export async function POST(request: NextRequest) {
         success: true,
         data: stakworkData.data,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Error creating chat message:", error);
     return NextResponse.json(
       { error: "Failed to create chat message" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

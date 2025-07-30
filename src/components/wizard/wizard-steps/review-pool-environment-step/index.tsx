@@ -44,7 +44,7 @@ const formatContainerEnv = (containerEnv: Record<string, string>) => {
 
   const entries = Object.entries(containerEnv);
   const formattedEntries = entries.map(
-    ([key, value]) => `    "${key}": "${value}"`
+    ([key, value]) => `    "${key}": "${value}"`,
   );
   return `{\n${formattedEntries.join(",\n")}\n  }`;
 };
@@ -52,7 +52,7 @@ const formatContainerEnv = (containerEnv: Record<string, string>) => {
 // Helper function to generate PM2 apps from services data
 const generatePM2Apps = (
   repoName: string,
-  servicesData: ServiceDataConfig[]
+  servicesData: ServiceDataConfig[],
 ) => {
   if (!servicesData || !servicesData || servicesData.length === 0) {
     // Return default configuration if no services
@@ -103,7 +103,7 @@ const formatPM2Apps = (
     watch: boolean;
     max_memory_restart: string;
     env: Record<string, string>;
-  }>
+  }>,
 ) => {
   const formattedApps = apps.map((app) => {
     const envEntries = Object.entries(app.env)
@@ -131,7 +131,7 @@ const getFiles = (
   repoName: string,
   projectName: string,
   servicesData: ServiceDataConfig[],
-  envVars: EnvironmentVariable[]
+  envVars: EnvironmentVariable[],
 ) => {
   const containerEnv = generateContainerEnv(envVars);
   const pm2Apps = generatePM2Apps(repoName, servicesData);
@@ -325,7 +325,7 @@ export const ReviewPoolEnvironmentStep = ({
   }, [originalContents]);
 
   const hasModifications = Object.keys(fileContents).some((fileName) =>
-    isFileModified(fileName)
+    isFileModified(fileName),
   );
 
   const handleNext = useCallback(async () => {
@@ -339,7 +339,7 @@ export const ReviewPoolEnvironmentStep = ({
         acc[name] = Buffer.from(content).toString("base64");
         return acc;
       },
-      {} as Record<string, string>
+      {} as Record<string, string>,
     );
 
     try {
@@ -468,7 +468,7 @@ export const ReviewPoolEnvironmentStep = ({
                     <span>
                       {formatBytes(
                         getFileStats(fileContents[file.name] || file.content)
-                          .bytes
+                          .bytes,
                       )}
                     </span>
                   </div>
@@ -489,7 +489,7 @@ export const ReviewPoolEnvironmentStep = ({
                       onClick={() =>
                         handleContentChange(
                           file.name,
-                          originalContents[file.name]
+                          originalContents[file.name],
                         )
                       }
                       className="absolute top-2 right-2"

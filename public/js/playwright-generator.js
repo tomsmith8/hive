@@ -1,10 +1,17 @@
 // src/playwright-generator.ts
 function generatePlaywrightTest(url, trackingData) {
   var _a;
-  if (!trackingData)
-    return generateEmptyTest(url);
-  const { clicks, inputChanges, assertions, userInfo, formElementChanges } = trackingData;
-  if (!((_a = clicks == null ? void 0 : clicks.clickDetails) == null ? void 0 : _a.length) && !(inputChanges == null ? void 0 : inputChanges.length) && !(assertions == null ? void 0 : assertions.length) && !(formElementChanges == null ? void 0 : formElementChanges.length)) {
+  if (!trackingData) return generateEmptyTest(url);
+  const { clicks, inputChanges, assertions, userInfo, formElementChanges } =
+    trackingData;
+  if (
+    !((_a = clicks == null ? void 0 : clicks.clickDetails) == null
+      ? void 0
+      : _a.length) &&
+    !(inputChanges == null ? void 0 : inputChanges.length) &&
+    !(assertions == null ? void 0 : assertions.length) &&
+    !(formElementChanges == null ? void 0 : formElementChanges.length)
+  ) {
     return generateEmptyTest(url);
   }
   return `import { test, expect } from '@playwright/test';
@@ -27,7 +34,7 @@ function generatePlaywrightTest(url, trackingData) {
     inputChanges,
     trackingData.focusChanges,
     assertions,
-    formElementChanges
+    formElementChanges,
   )}
   
     await page.waitForTimeout(432);
@@ -47,7 +54,13 @@ function generateEmptyTest(url) {
     console.log('No user interactions to replay');
   });`;
 }
-function generateUserInteractions(clicks, inputChanges, focusChanges, assertions = [], formElementChanges = []) {
+function generateUserInteractions(
+  clicks,
+  inputChanges,
+  focusChanges,
+  assertions = [],
+  formElementChanges = [],
+) {
   var _a;
   const allEvents = [];
   const processedSelectors = /* @__PURE__ */ new Set();
@@ -71,7 +84,7 @@ function generateUserInteractions(clicks, inputChanges, focusChanges, assertions
           value: latestChange.value,
           checked: latestChange.checked,
           timestamp: latestChange.timestamp,
-          isUserAction: true
+          isUserAction: true,
         });
         formElementTimestamps[selector] = latestChange.timestamp;
       } else if (changes[0].type === "select") {
@@ -85,7 +98,7 @@ function generateUserInteractions(clicks, inputChanges, focusChanges, assertions
               value: change.value,
               text: change.text,
               timestamp: change.timestamp,
-              isUserAction: true
+              isUserAction: true,
             });
             formElementTimestamps[selector] = change.timestamp;
             lastValue = change.value;
@@ -95,14 +108,24 @@ function generateUserInteractions(clicks, inputChanges, focusChanges, assertions
       processedSelectors.add(selector);
     });
   }
-  if ((_a = clicks == null ? void 0 : clicks.clickDetails) == null ? void 0 : _a.length) {
+  if (
+    (_a = clicks == null ? void 0 : clicks.clickDetails) == null
+      ? void 0
+      : _a.length
+  ) {
     clicks.clickDetails.forEach((clickDetail) => {
       const [x, y, selector, timestamp] = clickDetail;
-      const shouldSkip = processedSelectors.has(selector) || Object.entries(formElementTimestamps).some(
-        ([formSelector, formTimestamp]) => {
-          return (selector.includes(formSelector) || formSelector.includes(selector)) && Math.abs(timestamp - formTimestamp) < 500;
-        }
-      );
+      const shouldSkip =
+        processedSelectors.has(selector) ||
+        Object.entries(formElementTimestamps).some(
+          ([formSelector, formTimestamp]) => {
+            return (
+              (selector.includes(formSelector) ||
+                formSelector.includes(selector)) &&
+              Math.abs(timestamp - formTimestamp) < 500
+            );
+          },
+        );
       if (!shouldSkip) {
         allEvents.push({
           type: "click",
@@ -110,23 +133,27 @@ function generateUserInteractions(clicks, inputChanges, focusChanges, assertions
           y,
           selector,
           timestamp,
-          isUserAction: true
+          isUserAction: true,
         });
       }
     });
   }
   if (inputChanges == null ? void 0 : inputChanges.length) {
     const completedInputs = inputChanges.filter(
-      (change) => change.action === "complete" || !change.action
+      (change) => change.action === "complete" || !change.action,
     );
     completedInputs.forEach((change) => {
-      if (!processedSelectors.has(change.elementSelector) && !change.elementSelector.includes('type="checkbox"') && !change.elementSelector.includes('type="radio"')) {
+      if (
+        !processedSelectors.has(change.elementSelector) &&
+        !change.elementSelector.includes('type="checkbox"') &&
+        !change.elementSelector.includes('type="radio"')
+      ) {
         allEvents.push({
           type: "input",
           selector: change.elementSelector,
           value: change.value,
           timestamp: change.timestamp,
-          isUserAction: true
+          isUserAction: true,
         });
       }
     });
@@ -142,7 +169,7 @@ function generateUserInteractions(clicks, inputChanges, focusChanges, assertions
           selector: assertion.selector,
           value: assertion.value,
           timestamp: assertion.timestamp,
-          isUserAction: false
+          isUserAction: false,
         });
       }
     });
@@ -247,14 +274,13 @@ function generateUserInteractions(clicks, inputChanges, focusChanges, assertions
               "h3",
               "h4",
               "h5",
-              "h6"
+              "h6",
             ];
-            const isGenericSelector = genericSelectors.includes(
-              event.selector
-            );
+            const isGenericSelector = genericSelectors.includes(event.selector);
             if (isGenericSelector) {
               const cleanedText = cleanTextForGetByText(event.value);
-              const isShortText = cleanedText.length < 10 || cleanedText.split(" ").length <= 2;
+              const isShortText =
+                cleanedText.length < 10 || cleanedText.split(" ").length <= 2;
               code += `  // Assert element contains text: ${event.selector}
 `;
               if (isShortText) {
@@ -296,23 +322,25 @@ function generateUserInteractions(clicks, inputChanges, focusChanges, assertions
   return code;
 }
 function escapeTextForAssertion(text) {
-  if (!text)
-    return "";
-  return text.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").trim();
+  if (!text) return "";
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t")
+    .trim();
 }
 function cleanTextForGetByText(text) {
-  if (!text)
-    return "";
+  if (!text) return "";
   return text.replace(/\s+/g, " ").replace(/\n+/g, " ").trim();
 }
 function convertToPlaywrightSelector(cssSelector) {
-  if (!cssSelector)
-    return "";
+  if (!cssSelector) return "";
   let selector = cssSelector;
   if (selector.includes("[data-testid=")) {
     const match = selector.match(/\[data-testid="([^"]+)"\]/);
-    if (match)
-      return `[data-testid="${match[1]}"]`;
+    if (match) return `[data-testid="${match[1]}"]`;
   }
   if (selector.includes("html>body>")) {
     selector = selector.replace("html>body>", "");
@@ -322,17 +350,13 @@ function convertToPlaywrightSelector(cssSelector) {
     selector = parts.slice(-2).join(" ");
   }
   const idMatch = selector.match(/#([a-zA-Z0-9_-]+)/);
-  if (idMatch)
-    return `#${idMatch[1]}`;
+  if (idMatch) return `#${idMatch[1]}`;
   return selector;
 }
 function isTextAmbiguous(text) {
-  if (!text)
-    return true;
-  if (text.length < 6)
-    return true;
-  if (text.split(/\s+/).length <= 2)
-    return true;
+  if (!text) return true;
+  if (text.length < 6) return true;
+  if (text.split(/\s+/).length <= 2) return true;
   return false;
 }
 if (typeof window !== "undefined") {
@@ -341,7 +365,7 @@ if (typeof window !== "undefined") {
     convertToPlaywrightSelector,
     escapeTextForAssertion,
     cleanTextForGetByText,
-    isTextAmbiguous
+    isTextAmbiguous,
   };
   console.log("PlaywrightGenerator loaded and attached to window object");
 }
@@ -349,5 +373,5 @@ export {
   cleanTextForGetByText,
   escapeTextForAssertion,
   generatePlaywrightTest,
-  isTextAmbiguous
+  isTextAmbiguous,
 };

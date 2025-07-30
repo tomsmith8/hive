@@ -55,8 +55,8 @@ export function IngestCodeStep({ onNext }: IngestCodeStepStepProps) {
     try {
       const res = await fetch(
         `/api/swarm/stakgraph/services?workspaceId=${encodeURIComponent(
-          workspaceId
-        )}&swarmId=${encodeURIComponent(swarmId!)}`
+          workspaceId,
+        )}&swarmId=${encodeURIComponent(swarmId!)}`,
       );
       const data = await res.json();
 
@@ -81,7 +81,7 @@ export function IngestCodeStep({ onNext }: IngestCodeStepStepProps) {
 
       try {
         const res = await fetch(
-          `/api/swarm/stakgraph/ingest?id=${ingestRefId}&swarmId=${swarmId}&workspaceId=${workspaceId}`
+          `/api/swarm/stakgraph/ingest?id=${ingestRefId}&swarmId=${swarmId}&workspaceId=${workspaceId}`,
         );
         const { apiResult } = await res.json();
         const { data } = apiResult;

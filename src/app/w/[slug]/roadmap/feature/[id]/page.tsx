@@ -52,7 +52,7 @@ export default function FeatureDetailPage() {
 
   // Architecture tab state
   const [archMarkdown, setArchMarkdown] = useState<string>(
-    `# Sample Architecture\n\n- Use a service-oriented approach\n- Document all endpoints\n\n**Diagram:**\n\n![Sample](https://placehold.co/600x200?text=Architecture+Diagram)`
+    `# Sample Architecture\n\n- Use a service-oriented approach\n- Document all endpoints\n\n**Diagram:**\n\n![Sample](https://placehold.co/600x200?text=Architecture+Diagram)`,
   );
   const [archEditMode, setArchEditMode] = useState<boolean>(false);
   const [archLinks, setArchLinks] = useState<string[]>([
@@ -95,8 +95,8 @@ export default function FeatureDetailPage() {
     if (openTaskIdx !== null) {
       setTasks(
         tasks.map((t, i) =>
-          i === openTaskIdx ? { ...t, content: modalContent } : t
-        )
+          i === openTaskIdx ? { ...t, content: modalContent } : t,
+        ),
       );
       setOpenTaskIdx(null);
     }

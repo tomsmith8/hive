@@ -40,7 +40,7 @@ interface WorkspaceContextType {
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
-  undefined
+  undefined,
 );
 
 interface WorkspaceProviderProps {
@@ -96,7 +96,7 @@ export function WorkspaceProvider({
       setWorkspaces(fetchedWorkspaces);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load workspaces"
+        err instanceof Error ? err.message : "Failed to load workspaces",
       );
     } finally {
       setLoading(false);
@@ -117,7 +117,7 @@ export function WorkspaceProvider({
 
       router.push(newPath);
     },
-    [router, pathname]
+    [router, pathname],
   );
 
   // Initialize context when authentication status changes
@@ -166,7 +166,7 @@ export function WorkspaceProvider({
           } catch (err) {
             console.error(`Failed to fetch workspace ${currentSlug}:`, err);
             setError(
-              err instanceof Error ? err.message : "Failed to load workspace"
+              err instanceof Error ? err.message : "Failed to load workspace",
             );
             setWorkspace(null);
             setCurrentLoadedSlug(""); // Clear loaded slug on error

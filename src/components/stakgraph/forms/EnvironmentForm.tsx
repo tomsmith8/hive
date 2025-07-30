@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 interface EnvironmentFormProps extends FormSectionProps<EnvironmentData> {
   onEnvVarsChange: (
-    envVars: Array<{ name: string; value: string; show?: boolean }>
+    envVars: Array<{ name: string; value: string; show?: boolean }>,
   ) => void;
 }
 
@@ -35,7 +35,7 @@ export default function EnvironmentForm({
           name: env.name,
           value: env.value,
           show: false,
-        }))
+        })),
       );
     }
   }, [data.environmentVariables, setEnvVars]);

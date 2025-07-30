@@ -6,7 +6,7 @@ interface UseEnvironmentVarsReturn {
   handleEnvChange: (
     index: number,
     field: keyof EnvironmentVariable,
-    value: string | boolean
+    value: string | boolean,
   ) => void;
   handleAddEnv: () => void;
   handleRemoveEnv: (index: number) => void;
@@ -14,19 +14,19 @@ interface UseEnvironmentVarsReturn {
 }
 
 export function useEnvironmentVars(
-  initialVars?: EnvironmentVariable[]
+  initialVars?: EnvironmentVariable[],
 ): UseEnvironmentVarsReturn {
   const [envVars, setEnvVars] = useState<EnvironmentVariable[]>(
-    initialVars || [{ name: "", value: "", show: false }]
+    initialVars || [{ name: "", value: "", show: false }],
   );
 
   const handleEnvChange = (
     index: number,
     field: keyof EnvironmentVariable,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setEnvVars((prev) =>
-      prev.map((pair, i) => (i === index ? { ...pair, [field]: value } : pair))
+      prev.map((pair, i) => (i === index ? { ...pair, [field]: value } : pair)),
     );
   };
 

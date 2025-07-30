@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!message) {
       return NextResponse.json(
         { error: "Message is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     const clientMessage: ChatMessage = {
       ...chatMessage,
       contextTags: JSON.parse(
-        chatMessage.contextTags as string
+        chatMessage.contextTags as string,
       ) as ContextTag[],
       artifacts: chatMessage.artifacts.map((artifact) => ({
         ...artifact,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       try {
         const channelName = getTaskChannelName(taskId);
         console.log(
-          `🚀 Broadcasting message to Pusher channel: ${channelName}`
+          `🚀 Broadcasting message to Pusher channel: ${channelName}`,
         );
         console.log(`📨 Message content:`, {
           id: clientMessage.id,
@@ -107,11 +107,11 @@ export async function POST(request: NextRequest) {
         await pusherServer.trigger(
           channelName,
           PUSHER_EVENTS.NEW_MESSAGE,
-          clientMessage
+          clientMessage,
         );
 
         console.log(
-          `✅ Successfully broadcast message to Pusher channel: ${channelName}`
+          `✅ Successfully broadcast message to Pusher channel: ${channelName}`,
         );
       } catch (error) {
         console.error("❌ Error broadcasting to Pusher:", error);
@@ -124,13 +124,13 @@ export async function POST(request: NextRequest) {
         success: true,
         data: clientMessage,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Error creating chat response:", error);
     return NextResponse.json(
       { error: "Failed to create chat response" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

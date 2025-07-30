@@ -50,14 +50,14 @@ export async function POST(request: NextRequest) {
 
       const sanitizedSecretAlias = (swarm?.swarmSecretAlias || "").replace(
         /{{(.*?)}}/g,
-        "$1"
+        "$1",
       );
 
       if (sanitizedSecretAlias && swarm?.swarmApiKey && token) {
         await stakworkService().createSecret(
           sanitizedSecretAlias,
           swarm.swarmApiKey,
-          token
+          token,
         );
       }
 
@@ -75,13 +75,13 @@ export async function POST(request: NextRequest) {
           service: apiError.service,
           details: apiError.details,
         },
-        { status: apiError.status }
+        { status: apiError.status },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to create customer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

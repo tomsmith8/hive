@@ -54,7 +54,7 @@ export class StakworkService extends BaseServiceClass {
         endpoint,
         { customer: { name: customerName } },
         headers,
-        this.serviceName
+        this.serviceName,
       );
     };
 
@@ -70,7 +70,7 @@ export class StakworkService extends BaseServiceClass {
   async createSecret<T = unknown>(
     name: string,
     value: string,
-    token: string
+    token: string,
   ): Promise<T> {
     const endpoint = `/secrets`;
 
@@ -85,7 +85,7 @@ export class StakworkService extends BaseServiceClass {
         endpoint,
         { secret: { name: name, value: value } },
         headers,
-        this.serviceName
+        this.serviceName,
       );
     };
 
@@ -105,7 +105,7 @@ export class StakworkService extends BaseServiceClass {
       name: string;
       workflow_id: number;
       workflow_params: { set_var: { attributes: { vars: unknown } } };
-    }
+    },
   ): Promise<T> {
     // Compose headers as required by Stakwork
     const headers = {

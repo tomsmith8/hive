@@ -26,7 +26,7 @@ export function EnvironmentSetupStep({
   const workspaceId = useWizardStore((s) => s.workspaceId);
   const [loading, setLoading] = useState(false);
   const [localVars, setLocalVars] = useState<{ name: string; value: string }[]>(
-    []
+    [],
   );
 
   // Initialize from services[*].env
@@ -42,14 +42,14 @@ export function EnvironmentSetupStep({
       });
     });
     setLocalVars(
-      collectedVars.length > 0 ? collectedVars : [{ name: "", value: "" }]
+      collectedVars.length > 0 ? collectedVars : [{ name: "", value: "" }],
     );
   }, [services, envVars]);
 
   const handleChange = (
     index: number,
     field: "name" | "value",
-    value: string
+    value: string,
   ) => {
     setLocalVars((prev) => {
       const updated = [...prev];

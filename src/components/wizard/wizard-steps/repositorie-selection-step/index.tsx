@@ -62,7 +62,7 @@ export function RepositorySelectionStep({
   const filteredRepositories = repositories.filter(
     (repo) =>
       repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      repo.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      repo.description?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (

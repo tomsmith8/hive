@@ -81,7 +81,7 @@ export function CreateUserStoryDialog({
       iWant: formData.iWant.trim(),
       soThat: formData.soThat.trim(),
       acceptanceCriteria: acceptanceCriteria.filter(
-        (criteria) => criteria.trim() !== ""
+        (criteria) => criteria.trim() !== "",
       ),
       priority: formData.priority,
     });

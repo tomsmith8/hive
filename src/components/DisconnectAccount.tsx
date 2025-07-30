@@ -24,7 +24,7 @@ export function DisconnectAccount({ user }: DisconnectAccountProps) {
   const handleDisconnect = async () => {
     if (
       !confirm(
-        "Are you sure you want to disconnect your GitHub account? This will revoke access to your GitHub data and you'll need to reconnect to use the app."
+        "Are you sure you want to disconnect your GitHub account? This will revoke access to your GitHub data and you'll need to reconnect to use the app.",
       )
     ) {
       return;
@@ -57,7 +57,7 @@ export function DisconnectAccount({ user }: DisconnectAccountProps) {
             .replace(/^ +/, "")
             .replace(
               /=.*/,
-              "=;expires=" + new Date().toUTCString() + ";path=/"
+              "=;expires=" + new Date().toUTCString() + ";path=/",
             );
         });
       }

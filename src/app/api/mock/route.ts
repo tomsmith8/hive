@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     console.error("❌ Mock error processing message:", error);
     return NextResponse.json(
       { error: "Failed to process message" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
