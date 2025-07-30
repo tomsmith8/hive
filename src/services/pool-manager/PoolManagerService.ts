@@ -7,7 +7,6 @@ import {
   DeletePoolRequest,
   UpdatePoolRequest,
   Pool,
-  PoolUser,
 } from "@/types";
 import {
   fetchPoolEnvVars,
@@ -35,9 +34,9 @@ interface IPoolManagerService {
   updatePoolData: (
     poolName: string,
     poolApiKey: string,
-    envVars: Array<{ key: string; value: string }>,
-    currentEnvVars: Array<{ key: string; value: string; masked?: boolean }>,
-    containerFiles: Map<string, string>
+    envVars: Array<{ name: string; value: string }>,
+    currentEnvVars: Array<{ name: string; value: string; masked?: boolean }>,
+    containerFiles: Record<string, DevContainerFile>
   ) => Promise<void>;
 }
 
@@ -81,8 +80,8 @@ export class PoolManagerService
   async updatePoolData(
     poolName: string,
     poolApiKey: string,
-    envVars: Array<{ key: string; value: string }>,
-    currentEnvVars: Array<{ key: string; value: string; masked?: boolean }>,
+    envVars: Array<{ name: string; value: string }>,
+    currentEnvVars: Array<{ name: string; value: string; masked?: boolean }>,
     containerFiles: Record<string, DevContainerFile>
   ): Promise<void> {
     return updatePoolDataApi(

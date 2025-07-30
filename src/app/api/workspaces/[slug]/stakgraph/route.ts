@@ -11,6 +11,7 @@ import { saveOrUpdateSwarm, select as swarmSelect } from "@/services/swarm/db";
 import type { SwarmSelectResult } from "@/types/swarm";
 import { SwarmStatus } from "@prisma/client";
 import { getDevContainerFiles } from "@/utils/devContainerUtils";
+import { ServiceDataConfig } from "@/components/stakgraph";
 
 // Validation schema for stakgraph settings
 const stakgraphSettingsSchema = z.object({
@@ -19,6 +20,7 @@ const stakgraphSettingsSchema = z.object({
   swarmUrl: z.string().url("Invalid swarm URL"),
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   poolName: z.string().min(1, "Pool name is required"),
+  description: z.string().optional(),
   environmentVariables: z
     .array(
       z.object({
@@ -116,16 +118,10 @@ export async function GET(
       );
     }
 
-    const user = await db.user.findUnique({
-      where: {
-        email: session?.user?.email || "",
-      },
-    });
 
-    const poolApiKey = user?.poolApiKey;
 
     // Fetch environment variables from Pool Manager using poolName and poolApiKey
-    let environmentVariables = swarm?.environmentVariables;
+    const environmentVariables = swarm?.environmentVariables;
 
     const repository = await db.repository.findFirst({
       where: {
@@ -276,7 +272,7 @@ export async function PUT(
 
           const files = getDevContainerFiles({
             repoName: settings.name,
-            servicesData: settings.services,
+            servicesData: settings.services as ServiceDataConfig[],
             envVars: settings.environmentVariables,
           });
 
@@ -286,8 +282,8 @@ export async function PUT(
           await poolManager.updatePoolData(
             swarm.id,
             poolApiKey,
-            settings.environmentVariables,
-            currentEnvVars,
+            settings.environmentVariables as unknown as Array<{ name: string; value: string }>,
+            currentEnvVars as unknown as Array<{ name: string; value: string; masked?: boolean }>,
             files
           );
         }
