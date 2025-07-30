@@ -139,7 +139,7 @@ export async function GET(
         swarmUrl: swarm.swarmUrl || "",
         swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.id || "",
-        environmentVariables,
+        environmentVariables: typeof environmentVariables === "string" ? JSON.parse(environmentVariables) : environmentVariables,
         services:
           typeof swarm.services === "string"
             ? JSON.parse(swarm.services)
