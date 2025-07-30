@@ -40,7 +40,7 @@ export function generateCodeResponse() {
           action: "create",
         },
       }),
-    ]
+    ],
   );
 }
 
@@ -72,7 +72,7 @@ export function generateFormResponse() {
           ],
         },
       }),
-    ]
+    ],
   );
 }
 
@@ -99,7 +99,7 @@ export function generateChatFormResponse() {
           ],
         },
       }),
-    ]
+    ],
   );
 }
 
@@ -120,7 +120,7 @@ export function generateBrowserResponse(baseUrl: string) {
 
 export function generateResponseBasedOnMessage(
   message: string,
-  baseUrl: string
+  baseUrl: string,
 ) {
   const messageText = message.toLowerCase();
 

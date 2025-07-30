@@ -7,7 +7,7 @@ import { RepositoryStatus } from "@prisma/client";
 import { saveOrUpdateSwarm } from "@/services/swarm/db";
 
 interface WizardData {
-  selectedRepo?: { html_url?: string, default_branch?: string };
+  selectedRepo?: { html_url?: string; default_branch?: string };
 }
 
 export async function POST(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (!swarmId) {
       return NextResponse.json(
         { success: false, message: "Missing required fields: swarmId" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "No GitHub credentials found for user",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const { username, pat } = githubCreds;
@@ -53,13 +53,13 @@ export async function POST(request: NextRequest) {
     if (!swarm) {
       return NextResponse.json(
         { success: false, message: "Swarm not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
     if (!swarm.swarmUrl || !swarm.swarmApiKey) {
       return NextResponse.json(
         { success: false, message: "Swarm URL or API key not set" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -69,32 +69,29 @@ export async function POST(request: NextRequest) {
     console.log(swarm);
 
     let final_repo_url;
-    let branch = ''
+    let branch = "";
 
     if (
       swarm.wizardData &&
       typeof swarm.wizardData === "object" &&
       "selectedRepo" in swarm.wizardData
     ) {
-      final_repo_url =
-        (swarm.wizardData as WizardData).selectedRepo?.html_url;
+      final_repo_url = (swarm.wizardData as WizardData).selectedRepo?.html_url;
       branch =
-        (swarm.wizardData as WizardData).selectedRepo?.default_branch || '';
+        (swarm.wizardData as WizardData).selectedRepo?.default_branch || "";
     }
-    
-
 
     if (!final_repo_url) {
       return NextResponse.json(
         { success: false, message: "No repository URL found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!repoWorkspaceId) {
       return NextResponse.json(
         { success: false, message: "No repository workspace ID found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -117,13 +114,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-
     const dataApi = {
       repo_url: final_repo_url,
       username,
-      pat
+      pat,
     };
-
 
     console.log("dataApi", dataApi);
 
@@ -139,7 +134,6 @@ export async function POST(request: NextRequest) {
       apiKey: swarm.swarmApiKey,
       data: dataApi,
     });
-
 
     // If success, update repository status to SYNCED
     let finalStatus = repository.status;
@@ -162,7 +156,7 @@ export async function POST(request: NextRequest) {
       await saveOrUpdateSwarm({
         workspaceId: swarm.workspaceId,
         ingestRefId: apiResult.data?.request_id,
-      })
+      });
     }
 
     return NextResponse.json(
@@ -172,13 +166,13 @@ export async function POST(request: NextRequest) {
         data: apiResult.data,
         repositoryStatus: finalStatus,
       },
-      { status: apiResult.status }
+      { status: apiResult.status },
     );
   } catch (error) {
     console.log("Error ingesting code:", error);
     return NextResponse.json(
       { success: false, message: "Failed to ingest code" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -196,15 +190,14 @@ export async function GET(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
-
 
     if (!id) {
       return NextResponse.json(
         { success: false, message: "Missing required fields: id" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -216,7 +209,7 @@ export async function GET(request: NextRequest) {
           success: false,
           message: "No GitHub credentials found for user",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const { username, pat } = githubCreds;
@@ -231,23 +224,18 @@ export async function GET(request: NextRequest) {
     }
     const swarm = await db.swarm.findFirst({ where });
 
-
     if (!swarm) {
       return NextResponse.json(
         { success: false, message: "Swarm not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
     if (!swarm.swarmUrl || !swarm.swarmApiKey) {
       return NextResponse.json(
         { success: false, message: "Swarm URL or API key not set" },
-        { status: 400 }
+        { status: 400 },
       );
     }
-
-
-
-
 
     const stakgraphUrl = `https://${swarm.name}:7799`;
 
@@ -263,14 +251,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        apiResult
+        apiResult,
       },
-      { status: apiResult.status }
+      { status: apiResult.status },
     );
   } catch {
     return NextResponse.json(
       { success: false, message: "Failed to ingest code" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

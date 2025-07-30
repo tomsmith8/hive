@@ -26,7 +26,7 @@ const stakgraphSettingsSchema = z.object({
       z.object({
         name: z.string().min(1, "Environment variable key is required"),
         value: z.string(),
-      })
+      }),
     )
     .optional()
     .default([]),
@@ -39,7 +39,7 @@ const stakgraphSettingsSchema = z.object({
             if (val === undefined || val === null || val === "") return NaN;
             return Number(val);
           },
-          z.number().int().min(1, "Port is required")
+          z.number().int().min(1, "Port is required"),
         ),
         scripts: z.object({
           start: z.string().min(1, "Start script is required"),
@@ -51,7 +51,7 @@ const stakgraphSettingsSchema = z.object({
         dev: z.boolean().optional(),
         env: z.record(z.string()).optional(),
         language: z.string().optional(),
-      })
+      }),
     )
     .optional()
     .default([]),
@@ -59,7 +59,7 @@ const stakgraphSettingsSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -72,7 +72,7 @@ export async function GET(
           message: "Authentication required",
           error: "UNAUTHORIZED",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -84,7 +84,7 @@ export async function GET(
           message: "Invalid user session",
           error: "INVALID_SESSION",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -97,7 +97,7 @@ export async function GET(
           message: "Workspace not found",
           error: "WORKSPACE_NOT_FOUND",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -114,11 +114,9 @@ export async function GET(
           message: "No swarm found for this workspace",
           error: "SWARM_NOT_FOUND",
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
-
-
 
     // Fetch environment variables from Pool Manager using poolName and poolApiKey
     const environmentVariables = swarm?.environmentVariables;
@@ -139,7 +137,10 @@ export async function GET(
         swarmUrl: swarm.swarmUrl || "",
         swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.id || "",
-        environmentVariables: typeof environmentVariables === "string" ? JSON.parse(environmentVariables) : environmentVariables,
+        environmentVariables:
+          typeof environmentVariables === "string"
+            ? JSON.parse(environmentVariables)
+            : environmentVariables,
         services:
           typeof swarm.services === "string"
             ? JSON.parse(swarm.services)
@@ -156,14 +157,14 @@ export async function GET(
         message: "Internal server error",
         error: "INTERNAL_ERROR",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -176,7 +177,7 @@ export async function PUT(
           message: "Authentication required",
           error: "UNAUTHORIZED",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -188,7 +189,7 @@ export async function PUT(
           message: "Invalid user session",
           error: "INVALID_SESSION",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -201,7 +202,7 @@ export async function PUT(
           message: "Workspace not found",
           error: "WORKSPACE_NOT_FOUND",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -217,7 +218,7 @@ export async function PUT(
           error: "VALIDATION_ERROR",
           details: validationResult.error.flatten().fieldErrors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -256,7 +257,7 @@ export async function PUT(
     ) {
       try {
         const poolManager = new PoolManagerService(
-          config as unknown as ServiceConfig
+          config as unknown as ServiceConfig,
         );
 
         const swarm = (await db.swarm.findUnique({
@@ -267,7 +268,7 @@ export async function PUT(
         if (swarm) {
           const currentEnvVars = await poolManager.getPoolEnvVars(
             swarm.id,
-            poolApiKey
+            poolApiKey,
           );
 
           const files = getDevContainerFiles({
@@ -282,9 +283,16 @@ export async function PUT(
           await poolManager.updatePoolData(
             swarm.id,
             poolApiKey,
-            settings.environmentVariables as unknown as Array<{ name: string; value: string }>,
-            currentEnvVars as unknown as Array<{ name: string; value: string; masked?: boolean }>,
-            files
+            settings.environmentVariables as unknown as Array<{
+              name: string;
+              value: string;
+            }>,
+            currentEnvVars as unknown as Array<{
+              name: string;
+              value: string;
+              masked?: boolean;
+            }>,
+            files,
           );
         }
       } catch (err) {
@@ -322,7 +330,7 @@ export async function PUT(
         message: "Failed to save stakgraph settings",
         error: "INTERNAL_ERROR",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

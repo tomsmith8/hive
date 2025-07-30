@@ -34,7 +34,7 @@ export default function ServicesForm({
   const handleServiceChange = (
     idx: number,
     field: keyof ServiceDataConfig,
-    value: string | number
+    value: string | number,
   ) => {
     const updatedServices = [...data];
     if (field === "port") {
@@ -49,12 +49,12 @@ export default function ServicesForm({
   const handleServiceScriptChange = (
     idx: number,
     scriptKey: keyof ServiceDataConfig["scripts"],
-    value: string
+    value: string,
   ) => {
     const updatedServices = data.map((svc, i) =>
       i === idx
         ? { ...svc, scripts: { ...svc.scripts, [scriptKey]: value } }
-        : svc
+        : svc,
     );
     onChange(updatedServices);
   };

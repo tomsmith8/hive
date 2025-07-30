@@ -14,7 +14,7 @@ export function useChatForm(messages: ChatMessage[]) {
           if (artifact.type === "FORM" && artifact.content) {
             const formContent = artifact.content as FormContent;
             const hasChatOptions = formContent.options.some(
-              (option) => option.actionType === "chat"
+              (option) => option.actionType === "chat",
             );
             if (hasChatOptions) {
               return {

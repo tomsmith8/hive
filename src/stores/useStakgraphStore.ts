@@ -45,7 +45,7 @@ type StakgraphStore = {
   loadSettings: (slug: string) => Promise<void>;
   saveSettings: (
     slug: string,
-    toast: (opts: Omit<ToastProps, "open" | "onOpenChange">) => void
+    toast: (opts: Omit<ToastProps, "open" | "onOpenChange">) => void,
   ) => Promise<void>;
   resetForm: () => void;
 
@@ -56,7 +56,7 @@ type StakgraphStore = {
   handleEnvironmentChange: (data: Partial<EnvironmentData>) => void;
   handleServicesChange: (services: ServiceDataConfig[]) => void;
   handleEnvVarsChange: (
-    newEnvVars: Array<{ name: string; value: string; show?: boolean }>
+    newEnvVars: Array<{ name: string; value: string; show?: boolean }>,
   ) => void;
 
   // Setters
@@ -122,7 +122,7 @@ export const useStakgraphStore = create<StakgraphStore>()(
                   name: env.name,
                   value: env.value,
                   show: false,
-                })
+                }),
               );
               set({ envVars: newEnvVars });
             }
@@ -143,7 +143,7 @@ export const useStakgraphStore = create<StakgraphStore>()(
     // Save settings
     saveSettings: async (
       slug: string,
-      toast: (opts: Omit<ToastProps, "open" | "onOpenChange">) => void
+      toast: (opts: Omit<ToastProps, "open" | "onOpenChange">) => void,
     ) => {
       const state = get();
 
@@ -358,7 +358,7 @@ export const useStakgraphStore = create<StakgraphStore>()(
     },
 
     handleEnvVarsChange: (
-      newEnvVars: Array<{ name: string; value: string; show?: boolean }>
+      newEnvVars: Array<{ name: string; value: string; show?: boolean }>,
     ) => {
       set({
         envVars: newEnvVars,
@@ -372,5 +372,5 @@ export const useStakgraphStore = create<StakgraphStore>()(
     setInitialLoading: (loading) => set({ initialLoading: loading }),
     setSaved: (saved) => set({ saved }),
     resetForm: () => set(initialState),
-  }))
+  })),
 );

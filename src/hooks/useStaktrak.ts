@@ -53,7 +53,7 @@ interface PlaywrightTrackingData {
 
 function sendCommand(
   iframeRef: React.RefObject<HTMLIFrameElement | null>,
-  command: StaktrakCommandType
+  command: StaktrakCommandType,
 ) {
   console.log("Sending command:", command);
   if (iframeRef?.current && iframeRef.current.contentWindow) {
@@ -66,7 +66,7 @@ declare global {
     PlaywrightGenerator?: {
       generatePlaywrightTest: (
         url: string,
-        trackingData: PlaywrightTrackingData
+        trackingData: PlaywrightTrackingData,
       ) => string;
     };
   }
@@ -74,7 +74,7 @@ declare global {
 
 export const useStaktrak = (initialUrl?: string) => {
   const [currentUrl, setCurrentUrl] = useState<string | null>(
-    initialUrl || null
+    initialUrl || null,
   );
   const [isSetup, setIsSetup] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -131,7 +131,7 @@ export const useStaktrak = (initialUrl?: string) => {
                 const playwrightTest =
                   window.PlaywrightGenerator.generatePlaywrightTest(
                     initialUrl,
-                    staktrakEvent.data.data as PlaywrightTrackingData
+                    staktrakEvent.data.data as PlaywrightTrackingData,
                   );
                 setGeneratedPlaywrightTest(playwrightTest);
                 setShowPlaywrightModal(true);

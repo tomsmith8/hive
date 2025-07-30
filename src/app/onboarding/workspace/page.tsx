@@ -1,7 +1,10 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { redirect } from "next/navigation";
-import { getUserWorkspaces, getDefaultWorkspaceForUser } from "@/services/workspace";
+import {
+  getUserWorkspaces,
+  getDefaultWorkspaceForUser,
+} from "@/services/workspace";
 import { OnboardingWorkspaceClient } from "@/app/onboarding/workspace/client";
 import { WorkspaceWithRole } from "@/types";
 
@@ -46,7 +49,15 @@ export default async function OnboardingWorkspacePage() {
     email: session.user?.email,
     image: session.user?.image,
     id: userId,
-    github: (session.user as { github?: { username?: string; publicRepos?: number; followers?: number } })?.github,
+    github: (
+      session.user as {
+        github?: {
+          username?: string;
+          publicRepos?: number;
+          followers?: number;
+        };
+      }
+    )?.github,
   };
 
   return <OnboardingWorkspaceClient user={user} />;

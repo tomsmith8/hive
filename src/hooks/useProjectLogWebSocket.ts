@@ -10,23 +10,22 @@ interface LogEntry {
 export const useProjectLogWebSocket = (
   projectId: string | null,
   chatId: string | null,
-  isVerboseLoggingEnabled: boolean = false
+  isVerboseLoggingEnabled: boolean = false,
 ) => {
   const wsRef = useRef<WebSocket | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [lastLogLine, setLastLogLine] = useState<string>('');
+  const [lastLogLine, setLastLogLine] = useState<string>("");
 
   const addLogEntry = useCallback((logEntry: LogEntry) => {
-    setLogs(prevLogs => [...prevLogs, logEntry]);
+    setLogs((prevLogs) => [...prevLogs, logEntry]);
     setLastLogLine(logEntry.message);
   }, []);
 
   // Clear logs function
   const clearLogs = useCallback(() => {
     setLogs([]);
-    setLastLogLine('');
+    setLastLogLine("");
   }, []);
-
 
   useEffect(() => {
     if (!projectId || !chatId) {
@@ -35,7 +34,7 @@ export const useProjectLogWebSocket = (
 
     const connectToLogWebSocket = () => {
       const ws = new WebSocket(
-        "wss://jobs.stakwork.com/cable?channel=ProjectLogChannel"
+        "wss://jobs.stakwork.com/cable?channel=ProjectLogChannel",
       );
 
       ws.onopen = () => {

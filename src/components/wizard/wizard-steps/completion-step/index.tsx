@@ -4,7 +4,6 @@ import { Activity, CheckCircle, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWizardStore } from "@/stores/useWizardStore";
 
-
 export const CompletionStep = () => {
   const workspaceSlug = useWizardStore((s) => s.workspaceSlug);
 
@@ -12,7 +11,7 @@ export const CompletionStep = () => {
 
   const onNewTask = () => {
     router.push(`/w/${workspaceSlug}/task/new`);
-  }
+  };
 
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
@@ -25,8 +24,14 @@ export const CompletionStep = () => {
             </div>
             {/* Sparkle animations */}
             <Sparkles className="w-4 h-4 text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
-            <Sparkles className="w-3 h-3 text-blue-400 absolute -bottom-1 -left-1 animate-pulse" style={{ animationDelay: '0.5s' }} />
-            <Sparkles className="w-3 h-3 text-purple-400 absolute top-1 -left-2 animate-pulse" style={{ animationDelay: '1s' }} />
+            <Sparkles
+              className="w-3 h-3 text-blue-400 absolute -bottom-1 -left-1 animate-pulse"
+              style={{ animationDelay: "0.5s" }}
+            />
+            <Sparkles
+              className="w-3 h-3 text-purple-400 absolute top-1 -left-2 animate-pulse"
+              style={{ animationDelay: "1s" }}
+            />
           </div>
         </div>
         <CardTitle className="text-2xl text-foreground">

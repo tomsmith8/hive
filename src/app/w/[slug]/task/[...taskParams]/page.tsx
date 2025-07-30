@@ -40,7 +40,7 @@ export default function TaskChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [started, setStarted] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(
-    taskIdFromUrl
+    taskIdFromUrl,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isChainVisible, setIsChainVisible] = useState(false);
@@ -57,7 +57,7 @@ export default function TaskChatPage() {
   const { logs, lastLogLine, clearLogs } = useProjectLogWebSocket(
     projectId,
     currentTaskId,
-    true
+    true,
   );
 
   // Handle incoming SSE messages
@@ -74,7 +74,7 @@ export default function TaskChatPage() {
       setIsChainVisible(false);
       setIsActionSend(false);
     },
-    [clearLogs]
+    [clearLogs],
   );
 
   // Use the Pusher connection hook
@@ -173,7 +173,7 @@ export default function TaskChatPage() {
   const handleSend = async (message: string) => {
     await sendMessage(
       message,
-      chatWebhook ? { webhook: chatWebhook } : undefined
+      chatWebhook ? { webhook: chatWebhook } : undefined,
     );
   };
 
@@ -183,7 +183,7 @@ export default function TaskChatPage() {
       taskId?: string;
       replyId?: string;
       webhook?: string;
-    }
+    },
   ) => {
     if (isLoading) return;
 
@@ -237,8 +237,8 @@ export default function TaskChatPage() {
       // This prevents re-animation since React sees it as the same message
       setMessages((msgs) =>
         msgs.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: ChatStatus.SENT } : msg
-        )
+          msg.id === newMessage.id ? { ...msg, status: ChatStatus.SENT } : msg,
+        ),
       );
     } catch (error) {
       console.error("Error sending message:", error);
@@ -246,8 +246,8 @@ export default function TaskChatPage() {
       // Update message status to ERROR
       setMessages((msgs) =>
         msgs.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: ChatStatus.ERROR } : msg
-        )
+          msg.id === newMessage.id ? { ...msg, status: ChatStatus.ERROR } : msg,
+        ),
       );
 
       toast({
@@ -263,7 +263,7 @@ export default function TaskChatPage() {
   const handleArtifactAction = async (
     messageId: string,
     action: Option,
-    webhook: string
+    webhook: string,
   ) => {
     // console.log("Action triggered:", action);
 

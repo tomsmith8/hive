@@ -6,15 +6,21 @@ var userBehaviour = (() => {
   var __getOwnPropSymbols = Object.getOwnPropertySymbols;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
   var __propIsEnum = Object.prototype.propertyIsEnumerable;
-  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __defNormalProp = (obj, key, value) =>
+    key in obj
+      ? __defProp(obj, key, {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value,
+        })
+      : (obj[key] = value);
   var __spreadValues = (a, b) => {
     for (var prop in b || (b = {}))
-      if (__hasOwnProp.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
+      if (__hasOwnProp.call(b, prop)) __defNormalProp(a, prop, b[prop]);
     if (__getOwnPropSymbols)
       for (var prop of __getOwnPropSymbols(b)) {
-        if (__propIsEnum.call(b, prop))
-          __defNormalProp(a, prop, b[prop]);
+        if (__propIsEnum.call(b, prop)) __defNormalProp(a, prop, b[prop]);
       }
     return a;
   };
@@ -23,44 +29,50 @@ var userBehaviour = (() => {
       __defProp(target, name, { get: all[name], enumerable: true });
   };
   var __copyProps = (to, from, except, desc) => {
-    if (from && typeof from === "object" || typeof from === "function") {
+    if ((from && typeof from === "object") || typeof from === "function") {
       for (let key of __getOwnPropNames(from))
         if (!__hasOwnProp.call(to, key) && key !== except)
-          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+          __defProp(to, key, {
+            get: () => from[key],
+            enumerable:
+              !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
+          });
     }
     return to;
   };
-  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+  var __toCommonJS = (mod) =>
+    __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
   // src/index.ts
   var src_exports = {};
   __export(src_exports, {
-    default: () => src_default
+    default: () => src_default,
   });
 
   // src/utils.ts
   var getTimeStamp = () => Date.now();
-  var isInputOrTextarea = (element) => element.tagName === "INPUT" || element.tagName === "TEXTAREA" || element.isContentEditable;
+  var isInputOrTextarea = (element) =>
+    element.tagName === "INPUT" ||
+    element.tagName === "TEXTAREA" ||
+    element.isContentEditable;
   var getElementSelector = (element) => {
-    if (!element || element.nodeType !== 1)
-      return "";
+    if (!element || element.nodeType !== 1) return "";
     const dataset = element.dataset;
     if (dataset == null ? void 0 : dataset.testid)
       return `[data-testid="${dataset.testid}"]`;
     const id = element.id;
-    if (id)
-      return `#${id}`;
+    if (id) return `#${id}`;
     let selector = element.tagName.toLowerCase();
     const className = element.className;
     if (className) {
-      const classes = Array.from(element.classList).filter((cls) => cls !== "staktrak-selection-active").join(".");
-      if (classes)
-        selector += `.${classes}`;
+      const classes = Array.from(element.classList)
+        .filter((cls) => cls !== "staktrak-selection-active")
+        .join(".");
+      if (classes) selector += `.${classes}`;
     }
     if (element.tagName === "INPUT") {
       const type = element.type;
-      if (type)
-        selector += `[type="${type}"]`;
+      if (type) selector += `[type="${type}"]`;
     }
     return selector;
   };
@@ -77,13 +89,11 @@ var userBehaviour = (() => {
           const className = el.className;
           if (className) {
             el.classList.forEach((cls) => {
-              if (cls !== "staktrak-selection-active")
-                node += `.${cls}`;
+              if (cls !== "staktrak-selection-active") node += `.${cls}`;
             });
           }
           const id = el.id;
-          if (id)
-            node += `#${id}`;
+          if (id) node += `#${id}`;
         }
         path.push(node);
       }
@@ -91,18 +101,22 @@ var userBehaviour = (() => {
     return path.reverse().join(">");
   };
   var filterClickDetails = (clickDetails, assertions, config) => {
-    if (!clickDetails.length)
-      return [];
-    let filtered = config.filterAssertionClicks ? clickDetails.filter(
-      (click) => !assertions.some(
-        (assertion) => Math.abs(click[3] - assertion.timestamp) < 1e3 && (click[2].includes(assertion.selector) || assertion.selector.includes(click[2]))
-      )
-    ) : clickDetails;
+    if (!clickDetails.length) return [];
+    let filtered = config.filterAssertionClicks
+      ? clickDetails.filter(
+          (click) =>
+            !assertions.some(
+              (assertion) =>
+                Math.abs(click[3] - assertion.timestamp) < 1e3 &&
+                (click[2].includes(assertion.selector) ||
+                  assertion.selector.includes(click[2])),
+            ),
+        )
+      : clickDetails;
     const clicksBySelector = {};
     filtered.forEach((click) => {
       const selector = click[2];
-      if (!clicksBySelector[selector])
-        clicksBySelector[selector] = [];
+      if (!clicksBySelector[selector]) clicksBySelector[selector] = [];
       clicksBySelector[selector].push({ detail: click, timestamp: click[3] });
     });
     const result = [];
@@ -110,7 +124,10 @@ var userBehaviour = (() => {
       clicks.sort((a, b) => a.timestamp - b.timestamp);
       let lastClick = null;
       clicks.forEach((click) => {
-        if (!lastClick || click.timestamp - lastClick.timestamp > config.multiClickInterval) {
+        if (
+          !lastClick ||
+          click.timestamp - lastClick.timestamp > config.multiClickInterval
+        ) {
           result.push(click.detail);
         }
         lastClick = click;
@@ -138,7 +155,7 @@ var userBehaviour = (() => {
     inputDebounceDelay: 2e3,
     multiClickInterval: 300,
     filterAssertionClicks: true,
-    processData: (results) => console.log(results)
+    processData: (results) => console.log(results),
   };
   var UserBehaviorTracker = class {
     constructor() {
@@ -153,7 +170,7 @@ var userBehaviour = (() => {
         mutationObserver: null,
         mouseInterval: null,
         listeners: [],
-        alwaysListeners: []
+        alwaysListeners: [],
       };
       this.isRunning = false;
     }
@@ -171,7 +188,7 @@ var userBehaviour = (() => {
         formElementChanges: [],
         touchEvents: [],
         audioVideoInteractions: [],
-        assertions: []
+        assertions: [],
       };
     }
     makeConfig(newConfig) {
@@ -198,14 +215,14 @@ var userBehaviour = (() => {
           url: document.URL,
           userAgent: navigator.userAgent,
           platform: navigator.platform,
-          windowSize: [window.innerWidth, window.innerHeight]
+          windowSize: [window.innerWidth, window.innerHeight],
         };
       }
       if (this.config.timeCount) {
         this.results.time = {
           startedAt: getTimeStamp(),
           completedAt: 0,
-          totalSeconds: 0
+          totalSeconds: 0,
         };
       }
     }
@@ -220,8 +237,8 @@ var userBehaviour = (() => {
         clearInterval(this.memory.mouseInterval);
         this.memory.mouseInterval = null;
       }
-      Object.values(this.memory.inputDebounceTimers).forEach(
-        (timer) => clearTimeout(timer)
+      Object.values(this.memory.inputDebounceTimers).forEach((timer) =>
+        clearTimeout(timer),
       );
       this.memory.inputDebounceTimers = {};
       if (this.memory.assertionDebounceTimer) {
@@ -241,22 +258,25 @@ var userBehaviour = (() => {
             e.clientX,
             e.clientY,
             path,
-            getTimeStamp()
+            getTimeStamp(),
           ]);
           const target = e.target;
-          if (target.tagName === "INPUT" && (target.type === "checkbox" || target.type === "radio")) {
+          if (
+            target.tagName === "INPUT" &&
+            (target.type === "checkbox" || target.type === "radio")
+          ) {
             this.results.formElementChanges.push({
               elementSelector: getElementSelector(target),
               type: target.type,
               checked: target.checked,
               value: target.value,
-              timestamp: getTimeStamp()
+              timestamp: getTimeStamp(),
             });
           }
         };
         document.addEventListener("click", clickHandler);
-        this.memory.listeners.push(
-          () => document.removeEventListener("click", clickHandler)
+        this.memory.listeners.push(() =>
+          document.removeEventListener("click", clickHandler),
         );
       }
       if (this.config.mouseScroll) {
@@ -264,12 +284,12 @@ var userBehaviour = (() => {
           this.results.mouseScroll.push([
             window.scrollX,
             window.scrollY,
-            getTimeStamp()
+            getTimeStamp(),
           ]);
         };
         window.addEventListener("scroll", scrollHandler);
-        this.memory.listeners.push(
-          () => window.removeEventListener("scroll", scrollHandler)
+        this.memory.listeners.push(() =>
+          window.removeEventListener("scroll", scrollHandler),
         );
       }
       if (this.config.mouseMovement) {
@@ -295,24 +315,24 @@ var userBehaviour = (() => {
           this.results.windowSizes.push([
             window.innerWidth,
             window.innerHeight,
-            getTimeStamp()
+            getTimeStamp(),
           ]);
         };
         window.addEventListener("resize", resizeHandler);
-        this.memory.listeners.push(
-          () => window.removeEventListener("resize", resizeHandler)
+        this.memory.listeners.push(() =>
+          window.removeEventListener("resize", resizeHandler),
         );
       }
       if (this.config.visibilitychange) {
         const visibilityHandler = () => {
           this.results.visibilitychanges.push([
             document.visibilityState,
-            getTimeStamp()
+            getTimeStamp(),
           ]);
         };
         document.addEventListener("visibilitychange", visibilityHandler);
-        this.memory.listeners.push(
-          () => document.removeEventListener("visibilitychange", visibilityHandler)
+        this.memory.listeners.push(() =>
+          document.removeEventListener("visibilitychange", visibilityHandler),
         );
       }
       if (this.config.keyboardActivity) {
@@ -322,8 +342,8 @@ var userBehaviour = (() => {
           }
         };
         document.addEventListener("keypress", keyHandler);
-        this.memory.listeners.push(
-          () => document.removeEventListener("keypress", keyHandler)
+        this.memory.listeners.push(() =>
+          document.removeEventListener("keypress", keyHandler),
         );
       }
       if (this.config.formInteractions) {
@@ -337,22 +357,30 @@ var userBehaviour = (() => {
               type: "touchstart",
               x: touch.clientX,
               y: touch.clientY,
-              timestamp: getTimeStamp()
+              timestamp: getTimeStamp(),
             });
           }
         };
         document.addEventListener("touchstart", touchHandler);
-        this.memory.listeners.push(
-          () => document.removeEventListener("touchstart", touchHandler)
+        this.memory.listeners.push(() =>
+          document.removeEventListener("touchstart", touchHandler),
         );
       }
     }
     setupFormInteractions() {
       const attachFormListeners = (element) => {
         const htmlEl = element;
-        if (htmlEl.tagName === "INPUT" || htmlEl.tagName === "SELECT" || htmlEl.tagName === "TEXTAREA") {
+        if (
+          htmlEl.tagName === "INPUT" ||
+          htmlEl.tagName === "SELECT" ||
+          htmlEl.tagName === "TEXTAREA"
+        ) {
           const inputEl = htmlEl;
-          if (inputEl.type === "checkbox" || inputEl.type === "radio" || htmlEl.tagName === "SELECT") {
+          if (
+            inputEl.type === "checkbox" ||
+            inputEl.type === "radio" ||
+            htmlEl.tagName === "SELECT"
+          ) {
             const changeHandler = () => {
               const selector = getElementSelector(htmlEl);
               if (htmlEl.tagName === "SELECT") {
@@ -362,8 +390,10 @@ var userBehaviour = (() => {
                   elementSelector: selector,
                   type: "select",
                   value: selectEl.value,
-                  text: (selectedOption == null ? void 0 : selectedOption.text) || "",
-                  timestamp: getTimeStamp()
+                  text:
+                    (selectedOption == null ? void 0 : selectedOption.text) ||
+                    "",
+                  timestamp: getTimeStamp(),
                 });
               } else {
                 this.results.formElementChanges.push({
@@ -371,7 +401,7 @@ var userBehaviour = (() => {
                   type: inputEl.type,
                   checked: inputEl.checked,
                   value: inputEl.value,
-                  timestamp: getTimeStamp()
+                  timestamp: getTimeStamp(),
                 });
               }
             };
@@ -388,7 +418,7 @@ var userBehaviour = (() => {
                   elementSelector: selector,
                   value: inputEl.value,
                   timestamp: getTimeStamp(),
-                  action: "complete"
+                  action: "complete",
                 });
                 delete this.memory.inputDebounceTimers[elementId];
               }, this.config.inputDebounceDelay);
@@ -396,7 +426,7 @@ var userBehaviour = (() => {
                 elementSelector: selector,
                 value: inputEl.value,
                 timestamp: getTimeStamp(),
-                action: "intermediate"
+                action: "intermediate",
               });
             };
             const focusHandler = (e) => {
@@ -404,7 +434,7 @@ var userBehaviour = (() => {
               this.results.focusChanges.push({
                 elementSelector: selector,
                 type: e.type,
-                timestamp: getTimeStamp()
+                timestamp: getTimeStamp(),
               });
               if (e.type === "blur") {
                 const elementId = inputEl.id || selector;
@@ -416,7 +446,7 @@ var userBehaviour = (() => {
                   elementSelector: selector,
                   value: inputEl.value,
                   timestamp: getTimeStamp(),
-                  action: "complete"
+                  action: "complete",
                 });
               }
             };
@@ -426,20 +456,24 @@ var userBehaviour = (() => {
           }
         }
       };
-      document.querySelectorAll("input, select, textarea").forEach(attachFormListeners);
+      document
+        .querySelectorAll("input, select, textarea")
+        .forEach(attachFormListeners);
       this.memory.mutationObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === 1) {
               attachFormListeners(node);
-              node.querySelectorAll("input, select, textarea").forEach(attachFormListeners);
+              node
+                .querySelectorAll("input, select, textarea")
+                .forEach(attachFormListeners);
             }
           });
         });
       });
       this.memory.mutationObserver.observe(document.body, {
         childList: true,
-        subtree: true
+        subtree: true,
       });
       this.memory.listeners.push(() => {
         if (this.memory.mutationObserver) {
@@ -455,11 +489,11 @@ var userBehaviour = (() => {
         this.results.pageNavigation.push({
           type,
           url: document.URL,
-          timestamp: getTimeStamp()
+          timestamp: getTimeStamp(),
         });
         window.parent.postMessage(
           { type: "staktrak-page-navigation", data: document.URL },
-          "*"
+          "*",
         );
       };
       history.pushState = (...args) => {
@@ -474,17 +508,15 @@ var userBehaviour = (() => {
         recordStateChange("popstate");
       };
       window.addEventListener("popstate", popstateHandler);
-      this.memory.alwaysListeners.push(
-        () => window.removeEventListener("popstate", popstateHandler)
+      this.memory.alwaysListeners.push(() =>
+        window.removeEventListener("popstate", popstateHandler),
       );
     }
     setupMessageHandling() {
-      if (this.memory.alwaysListeners.length > 0)
-        return;
+      if (this.memory.alwaysListeners.length > 0) return;
       const messageHandler = (event) => {
         var _a;
-        if (!((_a = event.data) == null ? void 0 : _a.type))
-          return;
+        if (!((_a = event.data) == null ? void 0 : _a.type)) return;
         switch (event.data.type) {
           case "staktrak-start":
             this.resetResults();
@@ -505,15 +537,15 @@ var userBehaviour = (() => {
                 type: event.data.assertion.type || "hasText",
                 selector: event.data.assertion.selector,
                 value: event.data.assertion.value || "",
-                timestamp: getTimeStamp()
+                timestamp: getTimeStamp(),
               });
             }
             break;
         }
       };
       window.addEventListener("message", messageHandler);
-      this.memory.alwaysListeners.push(
-        () => window.removeEventListener("message", messageHandler)
+      this.memory.alwaysListeners.push(() =>
+        window.removeEventListener("message", messageHandler),
       );
     }
     setSelectionMode(isActive) {
@@ -526,8 +558,7 @@ var userBehaviour = (() => {
           if (selection == null ? void 0 : selection.toString().trim()) {
             const text = selection.toString();
             let container = selection.getRangeAt(0).commonAncestorContainer;
-            if (container.nodeType === 3)
-              container = container.parentNode;
+            if (container.nodeType === 3) container = container.parentNode;
             if (this.memory.assertionDebounceTimer)
               clearTimeout(this.memory.assertionDebounceTimer);
             this.memory.assertionDebounceTimer = setTimeout(() => {
@@ -536,19 +567,19 @@ var userBehaviour = (() => {
                 type: "hasText",
                 selector,
                 value: text,
-                timestamp: getTimeStamp()
+                timestamp: getTimeStamp(),
               };
               this.memory.assertions.push(assertion);
               window.parent.postMessage(
                 { type: "staktrak-selection", text, selector },
-                "*"
+                "*",
               );
             }, 300);
           }
         };
         document.addEventListener("mouseup", mouseUpHandler);
-        this.memory.listeners.push(
-          () => document.removeEventListener("mouseup", mouseUpHandler)
+        this.memory.listeners.push(() =>
+          document.removeEventListener("mouseup", mouseUpHandler),
         );
       } else {
         document.body.classList.remove("staktrak-selection-active");
@@ -556,25 +587,26 @@ var userBehaviour = (() => {
       }
       window.parent.postMessage(
         {
-          type: `staktrak-selection-mode-${isActive ? "started" : "ended"}`
+          type: `staktrak-selection-mode-${isActive ? "started" : "ended"}`,
         },
-        "*"
+        "*",
       );
     }
     processResults() {
       if (this.config.timeCount && this.results.time) {
         this.results.time.completedAt = getTimeStamp();
-        this.results.time.totalSeconds = (this.results.time.completedAt - this.results.time.startedAt) / 1e3;
+        this.results.time.totalSeconds =
+          (this.results.time.completedAt - this.results.time.startedAt) / 1e3;
       }
       this.results.clicks.clickDetails = filterClickDetails(
         this.results.clicks.clickDetails,
         this.memory.assertions,
-        this.config
+        this.config,
       );
       this.results.assertions = this.memory.assertions;
       window.parent.postMessage(
         { type: "staktrak-results", data: this.results },
-        "*"
+        "*",
       );
       this.config.processData(this.results);
       if (this.config.clearAfterProcess) {
@@ -602,17 +634,22 @@ var userBehaviour = (() => {
         type,
         selector,
         value,
-        timestamp: getTimeStamp()
+        timestamp: getTimeStamp(),
       });
     }
   };
   var userBehaviour = new UserBehaviorTracker();
   var initializeStakTrak = () => {
-    userBehaviour.makeConfig({
-      processData: (results) => console.log("StakTrak recording processed:", results)
-    }).listen();
+    userBehaviour
+      .makeConfig({
+        processData: (results) =>
+          console.log("StakTrak recording processed:", results),
+      })
+      .listen();
   };
-  document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", initializeStakTrak) : initializeStakTrak();
+  document.readyState === "loading"
+    ? document.addEventListener("DOMContentLoaded", initializeStakTrak)
+    : initializeStakTrak();
   var src_default = userBehaviour;
   return __toCommonJS(src_exports);
 })();
