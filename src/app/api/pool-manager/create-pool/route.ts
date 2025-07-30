@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth/nextauth";
+import { authOptions, getGithubUsernameAndPAT } from "@/lib/auth/nextauth";
 import { type ApiError } from "@/types";
 import { db } from "@/lib/db";
 import { generateRandomPassword } from "@/utils/randomPassword";
@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
         if (swarmId) where.swarmId = swarmId;
         if (!swarmId && workspaceId) where.workspaceId = workspaceId;
         const swarm = await db.swarm.findFirst({ where });
+
+        const github_pat = await getGithubUsernameAndPAT(session?.user.id);
 
         const password = generateRandomPassword(12);
 
@@ -160,6 +162,8 @@ export async function POST(request: NextRequest) {
             }
         })
 
+
+
         console.log("--------------------------------createPool--------------------------------")
         console.log(poolApiKey)
         console.log("--------------------------------createPool--------------------------------")
@@ -170,7 +174,7 @@ export async function POST(request: NextRequest) {
             repo_name: repository?.repositoryUrl || '',
             branch_name: repository?.branch || '',
             github_pat: account?.access_token || '',
-            github_username: session?.user.name || '',
+            github_username: github_pat?.username || '',
             env_vars: typeof swarm.environmentVariables === 'string'
                 ? JSON.parse(swarm.environmentVariables)
                 : [
