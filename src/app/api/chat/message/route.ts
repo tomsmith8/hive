@@ -132,7 +132,8 @@ async function callStakwork(
     console.log("config.STAKWORK_WORKFLOW_ID", config.STAKWORK_WORKFLOW_ID);
     console.log("mode", mode);
 
-    const workflowId = mode === "live" ? stakworkWorkflowIds[0] : stakworkWorkflowIds[1];
+    const workflowId =
+      mode === "live" ? stakworkWorkflowIds[0] : stakworkWorkflowIds[1];
     const stakworkPayload: StakworkWorkflowPayload = {
       name: "hive_autogen",
       workflow_id: parseInt(workflowId),
@@ -338,7 +339,9 @@ export async function POST(request: NextRequest) {
       null;
 
     const swarm = task.workspace.swarm;
-    const swarmUrl = swarm?.swarmUrl ? swarm.swarmUrl.replace("/api", ":8444/api") : '';
+    const swarmUrl = swarm?.swarmUrl
+      ? swarm.swarmUrl.replace("/api", ":8444/api")
+      : "";
 
     const swarmSecretAlias = swarm?.swarmSecretAlias || null;
     const poolName = swarm?.id || null;
@@ -368,7 +371,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        data: stakworkData.data
+        data: stakworkData.data,
       },
       { status: 201 }
     );

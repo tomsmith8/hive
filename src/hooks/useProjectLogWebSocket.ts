@@ -14,19 +14,18 @@ export const useProjectLogWebSocket = (
 ) => {
   const wsRef = useRef<WebSocket | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [lastLogLine, setLastLogLine] = useState<string>('');
+  const [lastLogLine, setLastLogLine] = useState<string>("");
 
   const addLogEntry = useCallback((logEntry: LogEntry) => {
-    setLogs(prevLogs => [...prevLogs, logEntry]);
+    setLogs((prevLogs) => [...prevLogs, logEntry]);
     setLastLogLine(logEntry.message);
   }, []);
 
   // Clear logs function
   const clearLogs = useCallback(() => {
     setLogs([]);
-    setLastLogLine('');
+    setLastLogLine("");
   }, []);
-
 
   useEffect(() => {
     if (!projectId || !chatId) {

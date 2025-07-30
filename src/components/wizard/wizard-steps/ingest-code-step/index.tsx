@@ -1,4 +1,9 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useCallback, useRef } from "react";
 import { useWizardStore } from "@/stores/useWizardStore";
@@ -8,9 +13,7 @@ interface IngestCodeStepStepProps {
   onBack?: () => void;
 }
 
-export function IngestCodeStep({
-  onNext,
-}: IngestCodeStepStepProps) {
+export function IngestCodeStep({ onNext }: IngestCodeStepStepProps) {
   const swarmId = useWizardStore((s) => s.swarmId);
   const workspaceId = useWizardStore((s) => s.workspaceId);
   const setCurrentStepStatus = useWizardStore((s) => s.setCurrentStepStatus);
@@ -58,7 +61,7 @@ export function IngestCodeStep({
       const data = await res.json();
 
       if (data.success || data.status === "ACTIVE") {
-        setServices(data.data);
+        setServices(data.data.services);
       } else {
         console.log("polling response (not ready):", data);
       }
@@ -112,7 +115,15 @@ export function IngestCodeStep({
         pollTimeoutRef.current = null;
       }
     };
-  }, [ingestRefId, swarmId, workspaceId, handleServices, setCurrentStepStatus, onNext, updateWizardProgress]);
+  }, [
+    ingestRefId,
+    swarmId,
+    workspaceId,
+    handleServices,
+    setCurrentStepStatus,
+    onNext,
+    updateWizardProgress,
+  ]);
 
   useEffect(() => {
     if (isPending && !ingestHasBeenSet.current) {

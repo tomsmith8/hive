@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +23,7 @@ export function GraphInfrastructureStep({
   onNext,
   onBack,
 }: GraphInfrastructureStepProps) {
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const swarmId = useWizardStore((s) => s.swarmId);
   const swarmName = useWizardStore((s) => s.swarmName);
   const projectName = useWizardStore((s) => s.projectName);
@@ -29,14 +35,13 @@ export function GraphInfrastructureStep({
   const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
   const swarmIsLoading = useWizardStore((s) => s.swarmIsLoading);
 
-
   const isPending = currentStepStatus === "PENDING";
 
   const handleCreate = async () => {
     try {
       await createSwarm();
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Unknown error');
+      setError(error instanceof Error ? error.message : "Unknown error");
       setCurrentStepStatus("FAILED");
       throw error;
     }
@@ -75,7 +80,7 @@ export function GraphInfrastructureStep({
           setTimeout(pollSwarm, 3000);
         }
       } catch (err) {
-        console.log(err)
+        console.log(err);
         if (!isCancelled) {
           setCurrentStepStatus("FAILED");
         }
@@ -96,22 +101,79 @@ export function GraphInfrastructureStep({
       <CardHeader className="text-center">
         {error && <div className="text-red-500">{error}</div>}
         <div className="flex items-center justify-center mx-auto mb-4">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="32" y1="12" x2="12" y2="32" stroke="#60A5FA" strokeWidth="2" />
-            <line x1="32" y1="12" x2="52" y2="32" stroke="#60A5FA" strokeWidth="2" />
-            <line x1="12" y1="32" x2="32" y2="52" stroke="#60A5FA" strokeWidth="2" />
-            <line x1="52" y1="32" x2="32" y2="52" stroke="#60A5FA" strokeWidth="2" />
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <line
+              x1="32"
+              y1="12"
+              x2="12"
+              y2="32"
+              stroke="#60A5FA"
+              strokeWidth="2"
+            />
+            <line
+              x1="32"
+              y1="12"
+              x2="52"
+              y2="32"
+              stroke="#60A5FA"
+              strokeWidth="2"
+            />
+            <line
+              x1="12"
+              y1="32"
+              x2="32"
+              y2="52"
+              stroke="#60A5FA"
+              strokeWidth="2"
+            />
+            <line
+              x1="52"
+              y1="32"
+              x2="32"
+              y2="52"
+              stroke="#60A5FA"
+              strokeWidth="2"
+            />
             <circle cx="32" cy="12" r="6" fill="#2563EB">
-              <animate attributeName="r" values="6;8;6" dur="1.2s" repeatCount="indefinite" />
+              <animate
+                attributeName="r"
+                values="6;8;6"
+                dur="1.2s"
+                repeatCount="indefinite"
+              />
             </circle>
             <circle cx="12" cy="32" r="5" fill="#3B82F6">
-              <animate attributeName="r" values="5;7;5" dur="1.2s" begin="0.3s" repeatCount="indefinite" />
+              <animate
+                attributeName="r"
+                values="5;7;5"
+                dur="1.2s"
+                begin="0.3s"
+                repeatCount="indefinite"
+              />
             </circle>
             <circle cx="52" cy="32" r="5" fill="#3B82F6">
-              <animate attributeName="r" values="5;7;5" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+              <animate
+                attributeName="r"
+                values="5;7;5"
+                dur="1.2s"
+                begin="0.6s"
+                repeatCount="indefinite"
+              />
             </circle>
             <circle cx="32" cy="52" r="5" fill="#60A5FA">
-              <animate attributeName="r" values="5;7;5" dur="1.2s" begin="0.9s" repeatCount="indefinite" />
+              <animate
+                attributeName="r"
+                values="5;7;5"
+                dur="1.2s"
+                begin="0.9s"
+                repeatCount="indefinite"
+              />
             </circle>
           </svg>
         </div>
@@ -124,8 +186,12 @@ export function GraphInfrastructureStep({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
             >
-              <CardTitle className="text-2xl">Creating Graph Infrastructure</CardTitle>
-              <CardDescription>Your graph infrastructure domain will be:</CardDescription>
+              <CardTitle className="text-2xl">
+                Creating Graph Infrastructure
+              </CardTitle>
+              <CardDescription>
+                Your graph infrastructure domain will be:
+              </CardDescription>
             </motion.div>
           ) : (
             <motion.div
@@ -136,7 +202,9 @@ export function GraphInfrastructureStep({
               transition={{ duration: 0.3 }}
             >
               <CardTitle className="text-2xl">Setting up Swarm</CardTitle>
-              <CardDescription>Your swarm is being set up. This may take a few minutes.</CardDescription>
+              <CardDescription>
+                Your swarm is being set up. This may take a few minutes.
+              </CardDescription>
             </motion.div>
           )}
         </AnimatePresence>
@@ -144,7 +212,10 @@ export function GraphInfrastructureStep({
 
       <CardContent className="space-y-6">
         <div>
-          <Label htmlFor="graphDomain" className="text-sm font-medium text-foreground">
+          <Label
+            htmlFor="graphDomain"
+            className="text-sm font-medium text-foreground"
+          >
             Graph Domain
           </Label>
           <Input
@@ -175,7 +246,11 @@ export function GraphInfrastructureStep({
             </>
           ) : (
             <div className="flex flex-col items-end gap-2 w-full">
-              <Button className="mt-2 ml-auto px-8 bg-muted text-muted-foreground" type="button" disabled>
+              <Button
+                className="mt-2 ml-auto px-8 bg-muted text-muted-foreground"
+                type="button"
+                disabled
+              >
                 Generating Swarm...
               </Button>
             </div>

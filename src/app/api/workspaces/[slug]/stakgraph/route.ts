@@ -118,8 +118,6 @@ export async function GET(
       );
     }
 
-
-
     // Fetch environment variables from Pool Manager using poolName and poolApiKey
     const environmentVariables = swarm?.environmentVariables;
 
@@ -139,7 +137,10 @@ export async function GET(
         swarmUrl: swarm.swarmUrl || "",
         swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.id || "",
-        environmentVariables: typeof environmentVariables === "string" ? JSON.parse(environmentVariables) : environmentVariables,
+        environmentVariables:
+          typeof environmentVariables === "string"
+            ? JSON.parse(environmentVariables)
+            : environmentVariables,
         services:
           typeof swarm.services === "string"
             ? JSON.parse(swarm.services)
@@ -282,8 +283,15 @@ export async function PUT(
           await poolManager.updatePoolData(
             swarm.id,
             poolApiKey,
-            settings.environmentVariables as unknown as Array<{ name: string; value: string }>,
-            currentEnvVars as unknown as Array<{ name: string; value: string; masked?: boolean }>,
+            settings.environmentVariables as unknown as Array<{
+              name: string;
+              value: string;
+            }>,
+            currentEnvVars as unknown as Array<{
+              name: string;
+              value: string;
+              masked?: boolean;
+            }>,
             files
           );
         }
