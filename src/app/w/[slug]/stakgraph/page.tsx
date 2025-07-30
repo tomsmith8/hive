@@ -13,6 +13,7 @@ import {
   RepositoryForm,
   SwarmForm,
   EnvironmentForm,
+  ServicesForm,
 } from "@/components/stakgraph";
 import { useStakgraphStore } from "@/stores/useStakgraphStore";
 
@@ -31,6 +32,7 @@ export default function StakgraphPage() {
     handleSwarmChange,
     handleEnvironmentChange,
     handleEnvVarsChange,
+    handleServicesChange,
   } = useStakgraphStore();
 
   const { toast } = useToast();
@@ -53,7 +55,6 @@ export default function StakgraphPage() {
 
   const allFieldsFilled =
     formData.name &&
-    formData.description &&
     formData.repositoryUrl &&
     formData.swarmUrl &&
     formData.swarmSecretAlias &&
@@ -183,11 +184,11 @@ export default function StakgraphPage() {
                 onEnvVarsChange={handleEnvVarsChange}
               />
 
-              {/* <ServicesForm
-                                data={{ services: formData.services }}
-                                loading={loading}
-                                onChange={handleServicesChange}
-                            /> */}
+              <ServicesForm
+                data={formData.services}
+                loading={loading}
+                onChange={handleServicesChange}
+              />
             </div>
 
             <Button type="submit" disabled={loading}>
