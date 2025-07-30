@@ -19,7 +19,6 @@ export interface StakgraphSettings {
   swarmUrl: string;
   swarmSecretAlias: string;
   poolName: string;
-  poolApiKey: string;
   environmentVariables: EnvironmentVariable[];
   services: ServiceDataConfig[];
   status?: string;
@@ -39,12 +38,10 @@ export interface RepositoryData {
 export interface SwarmData {
   swarmUrl: string;
   swarmSecretAlias: string;
-  poolApiKey: string;
 }
 
 export interface EnvironmentData {
   poolName: string;
-  poolApiKey: string;
   environmentVariables: EnvironmentVariable[];
 }
 
@@ -57,6 +54,8 @@ export interface FormSectionProps<T> {
   data: T;
   errors: Record<string, string>;
   loading: boolean;
-  onChange: T extends Array<infer U> ? (data: U[]) => void : (data: Partial<T>) => void;
+  onChange: T extends Array<infer U>
+    ? (data: U[]) => void
+    : (data: Partial<T>) => void;
   onValidationChange?: (errors: Record<string, string>) => void;
-} 
+}

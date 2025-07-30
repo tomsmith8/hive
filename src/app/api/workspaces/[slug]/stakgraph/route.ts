@@ -131,7 +131,6 @@ export async function GET(
         // Optionally, you can return an error or fallback to empty array
       }
     }
-
     return NextResponse.json({
       success: true,
       message: "Stakgraph settings retrieved successfully",
