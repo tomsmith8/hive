@@ -134,7 +134,6 @@ export const getDevContainerFiles = (
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker": {}
   },
-  "containerEnv": ${formatContainerEnv(containerEnv)},
   "customizations": {
     "vscode": {
         "settings": {
