@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useWizardStore } from "@/stores/useWizardStore";
 import { sanitizeWorkspaceName } from "@/utils/repositoryParser";
 
@@ -17,6 +17,7 @@ export function GraphInfrastructureStep({
   onNext,
   onBack,
 }: GraphInfrastructureStepProps) {
+  const [error, setError] = useState<string>('');
   const swarmId = useWizardStore((s) => s.swarmId);
   const swarmName = useWizardStore((s) => s.swarmName);
   const projectName = useWizardStore((s) => s.projectName);
@@ -28,12 +29,14 @@ export function GraphInfrastructureStep({
   const updateWizardProgress = useWizardStore((s) => s.updateWizardProgress);
   const swarmIsLoading = useWizardStore((s) => s.swarmIsLoading);
 
+
   const isPending = currentStepStatus === "PENDING";
 
   const handleCreate = async () => {
     try {
       await createSwarm();
     } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unknown error');
       setCurrentStepStatus("FAILED");
       throw error;
     }
@@ -91,6 +94,7 @@ export function GraphInfrastructureStep({
   return (
     <Card className="max-w-2xl mx-auto bg-card text-card-foreground">
       <CardHeader className="text-center">
+        {error && <div className="text-red-500">{error}</div>}
         <div className="flex items-center justify-center mx-auto mb-4">
           <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <line x1="32" y1="12" x2="12" y2="32" stroke="#60A5FA" strokeWidth="2" />

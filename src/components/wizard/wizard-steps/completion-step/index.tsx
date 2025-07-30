@@ -11,7 +11,7 @@ export const CompletionStep = () => {
   const router = useRouter();
 
   const onNewTask = () => {
-    router.push(`/w/${workspaceSlug}/tasks/new`);
+    router.push(`/w/${workspaceSlug}/task/new`);
   }
 
   return (
