@@ -54,10 +54,18 @@ export async function updatePoolDataApi(
   });
   const body = JSON.stringify({
     env_vars: envVarsForApi,
-    devcontainer_json: containerFiles["devcontainer_json"],
-    dockerfile: containerFiles["dockerfile"],
-    docker_compose_yml: containerFiles["docker_compose_yml"],
-    pm2_config_js: containerFiles["pm2_config_js"],
+    devcontainer_json: Buffer.from(
+      containerFiles["devcontainer_json"].content
+    ).toString("base64"),
+    dockerfile: Buffer.from(containerFiles["dockerfile"].content).toString(
+      "base64"
+    ),
+    docker_compose_yml: Buffer.from(
+      containerFiles["docker_compose_yml"].content
+    ).toString("base64"),
+    pm2_config_js: Buffer.from(
+      containerFiles["pm2_config_js"].content
+    ).toString("base64"),
   });
 
   const response = await fetch(url, {
