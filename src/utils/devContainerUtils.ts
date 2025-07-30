@@ -138,7 +138,8 @@ export const getDevContainerFiles = (
     "vscode": {
         "settings": {
           "git.autofetch": true,
-          "editor.formatOnSave": true
+          "editor.formatOnSave": true,
+          "telemetry.telemetryLevel": "off"
         },
         "extensions": [
             "stakwork.staklink"
