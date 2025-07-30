@@ -7,7 +7,7 @@ import { RepositoryStatus } from "@prisma/client";
 import { saveOrUpdateSwarm } from "@/services/swarm/db";
 
 interface WizardData {
-  selectedRepo?: { html_url?: string };
+  selectedRepo?: { html_url?: string, default_branch?: string };
 }
 
 export async function POST(request: NextRequest) {
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
     console.log(swarm);
 
     let final_repo_url;
+    let branch = ''
 
     if (
       swarm.wizardData &&
@@ -77,7 +78,11 @@ export async function POST(request: NextRequest) {
     ) {
       final_repo_url =
         (swarm.wizardData as WizardData).selectedRepo?.html_url;
+      branch =
+        (swarm.wizardData as WizardData).selectedRepo?.default_branch || '';
     }
+    
+
 
     if (!final_repo_url) {
       return NextResponse.json(
@@ -108,6 +113,7 @@ export async function POST(request: NextRequest) {
         repositoryUrl: final_repo_url,
         workspaceId: repoWorkspaceId,
         status: RepositoryStatus.PENDING,
+        branch,
       },
     });
 
