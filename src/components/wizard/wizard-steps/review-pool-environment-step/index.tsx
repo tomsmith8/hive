@@ -151,10 +151,11 @@ const getFiles = (
         "settings": {
           "git.autofetch": true,
           "editor.formatOnSave": true,
-          "telemetry.telemetryLevel": "off"
+          "telemetry.telemetryLevel": "off",
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
         "extensions": [
-            "stakwork.staklink"
+            "stakwork.staklink", "esbenp.prettier-vscode"
         ]
     }
   }
