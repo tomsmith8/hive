@@ -1,21 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Save, Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
+  EnvironmentForm,
   ProjectInfoForm,
   RepositoryForm,
-  SwarmForm,
-  EnvironmentForm,
   ServicesForm,
+  SwarmForm,
 } from "@/components/stakgraph";
+import { FileTabs } from "@/components/stakgraph/forms/EditFilesForm";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { useStakgraphStore } from "@/stores/useStakgraphStore";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, Save } from "lucide-react";
+import Link from "next/link";
+import { useEffect } from "react";
 
 export default function StakgraphPage() {
   const { slug, refreshCurrentWorkspace } = useWorkspace();
@@ -33,6 +34,7 @@ export default function StakgraphPage() {
     handleEnvironmentChange,
     handleEnvVarsChange,
     handleServicesChange,
+    handleFileChange
   } = useStakgraphStore();
 
   const { toast } = useToast();
@@ -55,10 +57,10 @@ export default function StakgraphPage() {
 
   const allFieldsFilled =
     formData.name &&
-    formData.repositoryUrl &&
-    formData.swarmUrl &&
-    formData.swarmSecretAlias &&
-    formData.poolName
+      formData.repositoryUrl &&
+      formData.swarmUrl &&
+      formData.swarmSecretAlias &&
+      formData.poolName
       ? true
       : false;
 
@@ -188,6 +190,12 @@ export default function StakgraphPage() {
                 data={formData.services}
                 loading={loading}
                 onChange={handleServicesChange}
+              />
+
+              <FileTabs
+                fileContents={formData.containerFiles}
+                originalContents={formData.containerFiles}
+                onChange={handleFileChange}
               />
             </div>
 

@@ -23,6 +23,7 @@ export interface StakgraphSettings {
   services: ServiceDataConfig[];
   status?: string;
   lastUpdated?: string;
+  containerFiles: Record<string, string>;
 }
 
 // Form section data types
@@ -55,7 +56,7 @@ export interface FormSectionProps<T> {
   errors: Record<string, string>;
   loading: boolean;
   onChange: T extends Array<infer U>
-    ? (data: U[]) => void
-    : (data: Partial<T>) => void;
+  ? (data: U[]) => void
+  : (data: Partial<T>) => void;
   onValidationChange?: (errors: Record<string, string>) => void;
 }

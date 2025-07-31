@@ -1,17 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
-import { getWorkspaceBySlug } from "@/services/workspace";
 import { db } from "@/lib/db";
-import { z } from "zod";
-import { PoolManagerService } from "@/services/pool-manager";
-import { ServiceConfig } from "@/types";
 import { config } from "@/lib/env";
+import { PoolManagerService } from "@/services/pool-manager";
 import { saveOrUpdateSwarm, select as swarmSelect } from "@/services/swarm/db";
+import { getWorkspaceBySlug } from "@/services/workspace";
+import { ServiceConfig } from "@/types";
 import type { SwarmSelectResult } from "@/types/swarm";
+import { getDevContainerFilesFromBase64 } from "@/utils/devContainerUtils";
 import { SwarmStatus } from "@prisma/client";
-import { getDevContainerFiles } from "@/utils/devContainerUtils";
-import { ServiceDataConfig } from "@/components/stakgraph";
+import { getServerSession } from "next-auth/next";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 // Validation schema for stakgraph settings
 const stakgraphSettingsSchema = z.object({
@@ -21,6 +20,7 @@ const stakgraphSettingsSchema = z.object({
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   poolName: z.string().min(1, "Pool name is required"),
   description: z.string().optional(),
+  containerFiles: z.record(z.string()).optional().default({}),
   environmentVariables: z
     .array(
       z.object({
@@ -147,6 +147,7 @@ export async function GET(
             : swarm.services || [],
         status: swarm.status,
         lastUpdated: swarm.updatedAt,
+        containerFiles: swarm.containerFiles || [],
       },
     });
   } catch (error) {
@@ -237,6 +238,7 @@ export async function PUT(
       poolName: settings.poolName,
       services: settings.services,
       environmentVariables: settings.environmentVariables,
+      containerFiles: settings.containerFiles,
     });
 
     const user = await db.user.findUnique({
@@ -271,13 +273,8 @@ export async function PUT(
             poolApiKey,
           );
 
-          const files = getDevContainerFiles({
-            repoName: settings.name,
-            servicesData: settings.services as ServiceDataConfig[],
-            envVars: settings.environmentVariables,
-          });
-
-          console.log("<<<<<<<<<<<<<<<<<<<files>>>>>>>>>>>>>>>>>>>", files);
+          // TODO: This is a solution to preserve data structure.
+          const files = getDevContainerFilesFromBase64(settings.containerFiles);
 
           // Always send all vars, with correct masked/changed status
           await poolManager.updatePoolData(

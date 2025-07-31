@@ -1,16 +1,16 @@
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import {
-  StakgraphSettings,
+  EnvironmentData,
   ProjectInfoData,
   RepositoryData,
-  SwarmData,
-  EnvironmentData,
-  ServicesData,
   ServiceDataConfig,
+  StakgraphSettings,
+  SwarmData
 } from "@/components/stakgraph/types";
-import { EnvironmentVariable } from "@/types/wizard";
 import { ToastProps } from "@/components/ui/toast";
+import { EnvironmentVariable } from "@/types/wizard";
+import { getPM2AppsContent } from "@/utils/devContainerUtils";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 const initialFormData: StakgraphSettings = {
   name: "",
@@ -21,6 +21,7 @@ const initialFormData: StakgraphSettings = {
   poolName: "",
   environmentVariables: [],
   services: [],
+  containerFiles: {},
 };
 
 const initialState = {
@@ -55,6 +56,7 @@ type StakgraphStore = {
   handleSwarmChange: (data: Partial<SwarmData>) => void;
   handleEnvironmentChange: (data: Partial<EnvironmentData>) => void;
   handleServicesChange: (services: ServiceDataConfig[]) => void;
+  handleFileChange: (fileName: string, content: string) => void;
   handleEnvVarsChange: (
     newEnvVars: Array<{ name: string; value: string; show?: boolean }>,
   ) => void;
@@ -95,6 +97,11 @@ export const useStakgraphStore = create<StakgraphStore>()(
 
             console.log("result.data>>>>", result.data);
 
+            const files = Object.entries(settings.containerFiles || {}).reduce((acc, curr) => {
+              acc[curr[0]] = atob(curr[1] as string);
+              return acc;
+            }, {} as Record<string, string>);
+
             const newFormData = {
               name: settings.name || "",
               description: settings.description || "",
@@ -106,6 +113,7 @@ export const useStakgraphStore = create<StakgraphStore>()(
               services: settings.services || [],
               status: settings.status,
               lastUpdated: settings.lastUpdated,
+              containerFiles: files,
             };
 
             console.log("newFormData", newFormData);
@@ -193,6 +201,20 @@ export const useStakgraphStore = create<StakgraphStore>()(
       set({ loading: true });
 
       try {
+
+        const containerFiles = {
+          ...state.formData.containerFiles,
+          'pm2.config.js': getPM2AppsContent(state.formData.name, state.formData.services)?.content || '',
+        }
+
+        const base64EncodedFiles = Object.entries(containerFiles).reduce(
+          (acc, [name, content]) => {
+            acc[name] = Buffer.from(content).toString("base64");
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+
         const payload = {
           name: state.formData.name.trim(),
           description: state.formData.description.trim(),
@@ -205,6 +227,7 @@ export const useStakgraphStore = create<StakgraphStore>()(
             value: env.value,
           })),
           services: state.formData.services,
+          containerFiles: base64EncodedFiles,
         };
 
         const response = await fetch(`/api/workspaces/${slug}/stakgraph`, {
@@ -362,6 +385,14 @@ export const useStakgraphStore = create<StakgraphStore>()(
     ) => {
       set({
         envVars: newEnvVars,
+        saved: false,
+      });
+    },
+
+    handleFileChange: (fileName: string, content: string) => {
+      const state = get();
+      set({
+        formData: { ...state.formData, containerFiles: { ...state.formData.containerFiles, [fileName]: content } },
         saved: false,
       });
     },

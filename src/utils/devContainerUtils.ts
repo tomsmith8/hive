@@ -1,5 +1,5 @@
-import { EnvironmentVariable } from "@/types/wizard";
 import { ServiceDataConfig } from "@/components/stakgraph/types";
+import { EnvironmentVariable } from "@/types/wizard";
 
 export interface DevContainerFile {
   name: string;
@@ -114,15 +114,26 @@ ${envEntries}
 export interface GetFilesParams {
   repoName: string;
   servicesData: ServiceDataConfig[];
-  envVars: EnvironmentVariable[];
+}
+
+export const getPM2AppsContent = (repoName: string, servicesData: ServiceDataConfig[]) => {
+  const pm2Apps = generatePM2Apps(repoName, servicesData);
+  const pm2AppFormatted = formatPM2Apps(pm2Apps);
+
+  return {
+    name: "pm2.config.js",
+    content: `module.exports = {
+  apps: ${pm2AppFormatted},
+};
+`,
+    type: "javascript",
+  }
 }
 
 export const getDevContainerFiles = (
   params: GetFilesParams,
 ): Record<string, DevContainerFile> => {
-  const { repoName, servicesData, envVars } = params;
-  const containerEnv = generateContainerEnv(envVars);
-  const pm2Apps = generatePM2Apps(repoName, servicesData);
+  const { repoName, servicesData } = params;
 
   return {
     devcontainer_json: {
@@ -150,14 +161,7 @@ export const getDevContainerFiles = (
 }`,
       type: "json",
     },
-    pm2_config_js: {
-      name: "pm2.config.js",
-      content: `module.exports = {
-  apps: ${formatPM2Apps(pm2Apps)},
-};
-`,
-      type: "javascript",
-    },
+    pm2_config_js: getPM2AppsContent(repoName, servicesData),
     docker_compose_yml: {
       name: "docker-compose.yml",
       content: `version: '3.8'
@@ -205,4 +209,32 @@ RUN npm install -g pm2 && \\
       type: "dockerfile",
     },
   };
+};
+
+const fileTypeMapper = {
+  "devcontainer.json": "json",
+  "pm2.config.js": "javascript",
+  "docker-compose.yml": "yaml",
+  "Dockerfile": "dockerfile",
+};
+
+const fileNamesMapper = {
+  "devcontainer.json": "devcontainer_json",
+  "pm2.config.js": "pm2_config_js",
+  "docker-compose.yml": "docker_compose_yml",
+  "Dockerfile": "dockerfile",
+};
+
+export const getDevContainerFilesFromBase64 = (base64Files: Record<string, string>) => {
+  const containerFiles = Object.entries(base64Files).reduce((acc, [name, content]) => {
+    const keyName = fileNamesMapper[name as keyof typeof fileNamesMapper];
+    acc[keyName] = {
+      name: keyName,
+      content: Buffer.from(content, "base64").toString("utf-8"),
+      type: fileTypeMapper[name as keyof typeof fileTypeMapper],
+    };
+    return acc;
+  }, {} as Record<string, DevContainerFile>);
+
+  return containerFiles;
 };
