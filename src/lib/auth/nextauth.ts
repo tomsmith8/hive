@@ -173,6 +173,7 @@ export const authOptions: NextAuthOptions = {
                   where: { id: existingAccount.id },
                   data: {
                     access_token: account.access_token,
+                    scope: account.scope,
                   },
                 });
               }
