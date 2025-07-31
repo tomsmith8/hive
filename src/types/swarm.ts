@@ -39,6 +39,7 @@ export interface SwarmSelectResult {
   poolName: string;
   environmentVariables: Record<string, string>[];
   services: ServicesConfig[] | string; // string if not parsed yet
+  containerFiles: Record<string, string>;
 }
 
 export interface ServicesConfig {

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { FileTabs } from "@/components/stakgraph/forms/EditFilesForm";
+import { ServiceDataConfig } from "@/components/stakgraph/types";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,50 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import {
-  FileText,
-  Settings,
-  Package,
-  Container,
-  AlertCircle,
-  RotateCcw,
-  ArrowRight,
-} from "lucide-react";
-import { EnvironmentVariable } from "@/types/wizard";
-import { ServiceDataConfig } from "@/components/stakgraph/types";
 import { useWizardStore } from "@/stores/useWizardStore";
+import { EnvironmentVariable } from "@/types/wizard";
+import {
+  AlertCircle,
+  ArrowRight
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
-// Helper function to generate containerEnv from environment variables
-const generateContainerEnv = (envVars: EnvironmentVariable[]) => {
-  const containerEnv: Record<string, string> = {};
-
-  envVars.forEach((envVar) => {
-    if (envVar.name && envVar.value) {
-      containerEnv[envVar.name] = envVar.value;
-    }
-  });
-
-  return containerEnv;
-};
-
-// Helper function to format containerEnv object as JSON string with proper indentation
-const formatContainerEnv = (containerEnv: Record<string, string>) => {
-  if (Object.keys(containerEnv).length === 0) {
-    return "{}";
-  }
-
-  const entries = Object.entries(containerEnv);
-  const formattedEntries = entries.map(
-    ([key, value]) => `    "${key}": "${value}"`,
-  );
-  return `{\n${formattedEntries.join(",\n")}\n  }`;
-};
-
-// Helper function to generate PM2 apps from services data
 const generatePM2Apps = (
   repoName: string,
   servicesData: ServiceDataConfig[],
@@ -131,15 +97,11 @@ const getFiles = (
   repoName: string,
   projectName: string,
   servicesData: ServiceDataConfig[],
-  envVars: EnvironmentVariable[],
 ) => {
-  const containerEnv = generateContainerEnv(envVars);
   const pm2Apps = generatePM2Apps(repoName, servicesData);
 
-  return [
-    {
-      name: "devcontainer.json",
-      content: `{
+  return {
+    "devcontainer.json": `{
   "name": "${projectName}",
   "dockerComposeFile": "./docker-compose.yml",
   "workspaceFolder": "/workspaces",
@@ -148,31 +110,24 @@ const getFiles = (
   },
   "customizations": {
     "vscode": {
-        "settings": {
-          "git.autofetch": true,
-          "editor.formatOnSave": true,
-          "telemetry.telemetryLevel": "off",
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "extensions": [
-            "stakwork.staklink", "esbenp.prettier-vscode"
-        ]
+      "settings": {
+        "git.autofetch": true,
+        "editor.formatOnSave": true,
+        "telemetry.telemetryLevel": "off",
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+      "extensions": [
+        "stakwork.staklink",
+        "esbenp.prettier-vscode"
+      ]
     }
   }
 }`,
-      type: "json",
-    },
-    {
-      name: "pm2.config.js",
-      content: `module.exports = {
+    "pm2.config.js": `module.exports = {
   apps: ${formatPM2Apps(pm2Apps)},
 };
 `,
-      type: "javascript",
-    },
-    {
-      name: "docker-compose.yml",
-      content: `version: '3.8'
+    "docker-compose.yml": `version: '3.8'
 volumes:
 networks:
   app_network:
@@ -191,19 +146,15 @@ services:
       - "localhost:172.17.0.1"
       - "host.docker.internal:host-gateway"
 `,
-      type: "yaml",
-    },
-    {
-      name: "Dockerfile",
-      content: `FROM mcr.microsoft.com/devcontainers/universal
+    "Dockerfile": `FROM mcr.microsoft.com/devcontainers/universal
 
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends wget sed
 
 RUN sudo mkdir -p -m 755 /etc/apt/keyrings \
-        && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-        && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+    && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
     && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
     && sudo apt update -y \
@@ -211,45 +162,12 @@ RUN sudo mkdir -p -m 755 /etc/apt/keyrings \
 
 # Install PM2 globally and ensure it's accessible
 RUN npm install -g pm2 && \
-    # Create symlink in /usr/local/bin to ensure it's always in PATH
     ln -sf /usr/local/node/bin/pm2 /usr/local/bin/pm2 && \
-    # Verify installation
     pm2 --version
 `,
-      type: "dockerfile",
-    },
-  ];
+  };
 };
 
-const getFileIcon = (type: string) => {
-  switch (type) {
-    case "json":
-      return <Settings className="w-3 h-3" />;
-    case "javascript":
-      return <FileText className="w-3 h-3" />;
-    case "yaml":
-      return <Package className="w-3 h-3" />;
-    case "dockerfile":
-      return <Container className="w-3 h-3" />;
-    default:
-      return <FileText className="w-3 h-3" />;
-  }
-};
-
-const getFileStats = (content: string) => {
-  const lines = content.split("\n").length;
-  const chars = content.length;
-  const bytes = new Blob([content]).size;
-  return { lines, chars, bytes };
-};
-
-const formatBytes = (bytes: number) => {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-};
 
 interface ReviewPoolEnvironmentStepProps {
   repoName: string;
@@ -270,7 +188,6 @@ export const ReviewPoolEnvironmentStep = ({
   onNext,
   onBack,
 }: ReviewPoolEnvironmentStepProps) => {
-  const [activeTab, setActiveTab] = useState("devcontainer-json");
   const [fileContents, setFileContents] = useState<Record<string, string>>({});
   const [originalContents, setOriginalContents] = useState<
     Record<string, string>
@@ -283,24 +200,13 @@ export const ReviewPoolEnvironmentStep = ({
   const swarmId = useWizardStore((s) => s.swarmId);
   const workspaceId = useWizardStore((s) => s.workspaceId);
 
-  const envVars = services.reduce<EnvironmentVariable[]>((acc, service) => {
-    const envs = Object.entries(service.env).map(([name, value]) => ({
-      name,
-      value,
-      show: true,
-    }));
-    return [...acc, ...envs];
-  }, []);
 
-  const files = getFiles(repoName, projectName, services, envVars);
+  const files = getFiles(repoName, projectName, services);
 
   useEffect(() => {
-    const initialContents: Record<string, string> = {};
-    files.forEach((file) => {
-      initialContents[file.name] = file.content;
-    });
-    setOriginalContents(initialContents);
-    setFileContents(initialContents);
+
+    setOriginalContents(files);
+    setFileContents(files);
   }, [services]);
 
   const handleContentChange = (fileName: string, value: string) => {
@@ -323,7 +229,7 @@ export const ReviewPoolEnvironmentStep = ({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [originalContents]);
+  }, [originalContents, resetFiles]);
 
   const hasModifications = Object.keys(fileContents).some((fileName) =>
     isFileModified(fileName),
@@ -359,14 +265,6 @@ export const ReviewPoolEnvironmentStep = ({
     }
   }, [onNext, fileContents, poolName]);
 
-  const handleConfirm = useCallback(() => {
-    const containerFiles = files.map((file) => ({
-      name: file.name,
-      content: fileContents[file.name] || file.content,
-    }));
-
-    console.log(containerFiles);
-  }, [fileContents]);
 
   return (
     <Card className="max-w-4xl mx-auto">
@@ -411,99 +309,11 @@ export const ReviewPoolEnvironmentStep = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger
-              value="devcontainer-json"
-              className="flex items-center gap-2"
-            >
-              {getFileIcon("json")}
-              DevContainer
-            </TabsTrigger>
-            <TabsTrigger
-              value="pm2-config.js"
-              className="flex items-center gap-2"
-            >
-              {getFileIcon("javascript")}
-              PM2 Config
-            </TabsTrigger>
-            <TabsTrigger
-              value="docker-compose-yml"
-              className="flex items-center gap-2"
-            >
-              {getFileIcon("yaml")}
-              Docker Compose
-            </TabsTrigger>
-            <TabsTrigger value="dockerfile" className="flex items-center gap-2">
-              {getFileIcon("dockerfile")}
-              Dockerfile
-            </TabsTrigger>
-          </TabsList>
-
-          {files.map((file) => {
-            return (
-              <TabsContent
-                key={file.name}
-                value={file.name.toLowerCase().replace(".", "-")}
-                className="space-y-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {getFileIcon(file.type)}
-                    <span className="font-medium">{file.name}</span>
-                    {isFileModified(file.name) && (
-                      <Badge variant="secondary" className="text-xs">
-                        Modified
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>
-                      {
-                        getFileStats(fileContents[file.name] || file.content)
-                          .lines
-                      }{" "}
-                      lines
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {formatBytes(
-                        getFileStats(fileContents[file.name] || file.content)
-                          .bytes,
-                      )}
-                    </span>
-                  </div>
-                </div>
-                <div className="relative">
-                  <Textarea
-                    value={fileContents[file.name] || file.content}
-                    onChange={(e) =>
-                      handleContentChange(file.name, e.target.value)
-                    }
-                    className="font-mono text-sm min-h-[300px] resize-none"
-                    placeholder={`Enter ${file.name} content...`}
-                  />
-                  {isFileModified(file.name) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleContentChange(
-                          file.name,
-                          originalContents[file.name],
-                        )
-                      }
-                      className="absolute top-2 right-2"
-                    >
-                      <RotateCcw className="w-3 h-3 mr-1" />
-                      Reset
-                    </Button>
-                  )}
-                </div>
-              </TabsContent>
-            );
-          })}
-        </Tabs>
+        <FileTabs
+          fileContents={fileContents}
+          originalContents={originalContents}
+          onChange={handleContentChange}
+        />
 
         {hasModifications && (
           <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
