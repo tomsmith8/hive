@@ -228,7 +228,7 @@ export async function PUT(
     // Save or update Swarm using shared service
     const swarm = await saveOrUpdateSwarm({
       workspaceId: workspace.id,
-      name: workspace.name, // Use workspace name for swarm name
+      name: `${workspace.name}.sphinx.chat`, // Use workspace name for swarm name
       repositoryName: settings.name,
       repositoryDescription: settings.description,
       repositoryUrl: settings.repositoryUrl,
