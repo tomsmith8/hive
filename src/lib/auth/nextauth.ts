@@ -167,6 +167,16 @@ export const authOptions: NextAuthOptions = {
 
               // Update the user object to use the existing user's ID
               user.id = existingUser.id;
+            } else {
+              if (account.access_token) {
+                await db.account.update({
+                  where: { id: existingAccount.id },
+                  data: {
+                    access_token: account.access_token,
+                    scope: account.scope,
+                  },
+                });
+              }
             }
           }
         } catch (error) {
