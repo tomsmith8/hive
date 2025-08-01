@@ -42,7 +42,7 @@ export function ChatMessage({
           </Avatar>
         )}
         <div
-          className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm ${
+          className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm whitespace-pre-wrap ${
             message.role === "USER"
               ? "bg-primary text-primary-foreground rounded-br-none"
               : "bg-background text-foreground rounded-bl-none border"
