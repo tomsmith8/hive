@@ -1,5 +1,7 @@
 // Pool Manager-specific types and interfaces
 
+import { EnvironmentVariable } from "./wizard";
+
 //Example Payload
 // {
 //   "username": "test",
@@ -51,7 +53,7 @@ export interface CreatePoolRequest {
   branch_name: string;
   github_pat: string;
   github_username: string;
-  env_vars: []; //Key value pair of name and value
+  env_vars: EnvironmentVariable[]; //Key value pair of name and value
   container_files: Record<string, string>;
 }
 //Response:
