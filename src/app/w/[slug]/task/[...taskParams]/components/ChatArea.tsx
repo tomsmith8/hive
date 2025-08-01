@@ -6,13 +6,6 @@ import { ChatMessage as ChatMessageType, Option } from "@/lib/chat";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 
-interface LogEntry {
-  timestamp: string;
-  projectId: string;
-  chatId: string;
-  message: string;
-}
-
 interface ChatAreaProps {
   messages: ChatMessageType[];
   onSend: (message: string) => Promise<void>;
@@ -26,7 +19,6 @@ interface ChatAreaProps {
   hasNonFormArtifacts?: boolean;
   isChainVisible?: boolean;
   lastLogLine?: string;
-  logs?: LogEntry[];
 }
 
 export function ChatArea({

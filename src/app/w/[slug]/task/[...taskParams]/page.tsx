@@ -44,7 +44,6 @@ export default function TaskChatPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isChainVisible, setIsChainVisible] = useState(false);
-  const [isActionSend, setIsActionSend] = useState(false);
 
   // Use hook to check for active chat form and get webhook
   const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
@@ -54,7 +53,7 @@ export default function TaskChatPage() {
     setTaskMode(mode || "live");
   }, []);
 
-  const { logs, lastLogLine, clearLogs } = useProjectLogWebSocket(
+  const { lastLogLine, clearLogs } = useProjectLogWebSocket(
     projectId,
     currentTaskId,
     true,
@@ -72,7 +71,6 @@ export default function TaskChatPage() {
 
       // Hide chain visibility when message processing is complete
       setIsChainVisible(false);
-      setIsActionSend(false);
     },
     [clearLogs],
   );
@@ -271,7 +269,7 @@ export default function TaskChatPage() {
     const originalMessage = messages.find((msg) => msg.id === messageId);
 
     if (originalMessage) {
-      setIsActionSend(true);
+      setIsChainVisible(true);
       // Send the artifact action response to the backend
       await sendMessage(action.optionResponse, {
         replyId: originalMessage.id,
@@ -321,9 +319,8 @@ export default function TaskChatPage() {
             inputDisabled={inputDisabled}
             isLoading={isLoading}
             hasNonFormArtifacts={hasNonFormArtifacts}
-            isChainVisible={isChainVisible || isActionSend}
+            isChainVisible={isChainVisible}
             lastLogLine={lastLogLine}
-            logs={logs}
           />
 
           <AnimatePresence>
