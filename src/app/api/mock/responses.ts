@@ -147,10 +147,10 @@ export function generateResponseBasedOnMessage(
     return generateCodeResponse();
   } else if (messageText.includes("chat")) {
     return generateChatFormResponse();
+  } else if (messageText.includes("longform")) {
+    return generateLongformResponse();
   } else if (messageText.includes("form")) {
     return generateFormResponse();
-  } else if (messageText.includes("repomap")) {
-    return generateLongformResponse();
   } else if (messageText.includes("confirmed")) {
     return makeRes("Ok! Let's move forward with this plan");
   } else if (messageText.includes("modify")) {
