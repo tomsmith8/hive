@@ -99,8 +99,7 @@ export const JSON_CODE = `{
   }
 }`;
 
-export const REPOMAP = `{
-<pre>
+export const REPOMAP = `
 Repository: fayekelmith/demo-repo
 ├─┬ Directory: frontend
 │ ├─┬ Directory: public
@@ -131,7 +130,7 @@ Repository: fayekelmith/demo-repo
 ├── File: main.go (159)
 ├── File: routes.go (660)
 └── File: utils.go (47)
-</pre>
-}`;
+
+`;
 
 export { createArtifact, ArtifactType };
