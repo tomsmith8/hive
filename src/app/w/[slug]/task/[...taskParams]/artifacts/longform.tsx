@@ -1,3 +1,4 @@
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { LongformContent, Artifact } from "@/lib/chat";
 import { useRef, useState, useEffect } from "react";
 
@@ -37,7 +38,7 @@ export function LongformArtifactPanel({
                   {content.title}
                 </div>
               )}
-              <div>{content.text}</div>
+              <MarkdownRenderer>{content.text}</MarkdownRenderer>
             </div>
           );
         })}

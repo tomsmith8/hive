@@ -134,3 +134,80 @@ Repository: fayekelmith/demo-repo
 `;
 
 export { createArtifact, ArtifactType };
+
+export const MARKDOWN_EXAMPLE = `
+# Hive Markdown Test
+
+Welcome to the **Hive Markdown Test**!  
+This message covers all major markdown features.
+
+---
+
+## Headings
+
+### H3 Heading
+
+#### H4 Heading
+
+## Lists
+
+- Unordered item 1
+- Unordered item 2
+  - Nested item
+- [x] Task complete
+- [ ] Task incomplete
+
+1. Ordered item 1
+2. Ordered item 2
+
+## Links
+
+[Hive on GitHub](https://github.com/fayekelmith/hive)
+
+## Blockquote
+
+> This is a blockquote.  
+> It supports multiple lines.
+
+## Code
+
+Inline code: \`console.log("Hello, Hive!")\`
+
+\`\`\`rust
+// Code block with RUST syntax
+pub async fn get_changed_files_between(
+    repo_path: &str,
+    old_commit: &str,
+    new_commit: &str,
+) -> Result<Vec<String>> {
+    let output = crate::utils::run_res_in_dir(
+        "git",
+        &["diff", "--name-only", old_commit, new_commit],
+        repo_path,
+    )
+    .await?;
+    Ok(output.lines().map(|s| s.to_string()).collect())
+}
+\`\`\`
+
+\`\`\`python
+# Python code block
+def hello():
+    print("Hello, Hive!")
+\`\`\`
+
+## Table
+
+| Name   | Role    | Status   |
+|--------|---------|----------|
+| Alice  | Admin   | ✅       |
+| Bob    | User    | ❌       |
+
+## Image
+
+![Random Image](https://picsum.photos/seed/picsum/200/300)
+
+---
+
+Enjoy testing markdown!
+`;
