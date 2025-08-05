@@ -13,7 +13,7 @@ export interface TestFile {
   size: number;
 }
 
-export function useTestFiles(baseUrl: string, apiKey: string) {
+export function useTestFiles(baseUrl: string, apiKey?: string) {
   const [testFiles, setTestFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, TestResult>>(
@@ -27,10 +27,13 @@ export function useTestFiles(baseUrl: string, apiKey: string) {
   const fetchTestFiles = useCallback(async () => {
     setIsLoading(true);
     try {
+      const headers: Record<string, string> = {};
+      if (apiKey) {
+        headers["x-api-token"] = apiKey;
+      }
+
       const response = await fetch(`${baseUrl}/test/list`, {
-        headers: {
-          "x-api-token": apiKey,
-        },
+        headers,
       });
       const data = await response.json();
       if (data.success) {
@@ -61,12 +64,15 @@ export function useTestFiles(baseUrl: string, apiKey: string) {
     }));
 
     try {
+      const headers: Record<string, string> = {};
+      if (apiKey) {
+        headers["x-api-token"] = apiKey;
+      }
+
       const getResponse = await fetch(
         `${baseUrl}/test/get?name=${encodeURIComponent(testName)}`,
         {
-          headers: {
-            "x-api-token": apiKey,
-          },
+          headers,
         },
       );
       const testData = await getResponse.json();
@@ -78,9 +84,7 @@ export function useTestFiles(baseUrl: string, apiKey: string) {
       const runResponse = await fetch(
         `${baseUrl}/test?test=${encodeURIComponent(testName)}`,
         {
-          headers: {
-            "x-api-token": apiKey,
-          },
+          headers,
         },
       );
       const runResult = await runResponse.json();
@@ -117,12 +121,15 @@ export function useTestFiles(baseUrl: string, apiKey: string) {
     if (!confirm(`Are you sure you want to delete ${testName}?`)) return false;
 
     try {
+      const headers: Record<string, string> = {};
+      if (apiKey) {
+        headers["x-api-token"] = apiKey;
+      }
+
       const response = await fetch(
         `${baseUrl}/test/delete?name=${encodeURIComponent(testName)}`,
         {
-          headers: {
-            "x-api-token": apiKey,
-          },
+          headers,
         },
       );
       const data = await response.json();
@@ -159,12 +166,16 @@ export function useTestFiles(baseUrl: string, apiKey: string) {
           : `${formattedFilename}.spec.js`;
       }
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (apiKey) {
+        headers["x-api-token"] = apiKey;
+      }
+
       const response = await fetch(`${baseUrl}/test/save`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-token": apiKey,
-        },
+        headers,
         body: JSON.stringify({
           name: formattedFilename,
           text: testCode,
