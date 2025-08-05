@@ -122,7 +122,7 @@ export function generateBrowserResponse(baseUrl: string) {
 export function generateLongformResponse() {
   const messageId = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  return makeRes("Project Hive RepoMap", [
+  return makeRes("", [
     createArtifact({
       id: "longform-1",
       messageId,
