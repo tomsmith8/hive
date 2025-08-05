@@ -80,7 +80,7 @@ export function ChatArea({
               <div className="text-sm">
                 {lastLogLine
                   ? lastLogLine
-                  : `I've got your message. Let me have a think.`}
+                  : `Communicating with workflow...`}
               </div>
               {/* Optional: Add a subtle loading indicator */}
               {isChainVisible && (
