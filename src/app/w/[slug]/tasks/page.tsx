@@ -9,14 +9,16 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Clock, Users, Calendar, Plus } from "lucide-react";
+import { Users, Calendar, Plus, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useWorkspaceTasks } from "@/hooks/useWorkspaceTasks";
 import { ConnectRepository } from "@/components/ConnectRepository";
 
 export default function TasksPage() {
   const router = useRouter();
-  const { workspace, slug } = useWorkspace();
+  const { workspace, slug, id: workspaceId } = useWorkspace();
+  const { tasks, loading, error } = useWorkspaceTasks(workspaceId);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -45,190 +47,102 @@ export default function TasksPage() {
         />
       ) : (
         <>
-          {/* Task Stats */}
-          <div className="grid gap-6 md:grid-cols-4">
+          {/* Recent Tasks */}
+          {loading ? (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Tasks
-                </CardTitle>
-                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle>Loading tasks...</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">45</div>
-                <p className="text-xs text-muted-foreground">
-                  +5 from last week
-                </p>
-              </CardContent>
             </Card>
-
+          ) : error ? (
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  In Progress
-                </CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle className="text-red-600">Error loading tasks</CardTitle>
+                <CardDescription>{error}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <p className="text-xs text-muted-foreground">Active tasks</p>
-              </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">28</div>
-                <p className="text-xs text-muted-foreground">This sprint</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">3</div>
-                <p className="text-xs text-muted-foreground">Need attention</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Task Lists */}
-          <div className="grid gap-6 lg:grid-cols-3">
+          ) : tasks.length === 0 ? (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  To Do
+                  <FileText className="h-5 w-5" />
+                  No tasks created yet
                 </CardTitle>
-                <CardDescription>Tasks ready to be started</CardDescription>
+                <CardDescription>
+                  Create your first task to start tracking work in this workspace.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 border rounded-lg hover:bg-muted cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">
-                      Update user authentication
-                    </h4>
-                    <Badge variant="secondary">High</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Implement JWT token refresh and improve security.
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="w-3 h-3" />
-                    <span>Backend Team</span>
-                  </div>
-                </div>
-
-                <div className="p-3 border rounded-lg hover:bg-muted cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">
-                      Design new landing page
-                    </h4>
-                    <Badge variant="outline">Medium</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Create wireframes and mockups for the new homepage.
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="w-3 h-3" />
-                    <span>Design Team</span>
-                  </div>
-                </div>
+              <CardContent>
+                <Button onClick={() => router.push(`/w/${slug}/task/new`)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Task
+                </Button>
               </CardContent>
             </Card>
-
+          ) : (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  In Progress
+                <CardTitle className="flex items-center gap-2 justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Recent Tasks
+                  </div>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+                  </span>
                 </CardTitle>
-                <CardDescription>Currently being worked on</CardDescription>
+                <CardDescription>
+                  Your latest tasks in this workspace
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="p-3 border rounded-lg hover:bg-muted cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">
-                      Fix sidebar navigation
-                    </h4>
-                    <Badge variant="secondary">High</Badge>
+                {tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="p-3 border rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                    onClick={() => router.push(`/w/${slug}/task/${task.id}`)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium line-clamp-1">
+                        {task.title}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={
+                            task.status === "DONE" ? "default" :
+                            task.status === "IN_PROGRESS" ? "secondary" :
+                            "outline"
+                          }
+                        >
+                          {task.status === "TODO" ? "To Do" :
+                           task.status === "IN_PROGRESS" ? "In Progress" :
+                           task.status === "DONE" ? "Done" :
+                           "Cancelled"}
+                        </Badge>
+                      </div>
+                    </div>
+                    {task.description && (
+                      <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                        {task.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      {task.assignee && (
+                        <div className="flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          <span>{task.assignee.name || task.assignee.email}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Resolve page refresh issues and modal disappearing.
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="w-3 h-3" />
-                    <span>Frontend Team</span>
-                  </div>
-                </div>
-
-                <div className="p-3 border rounded-lg hover:bg-muted cursor-pointer">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">
-                      Database optimization
-                    </h4>
-                    <Badge variant="outline">Medium</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Optimize queries and add proper indexing.
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="w-3 h-3" />
-                    <span>Backend Team</span>
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  Done
-                </CardTitle>
-                <CardDescription>Completed tasks</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 border rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">
-                      Setup CI/CD pipeline
-                    </h4>
-                    <Badge variant="outline">High</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Automated testing and deployment workflow.
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="w-3 h-3" />
-                    <span>DevOps Team</span>
-                  </div>
-                </div>
-
-                <div className="p-3 border rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">
-                      User registration flow
-                    </h4>
-                    <Badge variant="outline">Medium</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Complete signup and verification process.
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="w-3 h-3" />
-                    <span>Full Stack</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          )}
         </>
       )}
     </div>
