@@ -28,10 +28,20 @@ export interface TaskData {
   };
 }
 
+interface PaginationData {
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 interface UseWorkspaceTasksResult {
   tasks: TaskData[];
   loading: boolean;
   error: string | null;
+  pagination: PaginationData | null;
+  loadMore: () => Promise<void>;
   refetch: () => Promise<void>;
 }
 
@@ -40,10 +50,13 @@ export function useWorkspaceTasks(workspaceId: string | null): UseWorkspaceTasks
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationData | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchTasks = useCallback(async () => {
+  const fetchTasks = useCallback(async (page: number, reset: boolean = false) => {
     if (!workspaceId || !session?.user) {
       setTasks([]);
+      setPagination(null);
       return;
     }
 
@@ -51,7 +64,7 @@ export function useWorkspaceTasks(workspaceId: string | null): UseWorkspaceTasks
     setError(null);
 
     try {
-      const response = await fetch(`/api/tasks?workspaceId=${workspaceId}`, {
+      const response = await fetch(`/api/tasks?workspaceId=${workspaceId}&page=${page}&limit=5`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -65,9 +78,8 @@ export function useWorkspaceTasks(workspaceId: string | null): UseWorkspaceTasks
       const result = await response.json();
       
       if (result.success && Array.isArray(result.data)) {
-        // Get latest 5 tasks (API already orders by createdAt desc)
-        const recentTasks = result.data.slice(0, 5);
-        setTasks(recentTasks);
+        setTasks(prevTasks => reset ? result.data : [...prevTasks, ...result.data]);
+        setPagination(result.pagination);
       } else {
         throw new Error("Invalid response format");
       }
@@ -80,14 +92,29 @@ export function useWorkspaceTasks(workspaceId: string | null): UseWorkspaceTasks
     }
   }, [workspaceId, session?.user]);
 
-  useEffect(() => {
-    fetchTasks();
+  const loadMore = useCallback(async () => {
+    if (pagination?.hasMore) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      await fetchTasks(nextPage, false);
+    }
+  }, [fetchTasks, pagination?.hasMore, currentPage]);
+
+  const refetch = useCallback(async () => {
+    setCurrentPage(1);
+    await fetchTasks(1, true);
   }, [fetchTasks]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   return {
     tasks,
     loading,
     error,
-    refetch: fetchTasks,
+    pagination,
+    loadMore,
+    refetch,
   };
 }
