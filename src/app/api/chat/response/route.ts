@@ -29,14 +29,6 @@ export async function POST(request: NextRequest) {
       artifacts = [] as ArtifactRequest[],
     } = body;
 
-    // Validate required fields
-    if (!message) {
-      return NextResponse.json(
-        { error: "Message is required" },
-        { status: 400 },
-      );
-    }
-
     // Validate task exists (if taskId provided)
     if (taskId) {
       const task = await db.task.findFirst({
@@ -55,7 +47,7 @@ export async function POST(request: NextRequest) {
     const chatMessage = await db.chatMessage.create({
       data: {
         taskId,
-        message,
+        message: message || "",
         role: ChatRole.ASSISTANT,
         contextTags: JSON.stringify(contextTags),
         status: ChatStatus.SENT,
