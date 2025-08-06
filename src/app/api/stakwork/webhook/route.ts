@@ -16,7 +16,7 @@ interface StakworkStatusPayload {
 }
 
 // Map Stakwork status values to our WorkflowStatus enum
-const mapStakworkStatus = (status: string): WorkflowStatus => {
+const mapStakworkStatus = (status: string): WorkflowStatus | null => {
   switch (status.toLowerCase()) {
     case "in_progress":
     case "running":
@@ -34,8 +34,8 @@ const mapStakworkStatus = (status: string): WorkflowStatus => {
     case "stopped":
       return WorkflowStatus.HALTED;
     default:
-      console.warn(`Unknown Stakwork status: ${status}, defaulting to FAILED`);
-      return WorkflowStatus.FAILED;
+      console.warn(`Unknown Stakwork status: ${status}, keeping existing status`);
+      return null; // Keep existing status for unknown values
   }
 };
 
@@ -86,6 +86,23 @@ export async function POST(request: NextRequest) {
 
     // Map Stakwork status to our WorkflowStatus
     const workflowStatus = mapStakworkStatus(project_status);
+    
+    // Only update if we have a valid status mapping
+    if (workflowStatus === null) {
+      console.log(`Unknown status '${project_status}' - keeping existing workflow status for task ${finalTaskId}`);
+      return NextResponse.json(
+        {
+          success: true,
+          message: `Unknown status '${project_status}' - no update performed`,
+          data: {
+            taskId: finalTaskId,
+            receivedStatus: project_status,
+            action: "ignored",
+          },
+        },
+        { status: 200 }
+      );
+    }
     
     // Prepare update data
     const updateData: any = {
