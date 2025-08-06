@@ -239,18 +239,11 @@ const createComponents = (
     }
 
     return (
-      <div className={cn(baseStyles.codeBlock, styles.bg, styles.border)}>
+      <div>
         <SyntaxHighlighter
           language={match ? match[1] : "text"}
           style={tomorrow}
           PreTag="div"
-          customStyle={{
-            margin: 0,
-            padding: 0,
-            background: "transparent",
-            fontSize: "0.875rem",
-            lineHeight: "1.5",
-          }}
         >
           {String(children).replace(/\n$/, "")}
         </SyntaxHighlighter>
