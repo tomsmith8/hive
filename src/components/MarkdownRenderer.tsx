@@ -43,14 +43,14 @@ const baseStyles = {
   h4: "text-lg lg:text-xl mt-4 mb-2",
   h5: "text-base lg:text-lg mt-3 mb-1",
   h6: "text-sm lg:text-base mt-2 mb-1",
-  paragraph: "my-3 leading-7 [&:not(:first-child)]:mt-4",
+  paragraph: "leading-7 [&:not(:first-child)]:mt-4",
   blockquote: "border-l-4 pl-4 py-2 my-4 rounded-r-md italic",
   list: "my-4 ml-6 space-y-1 [&>li]:mt-1",
   listDisc: "list-disc",
   listDecimal: "list-decimal",
   listItem: "leading-7",
-  codeInline: "relative rounded px-1.5 py-0.5 text-sm font-mono border",
-  codeBlock: "relative rounded-lg border p-4 my-4 overflow-x-auto",
+  codeInline: "relative rounded text-sm font-mono border",
+  codeBlock: "relative rounded-lg border overflow-x-auto",
   table: "w-full border-collapse",
   tableWrapper: "my-6 w-full overflow-y-auto rounded-lg border",
   tableHeader: "border-b font-medium [&>tr]:border-b",
@@ -217,7 +217,7 @@ const createComponents = (
   ),
   img: ({ src, alt, ...props }) => (
     <img
-      className={cn(baseStyles.image, styles.border)}
+      className={cn(`${(baseStyles.image, styles.border)} rounded-md`)}
       src={src ?? ""}
       alt={alt || "Image"}
       loading="lazy"
@@ -251,6 +251,7 @@ const createComponents = (
         <SyntaxHighlighter
           language={match ? match[1] : "text"}
           style={tomorrow}
+          wrapLongLines={true}
           PreTag="div"
         >
           {String(children).replace(/\n$/, "")}
@@ -270,7 +271,7 @@ export function MarkdownRenderer({
   const components = createComponents(styles);
 
   return (
-    <div className={cn("prose dark:prose-invert max-w-none", className)}>
+    <div className={cn("prose dark:prose-invert max-w-full", className)}>
       <ReactMarkdown
         remarkPlugins={[
           remarkGfm,

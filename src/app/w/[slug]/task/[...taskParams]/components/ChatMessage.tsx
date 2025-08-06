@@ -34,7 +34,7 @@ export function ChatMessage({
       transition={{ duration: 0.4 }}
     >
       <div
-        className={`flex items-end gap-3 ${message.role === "USER" ? "justify-end" : "justify-start"}`}
+        className={`flex items-end gap-3 ${message.role === "USER" ? "justify-end ml-12" : "justify-start"}`}
       >
         {message.role === "ASSISTANT" && (
           <Avatar>
@@ -44,20 +44,20 @@ export function ChatMessage({
         )}
 
         {message.message && (
-        <div
-          className={`px-4 py-2 rounded-xl max-w-4xl shadow-sm ${
-            message.role === "USER"
-              ? "bg-primary text-primary-foreground rounded-br-none"
-              : "bg-background text-foreground rounded-bl-none border"
-          }`}
-        >
-
-          <MarkdownRenderer
-            variant={message.role === "USER" ? "user" : "assistant"}
+          <div
+            className={`px-4 py-1 rounded-md max-w-full shadow-sm ${
+              message.role === "USER"
+                ? "bg-primary text-primary-foreground rounded-br-none"
+                : "bg-background text-foreground rounded-bl-none border"
+            }`}
           >
-            {message.message}
-          </MarkdownRenderer>
-        </div>)}
+            <MarkdownRenderer
+              variant={message.role === "USER" ? "user" : "assistant"}
+            >
+              {message.message}
+            </MarkdownRenderer>
+          </div>
+        )}
         {message.role === "USER" && (
           <Avatar>
             <AvatarImage src="" alt="You" />
