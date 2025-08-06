@@ -18,6 +18,14 @@ interface MarkdownRendererProps {
   variant?: "user" | "assistant";
 }
 
+interface CodeProps {
+  node?: any;
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+  [key: string]: any;
+}
+
 const createStyles = (isUser: boolean) => ({
   text: isUser ? "text-primary-foreground" : "text-foreground",
   muted: isUser ? "text-primary-foreground/70" : "text-muted-foreground",
@@ -219,7 +227,7 @@ const createComponents = (
   hr: ({ ...props }) => (
     <hr className={cn(baseStyles.hr, styles.border)} {...props} />
   ),
-  code: ({ inline, className, children, ...props }) => {
+  code: ({ inline, className, children, ...props }: CodeProps) => {
     const match = /language-(\w+)/.exec(className || "");
 
     if (inline) {
