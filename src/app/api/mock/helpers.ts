@@ -100,6 +100,9 @@ export const JSON_CODE = `{
 }`;
 
 export const REPOMAP = `
+
+# REPO MAP
+
 Repository: fayekelmith/demo-repo
 ├─┬ Directory: frontend
 │ ├─┬ Directory: public
@@ -202,6 +205,28 @@ def hello():
 |--------|---------|----------|
 | Alice  | Admin   | ✅       |
 | Bob    | User    | ❌       |
+
+# Math Support
+Inline math: $E = mc^2$
+
+Block math:
+$$
+\sum_{i=1}^{n} x_i = x_1 + x_2 + \cdots + x_n
+$$
+
+# Directives
+::note[This is a custom directive]
+
+# Raw HTML (sanitized)
+<div style="color: red;">This HTML will be sanitized</div>
+
+# GFM Features
+- [x] Task lists
+- [ ] Unchecked
+
+| Tables | Work |
+|--------|------|
+| Cell 1 | Cell 2 |
 
 ## Image
 

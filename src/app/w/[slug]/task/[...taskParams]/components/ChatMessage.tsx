@@ -45,15 +45,19 @@ export function ChatMessage({
 
         {message.message && (
         <div
-          className={`px-4 py-2 rounded-xl text-sm max-w-xs shadow-sm whitespace-pre-wrap ${
+          className={`px-4 py-2 rounded-xl max-w-4xl shadow-sm ${
             message.role === "USER"
               ? "bg-primary text-primary-foreground rounded-br-none"
               : "bg-background text-foreground rounded-bl-none border"
           }`}
         >
-          <MarkdownRenderer>{message.message}</MarkdownRenderer>
-        </div>)}
 
+          <MarkdownRenderer
+            variant={message.role === "USER" ? "user" : "assistant"}
+          >
+            {message.message}
+          </MarkdownRenderer>
+        </div>)}
         {message.role === "USER" && (
           <Avatar>
             <AvatarImage src="" alt="You" />
