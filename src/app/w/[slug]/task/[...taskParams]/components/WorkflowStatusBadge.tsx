@@ -19,6 +19,7 @@ const statusConfig = {
     label: "Pending",
     icon: Clock,
     className: "text-muted-foreground",
+    iconClassName: "",
   },
   [WorkflowStatus.IN_PROGRESS]: {
     label: "Running",
@@ -30,21 +31,25 @@ const statusConfig = {
     label: "Completed",
     icon: CheckCircle,
     className: "text-green-600",
+    iconClassName: "",
   },
   [WorkflowStatus.ERROR]: {
     label: "Error",
     icon: AlertCircle,
     className: "text-red-600",
+    iconClassName: "",
   },
   [WorkflowStatus.HALTED]: {
     label: "Halted",
     icon: Pause,
     className: "text-orange-600",
+    iconClassName: "",
   },
   [WorkflowStatus.FAILED]: {
     label: "Failed",
     icon: XCircle,
     className: "text-red-600",
+    iconClassName: "",
   },
 };
 
