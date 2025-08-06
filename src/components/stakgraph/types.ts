@@ -9,6 +9,9 @@ export interface ServiceDataConfig {
     install?: string;
     build?: string;
     test?: string;
+    "pre-start"?: string;
+    "post-start"?: string;
+    rebuild?: string;
   };
 }
 
