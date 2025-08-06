@@ -106,15 +106,8 @@ export const getPM2AppsContent = (
   };
 };
 
-export const getDevContainerFiles = (
-  params: GetFilesParams,
-): Record<string, DevContainerFile> => {
-  const { repoName, servicesData } = params;
-
-  return {
-    devcontainer_json: {
-      name: "devcontainer.json",
-      content: `{
+export function devcontainerJsonContent(repoName: string) {
+  return `{
   "name": "${repoName}",
   "dockerComposeFile": "./docker-compose.yml",
   "workspaceFolder": "/workspaces",
@@ -123,24 +116,23 @@ export const getDevContainerFiles = (
   },
   "customizations": {
     "vscode": {
-        "settings": {
-          "git.autofetch": true,
-          "editor.formatOnSave": true,
-          "telemetry.telemetryLevel": "off",
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-        "extensions": [
-            "stakwork.staklink", "esbenp.prettier-vscode"
-        ]
+      "settings": {
+        "git.autofetch": true,
+        "editor.formatOnSave": true,
+        "telemetry.telemetryLevel": "off",
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+      "extensions": [
+        "stakwork.staklink",
+        "esbenp.prettier-vscode"
+      ]
     }
   }
-}`,
-      type: "json",
-    },
-    pm2_config_js: getPM2AppsContent(repoName, servicesData),
-    docker_compose_yml: {
-      name: "docker-compose.yml",
-      content: `version: '3.8'
+}`;
+}
+
+export function dockerComposeContent() {
+  return `version: '3.8'
 volumes:
 networks:
   app_network:
@@ -158,20 +150,19 @@ services:
     extra_hosts:
       - "localhost:172.17.0.1"
       - "host.docker.internal:host-gateway"
-`,
-      type: "yaml",
-    },
-    dockerfile: {
-      name: "Dockerfile",
-      content: `FROM mcr.microsoft.com/devcontainers/universal
+`;
+}
+
+export function dockerfileContent() {
+  return `FROM mcr.microsoft.com/devcontainers/universal
 
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
     && apt-get -y install --no-install-recommends wget sed
 
 RUN sudo mkdir -p -m 755 /etc/apt/keyrings \\
-        && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \\
-        && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \\
+    && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \\
+    && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \\
     && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \\
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \\
     && sudo apt update -y \\
@@ -181,7 +172,29 @@ RUN sudo mkdir -p -m 755 /etc/apt/keyrings \\
 RUN npm install -g pm2 && \\
     ln -sf /usr/local/node/bin/pm2 /usr/local/bin/pm2 && \\
     pm2 --version
-`,
+`;
+}
+
+export const getDevContainerFiles = (
+  params: GetFilesParams,
+): Record<string, DevContainerFile> => {
+  const { repoName, servicesData } = params;
+
+  return {
+    devcontainer_json: {
+      name: "devcontainer.json",
+      content: devcontainerJsonContent(repoName),
+      type: "json",
+    },
+    pm2_config_js: getPM2AppsContent(repoName, servicesData),
+    docker_compose_yml: {
+      name: "docker-compose.yml",
+      content: dockerComposeContent(),
+      type: "yaml",
+    },
+    dockerfile: {
+      name: "Dockerfile",
+      content: dockerfileContent(),
       type: "dockerfile",
     },
   };

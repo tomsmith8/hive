@@ -15,6 +15,9 @@ import { useCallback, useEffect, useState } from "react";
 import {
   generatePM2Apps,
   formatPM2Apps,
+  devcontainerJsonContent,
+  dockerComposeContent,
+  dockerfileContent,
 } from "../../../../utils/devContainerUtils";
 
 const getFiles = (
@@ -25,70 +28,13 @@ const getFiles = (
   const pm2Apps = generatePM2Apps(repoName, servicesData);
 
   return {
-    "devcontainer.json": `{
-  "name": "${projectName}",
-  "dockerComposeFile": "./docker-compose.yml",
-  "workspaceFolder": "/workspaces",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker": {}
-  },
-  "customizations": {
-    "vscode": {
-      "settings": {
-        "git.autofetch": true,
-        "editor.formatOnSave": true,
-        "telemetry.telemetryLevel": "off",
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
-      },
-      "extensions": [
-        "stakwork.staklink",
-        "esbenp.prettier-vscode"
-      ]
-    }
-  }
-}`,
+    "devcontainer.json": devcontainerJsonContent(projectName),
     "pm2.config.js": `module.exports = {
   apps: ${formatPM2Apps(pm2Apps)},
 };
 `,
-    "docker-compose.yml": `version: '3.8'
-volumes:
-networks:
-  app_network:
-    driver: bridge
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ../..:/workspaces:cached
-    command: sleep infinity
-    networks:
-      - app_network
-    extra_hosts:
-      - "localhost:172.17.0.1"
-      - "host.docker.internal:host-gateway"
-`,
-    Dockerfile: `FROM mcr.microsoft.com/devcontainers/universal
-
-# [Optional] Uncomment this section to install additional OS packages.
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \\
-    && apt-get -y install --no-install-recommends wget sed
-
-RUN sudo mkdir -p -m 755 /etc/apt/keyrings \\
-    && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \\
-    && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \\
-    && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \\
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \\
-    && sudo apt update -y \\
-    && sudo apt install gh -y
-
-# Install PM2 globally and ensure it's accessible
-RUN npm install -g pm2 && \\
-    ln -sf /usr/local/node/bin/pm2 /usr/local/bin/pm2 && \\
-    pm2 --version
-`,
+    "docker-compose.yml": dockerComposeContent(),
+    Dockerfile: dockerfileContent(),
   };
 };
 
