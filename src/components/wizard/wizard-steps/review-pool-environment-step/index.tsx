@@ -10,88 +10,12 @@ import {
 } from "@/components/ui/card";
 import { useWizardStore } from "@/stores/useWizardStore";
 import { EnvironmentVariable } from "@/types/wizard";
-import {
-  AlertCircle,
-  ArrowRight
-} from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-
-const generatePM2Apps = (
-  repoName: string,
-  servicesData: ServiceDataConfig[],
-) => {
-  if (!servicesData || !servicesData || servicesData.length === 0) {
-    // Return default configuration if no services
-    return [
-      {
-        name: "default-service",
-        script: "npm start",
-        cwd: `/workspaces/${repoName}`,
-        instances: 1,
-        autorestart: true,
-        watch: false,
-        max_memory_restart: "1G",
-        env: {
-          INSTALL_COMMAND: "npm install",
-          TEST_COMMAND: "npm test",
-          BUILD_COMMAND: "npm run build",
-          PORT: "3000",
-        },
-      },
-    ];
-  }
-
-  return servicesData.map((service) => ({
-    name: service.name,
-    script: service.scripts?.start || "",
-    cwd: `/workspaces/${repoName}`,
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: "1G",
-    env: {
-      INSTALL_COMMAND: service.scripts?.install || "",
-      TEST_COMMAND: service.scripts?.test || "",
-      BUILD_COMMAND: service.scripts?.build || "",
-      PORT: service.port?.toString() || "",
-    },
-  }));
-};
-
-// Helper function to format PM2 apps as JavaScript string
-const formatPM2Apps = (
-  apps: Array<{
-    name: string;
-    script: string;
-    cwd: string;
-    instances: number;
-    autorestart: boolean;
-    watch: boolean;
-    max_memory_restart: string;
-    env: Record<string, string>;
-  }>,
-) => {
-  const formattedApps = apps.map((app) => {
-    const envEntries = Object.entries(app.env)
-      .map(([key, value]) => `        ${key}: "${value}"`)
-      .join(",\n");
-
-    return `    {
-      name: "${app.name}",
-      script: "${app.script}",
-      cwd: "${app.cwd}",
-      instances: ${app.instances},
-      autorestart: ${app.autorestart},
-      watch: ${app.watch},
-      max_memory_restart: "${app.max_memory_restart}",
-      env: {
-${envEntries}
-      }
-    }`;
-  });
-
-  return `[\n${formattedApps.join(",\n")}\n  ]`;
-};
+import {
+  generatePM2Apps,
+  formatPM2Apps,
+} from "../../../../utils/devContainerUtils";
 
 const getFiles = (
   repoName: string,
@@ -168,7 +92,6 @@ RUN npm install -g pm2 && \\
   };
 };
 
-
 interface ReviewPoolEnvironmentStepProps {
   repoName: string;
   projectName: string;
@@ -200,11 +123,9 @@ export const ReviewPoolEnvironmentStep = ({
   const swarmId = useWizardStore((s) => s.swarmId);
   const workspaceId = useWizardStore((s) => s.workspaceId);
 
-
   const files = getFiles(repoName, projectName, services);
 
   useEffect(() => {
-
     setOriginalContents(files);
     setFileContents(files);
   }, [services]);
@@ -264,7 +185,6 @@ export const ReviewPoolEnvironmentStep = ({
       console.error(error);
     }
   }, [onNext, fileContents, poolName]);
-
 
   return (
     <Card className="max-w-4xl mx-auto">

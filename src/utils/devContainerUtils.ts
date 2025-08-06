@@ -1,5 +1,4 @@
 import { ServiceDataConfig } from "@/components/stakgraph/types";
-import { EnvironmentVariable } from "@/types/wizard";
 
 export interface DevContainerFile {
   name: string;
@@ -7,34 +6,8 @@ export interface DevContainerFile {
   type: string;
 }
 
-// Helper function to generate containerEnv from environment variables
-const generateContainerEnv = (envVars: EnvironmentVariable[]) => {
-  const containerEnv: Record<string, string> = {};
-
-  envVars.forEach((envVar) => {
-    if (envVar.name && envVar.value) {
-      containerEnv[envVar.name] = envVar.value;
-    }
-  });
-
-  return containerEnv;
-};
-
-// Helper function to format containerEnv object as JSON string with proper indentation
-const formatContainerEnv = (containerEnv: Record<string, string>) => {
-  if (Object.keys(containerEnv).length === 0) {
-    return "{}";
-  }
-
-  const entries = Object.entries(containerEnv);
-  const formattedEntries = entries.map(
-    ([key, value]) => `    "${key}": "${value}"`,
-  );
-  return `{\n${formattedEntries.join(",\n")}\n  }`;
-};
-
 // Helper function to generate PM2 apps from services data
-const generatePM2Apps = (
+export const generatePM2Apps = (
   repoName: string,
   servicesData: ServiceDataConfig[],
 ) => {
@@ -77,7 +50,7 @@ const generatePM2Apps = (
 };
 
 // Helper function to format PM2 apps as JavaScript string
-const formatPM2Apps = (
+export const formatPM2Apps = (
   apps: Array<{
     name: string;
     script: string;
@@ -116,7 +89,10 @@ export interface GetFilesParams {
   servicesData: ServiceDataConfig[];
 }
 
-export const getPM2AppsContent = (repoName: string, servicesData: ServiceDataConfig[]) => {
+export const getPM2AppsContent = (
+  repoName: string,
+  servicesData: ServiceDataConfig[],
+) => {
   const pm2Apps = generatePM2Apps(repoName, servicesData);
   const pm2AppFormatted = formatPM2Apps(pm2Apps);
 
@@ -127,8 +103,8 @@ export const getPM2AppsContent = (repoName: string, servicesData: ServiceDataCon
 };
 `,
     type: "javascript",
-  }
-}
+  };
+};
 
 export const getDevContainerFiles = (
   params: GetFilesParams,
@@ -215,26 +191,31 @@ const fileTypeMapper = {
   "devcontainer.json": "json",
   "pm2.config.js": "javascript",
   "docker-compose.yml": "yaml",
-  "Dockerfile": "dockerfile",
+  Dockerfile: "dockerfile",
 };
 
 const fileNamesMapper = {
   "devcontainer.json": "devcontainer_json",
   "pm2.config.js": "pm2_config_js",
   "docker-compose.yml": "docker_compose_yml",
-  "Dockerfile": "dockerfile",
+  Dockerfile: "dockerfile",
 };
 
-export const getDevContainerFilesFromBase64 = (base64Files: Record<string, string>) => {
-  const containerFiles = Object.entries(base64Files).reduce((acc, [name, content]) => {
-    const keyName = fileNamesMapper[name as keyof typeof fileNamesMapper];
-    acc[keyName] = {
-      name: keyName,
-      content: Buffer.from(content, "base64").toString("utf-8"),
-      type: fileTypeMapper[name as keyof typeof fileTypeMapper],
-    };
-    return acc;
-  }, {} as Record<string, DevContainerFile>);
+export const getDevContainerFilesFromBase64 = (
+  base64Files: Record<string, string>,
+) => {
+  const containerFiles = Object.entries(base64Files).reduce(
+    (acc, [name, content]) => {
+      const keyName = fileNamesMapper[name as keyof typeof fileNamesMapper];
+      acc[keyName] = {
+        name: keyName,
+        content: Buffer.from(content, "base64").toString("utf-8"),
+        type: fileTypeMapper[name as keyof typeof fileTypeMapper],
+      };
+      return acc;
+    },
+    {} as Record<string, DevContainerFile>,
+  );
 
   return containerFiles;
 };
