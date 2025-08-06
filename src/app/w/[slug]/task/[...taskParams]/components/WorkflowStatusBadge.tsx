@@ -52,11 +52,10 @@ export function WorkflowStatusBadge({
   status,
   className,
 }: WorkflowStatusBadgeProps) {
-  if (!status) {
-    return null;
-  }
-
-  const config = statusConfig[status];
+  // Default to PENDING if no status provided
+  const effectiveStatus = status || WorkflowStatus.PENDING;
+  const config = statusConfig[effectiveStatus];
+  
   if (!config) {
     return null;
   }

@@ -45,7 +45,7 @@ export default function TaskChatPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isChainVisible, setIsChainVisible] = useState(false);
-  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null);
+  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(WorkflowStatus.PENDING);
 
   // Use hook to check for active chat form and get webhook
   const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
@@ -120,6 +120,11 @@ export default function TaskChatPage() {
       if (result.success && result.data.messages) {
         setMessages(result.data.messages);
         console.log(`Loaded ${result.data.count} existing messages for task`);
+        
+        // Set initial workflow status from task data
+        if (result.data.task?.workflowStatus) {
+          setWorkflowStatus(result.data.task.workflowStatus);
+        }
       }
     } catch (error) {
       console.error("Error loading task messages:", error);
