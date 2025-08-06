@@ -2,7 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChatMessage as ChatMessageType, Option } from "@/lib/chat";
+import { ChatMessage as ChatMessageType, Option, WorkflowStatus } from "@/lib/chat";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 
@@ -19,6 +19,7 @@ interface ChatAreaProps {
   hasNonFormArtifacts?: boolean;
   isChainVisible?: boolean;
   lastLogLine?: string;
+  workflowStatus?: WorkflowStatus | null;
 }
 
 export function ChatArea({
@@ -30,6 +31,7 @@ export function ChatArea({
   hasNonFormArtifacts = false,
   isChainVisible = false,
   lastLogLine = "",
+  workflowStatus,
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +112,7 @@ export function ChatArea({
         onSend={onSend}
         disabled={inputDisabled}
         isLoading={isLoading}
+        workflowStatus={workflowStatus}
       />
     </motion.div>
   );

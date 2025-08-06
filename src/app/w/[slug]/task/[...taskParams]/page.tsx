@@ -8,11 +8,12 @@ import {
   ChatMessage,
   ChatRole,
   ChatStatus,
+  WorkflowStatus,
   createChatMessage,
   Option,
 } from "@/lib/chat";
 import { useParams } from "next/navigation";
-import { usePusherConnection } from "@/hooks/usePusherConnection";
+import { usePusherConnection, WorkflowStatusUpdate } from "@/hooks/usePusherConnection";
 import { useChatForm } from "@/hooks/useChatForm";
 import { useProjectLogWebSocket } from "@/hooks/useProjectLogWebSocket";
 import { TaskStartInput, ChatArea, ArtifactsPanel } from "./components";
@@ -44,6 +45,7 @@ export default function TaskChatPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isChainVisible, setIsChainVisible] = useState(false);
+  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(WorkflowStatus.PENDING);
 
   // Use hook to check for active chat form and get webhook
   const { hasActiveChatForm, webhook: chatWebhook } = useChatForm(messages);
@@ -75,10 +77,19 @@ export default function TaskChatPage() {
     [clearLogs],
   );
 
+  // Handle workflow status updates
+  const handleWorkflowStatusUpdate = useCallback(
+    (update: WorkflowStatusUpdate) => {
+      setWorkflowStatus(update.workflowStatus);
+    },
+    [],
+  );
+
   // Use the Pusher connection hook
   const { isConnected, error: connectionError } = usePusherConnection({
     taskId: currentTaskId,
     onMessage: handleSSEMessage,
+    onWorkflowStatusUpdate: handleWorkflowStatusUpdate,
   });
 
   // Show connection errors as toasts
@@ -109,6 +120,11 @@ export default function TaskChatPage() {
       if (result.success && result.data.messages) {
         setMessages(result.data.messages);
         console.log(`Loaded ${result.data.count} existing messages for task`);
+        
+        // Set initial workflow status from task data
+        if (result.data.task?.workflowStatus) {
+          setWorkflowStatus(result.data.task.workflowStatus);
+        }
       }
     } catch (error) {
       console.error("Error loading task messages:", error);
@@ -323,6 +339,7 @@ export default function TaskChatPage() {
             hasNonFormArtifacts={hasNonFormArtifacts}
             isChainVisible={isChainVisible}
             lastLogLine={lastLogLine}
+            workflowStatus={workflowStatus}
           />
 
           <AnimatePresence>
