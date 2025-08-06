@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 import { useWorkspaceTasks } from "@/hooks/useWorkspaceTasks";
 import { TaskCard } from "./TaskCard";
-import { EmptyState } from "./EmptyState";
+import { EmptyState } from "./empty-state";
 import { LoadingState } from "./LoadingState";
 
 interface TasksListProps {
