@@ -26,33 +26,54 @@ export const generatePM2Apps = (
           INSTALL_COMMAND: "npm install",
           TEST_COMMAND: "npm test",
           BUILD_COMMAND: "npm run build",
-          PRE_START_COMMAND: "",
-          POST_START_COMMAND: "",
-          REBUILD_COMMAND: "",
           PORT: "3000",
         },
       },
     ];
   }
 
-  return servicesData.map((service) => ({
-    name: service.name,
-    script: service.scripts?.start || "",
-    cwd: `/workspaces/${repoName}`,
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: "1G",
-    env: {
-      INSTALL_COMMAND: service.scripts?.install || "",
-      TEST_COMMAND: service.scripts?.test || "",
-      BUILD_COMMAND: service.scripts?.build || "",
-      PRE_START_COMMAND: service.scripts?.["pre-start"] || "",
-      POST_START_COMMAND: service.scripts?.["post-start"] || "",
-      REBUILD_COMMAND: service.scripts?.rebuild || "",
-      PORT: service.port?.toString() || "",
-    },
-  }));
+  return servicesData.map((service) => {
+    const appConfig = {
+      name: service.name,
+      script: service.scripts?.start || "",
+      cwd: `/workspaces/${repoName}`,
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "1G",
+      env: {} as Record<string, string>,
+    };
+
+    if (service.port) {
+      appConfig.env.PORT = service.port.toString();
+    }
+
+    if (service.scripts?.install) {
+      appConfig.env.INSTALL_COMMAND = service.scripts.install;
+    }
+
+    if (service.scripts?.test) {
+      appConfig.env.TEST_COMMAND = service.scripts.test;
+    }
+
+    if (service.scripts?.build) {
+      appConfig.env.BUILD_COMMAND = service.scripts.build;
+    }
+
+    if (service.scripts?.["pre-start"]) {
+      appConfig.env.PRE_START_COMMAND = service.scripts["pre-start"];
+    }
+
+    if (service.scripts?.["post-start"]) {
+      appConfig.env.POST_START_COMMAND = service.scripts["post-start"];
+    }
+
+    if (service.scripts?.rebuild) {
+      appConfig.env.REBUILD_COMMAND = service.scripts.rebuild;
+    }
+
+    return appConfig;
+  });
 };
 
 // Helper function to format PM2 apps as JavaScript string
