@@ -26,7 +26,7 @@ type ScriptConfig = {
   label: string;
   icon: React.ReactNode;
   placeholder: string;
-  envVar: string;
+  description: string;
   required?: boolean;
 };
 
@@ -41,7 +41,7 @@ export default function ServicesForm({
       label: "Start",
       icon: <Play className="w-4 h-4 text-muted-foreground" />,
       placeholder: "npm start",
-      envVar: "script",
+      description: "start your dev server",
       required: true,
     },
     install: {
@@ -49,42 +49,42 @@ export default function ServicesForm({
       label: "Install",
       icon: <Download className="w-4 h-4 text-muted-foreground" />,
       placeholder: "npm install",
-      envVar: "INSTALL_COMMAND",
+      description: "install dependencies",
     },
     test: {
       key: "test",
       label: "Test",
       icon: <TestTube className="w-4 h-4 text-muted-foreground" />,
       placeholder: "npm test",
-      envVar: "TEST_COMMAND",
+      description: "test command",
     },
-    "pre-start": {
-      key: "pre-start",
+    preStart: {
+      key: "preStart",
       label: "Pre-Start",
       icon: <Rewind className="w-4 h-4 text-muted-foreground" />,
       placeholder: "npx prisma migrate dev",
-      envVar: "PRE_START_COMMAND",
+      description: "run before the start command",
     },
-    "post-start": {
-      key: "post-start",
+    postStart: {
+      key: "postStart",
       label: "Post-Start",
       icon: <FastForward className="w-4 h-4 text-muted-foreground" />,
       placeholder: "echo 'Service started'",
-      envVar: "POST_START_COMMAND",
+      description: "run after the start command",
     },
     rebuild: {
       key: "rebuild",
       label: "Rebuild",
       icon: <RefreshCw className="w-4 h-4 text-muted-foreground" />,
       placeholder: "npm run build",
-      envVar: "REBUILD_COMMAND",
+      description: "rebuild on code change",
     },
     build: {
       key: "build",
       label: "Build",
       icon: <Hammer className="w-4 h-4 text-muted-foreground" />,
       placeholder: "npm run build",
-      envVar: "BUILD_COMMAND",
+      description: "build for production",
     },
   };
 
@@ -412,8 +412,8 @@ export default function ServicesForm({
                               >
                                 {config.icon}
                                 {config.label}
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  ({config.envVar})
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  ({config.description})
                                 </span>
                               </DropdownMenuItem>
                             ))}

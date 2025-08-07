@@ -60,12 +60,12 @@ export const generatePM2Apps = (
       appConfig.env.BUILD_COMMAND = service.scripts.build;
     }
 
-    if (service.scripts?.["pre-start"]) {
-      appConfig.env.PRE_START_COMMAND = service.scripts["pre-start"];
+    if (service.scripts?.preStart) {
+      appConfig.env.PRE_START_COMMAND = service.scripts.preStart;
     }
 
-    if (service.scripts?.["post-start"]) {
-      appConfig.env.POST_START_COMMAND = service.scripts["post-start"];
+    if (service.scripts?.postStart) {
+      appConfig.env.POST_START_COMMAND = service.scripts.postStart;
     }
 
     if (service.scripts?.rebuild) {

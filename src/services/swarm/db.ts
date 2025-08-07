@@ -10,8 +10,8 @@ export interface ServiceConfig {
     install?: string;
     build?: string;
     test?: string;
-    "pre-start"?: string;
-    "post-start"?: string;
+    preStart?: string;
+    postStart?: string;
     rebuild?: string;
   };
 }
@@ -88,7 +88,8 @@ export async function saveOrUpdateSwarm(params: SaveOrUpdateSwarmParams) {
   if (params.swarmApiKey !== undefined) data.swarmApiKey = params.swarmApiKey;
   if (params.poolName !== undefined) data.poolName = params.poolName;
   if (params.swarmId !== undefined) data.swarmId = params.swarmId;
-  if (params.defaultBranch !== undefined) data.defaultBranch = params.defaultBranch;
+  if (params.defaultBranch !== undefined)
+    data.defaultBranch = params.defaultBranch;
   if (params.swarmSecretAlias !== undefined)
     data.swarmSecretAlias = params.swarmSecretAlias;
   if (params.wizardStep !== undefined) data.wizardStep = params.wizardStep;
