@@ -46,6 +46,8 @@ const stakgraphSettingsSchema = z.object({
           install: z.string().optional(),
           build: z.string().optional(),
           test: z.string().optional(),
+          preStart: z.string().optional(),
+          postStart: z.string().optional(),
         }),
         // Add optional fields that might be in your payload
         dev: z.boolean().optional(),
