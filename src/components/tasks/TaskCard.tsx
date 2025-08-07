@@ -17,7 +17,7 @@ export function TaskCard({ task, workspaceSlug }: TaskCardProps) {
     router.push(`/w/${workspaceSlug}/task/${task.id}`);
   };
 
-  const getStatusVariant = (status: TaskData["status"]) => {
+  const getStatusVariant = (status: TaskData["workflowStatus"]) => {
     switch (status) {
       case "DONE":
         return "default";
@@ -28,7 +28,7 @@ export function TaskCard({ task, workspaceSlug }: TaskCardProps) {
     }
   };
 
-  const getStatusLabel = (status: TaskData["status"]) => {
+  const getStatusLabel = (status: TaskData["workflowStatus"]) => {
     switch (status) {
       case "TODO":
         return "To Do";
@@ -53,17 +53,11 @@ export function TaskCard({ task, workspaceSlug }: TaskCardProps) {
           {task.title}
         </h4>
         <div className="flex items-center gap-2">
-          <Badge variant={getStatusVariant(task.status)}>
-            {getStatusLabel(task.status)}
+          <Badge variant={getStatusVariant(task.workflowStatus)}>
+            {getStatusLabel(task.workflowStatus)}
           </Badge>
         </div>
       </div>
-      
-      {task.description && (
-        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-          {task.description}
-        </p>
-      )}
       
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         {task.assignee && (
