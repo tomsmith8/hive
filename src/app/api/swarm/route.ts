@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     await saveOrUpdateSwarm({
       workspaceId,
-      name: vanity_address,
+      name: name,
       instanceType: instance_type,
       status: SwarmStatus.PENDING,
       repositoryName: repositoryName || "",
