@@ -173,11 +173,9 @@ export async function POST(request: NextRequest) {
       minimum_vms: 2,
       repo_name: repository?.repositoryUrl || "",
       branch_name: repository?.branch || "",
-      github_pat: JSON.stringify(
-        encryptionService.decryptField(
-          "access_token",
-          account?.access_token || "",
-        ),
+      github_pat: encryptionService.decryptField(
+        "access_token",
+        account?.access_token || "",
       ),
       github_username: github_pat?.username || "",
       env_vars: envVars,
