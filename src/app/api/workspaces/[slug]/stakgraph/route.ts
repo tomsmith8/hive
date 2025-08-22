@@ -31,6 +31,7 @@ const stakgraphSettingsSchema = z.object({
   repositoryUrl: z.string().url("Invalid repository URL"),
   swarmUrl: z.string().url("Invalid swarm URL"),
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
+  swarmApiKey: z.string().optional(),
   poolName: z.string().min(1, "Pool name is required"),
   description: z.string().optional(),
   containerFiles: z.record(z.string()).optional().default({}),
@@ -278,6 +279,7 @@ export async function PUT(
       swarmUrl: settings.swarmUrl,
       status: SwarmStatus.ACTIVE, // auto active
       swarmSecretAlias: settings.swarmSecretAlias,
+      swarmApiKey: settings.swarmApiKey,
       poolName: settings.poolName,
       services: settings.services,
       environmentVariables: settings.environmentVariables,
