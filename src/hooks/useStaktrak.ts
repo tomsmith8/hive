@@ -132,6 +132,8 @@ export const useStaktrak = (initialUrl?: string) => {
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // No longer need to inject scripts - staktrak.js handles its own React detection
+
   const startRecording = () => {
     sendCommand(iframeRef, "staktrak-start");
     setIsRecording(true);
