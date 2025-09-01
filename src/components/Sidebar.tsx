@@ -45,6 +45,7 @@ const baseNavigationItems = [
 export function Sidebar({ user }: SidebarProps) {
   const router = useRouter();
   const { slug: workspaceSlug } = useWorkspace();
+
   const canAccessInsights = useFeatureFlag(
     FEATURE_FLAGS.CODEBASE_RECOMMENDATION,
   );
@@ -55,6 +56,7 @@ export function Sidebar({ user }: SidebarProps) {
   const navigationItems = baseNavigationItems.filter(
     (item) => !excludeLabels.includes(item.label),
   );
+
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const isTaskPage = pathname.includes("/task/");
@@ -81,8 +83,12 @@ export function Sidebar({ user }: SidebarProps) {
           {navigationItems.map((item) => (
             <li key={item.href}>
               <Button
-                variant="ghost"
-                className="w-full justify-start"
+                variant={pathname.includes(item.href) ? "secondary" : "ghost"}
+                className={`w-full justify-start ${
+                  pathname.includes(item.href)
+                    ? "bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30"
+                    : "hover:bg-primary/5 dark:hover:bg-primary/10"
+                }`}
                 onClick={() => handleNavigate(item.href)}
               >
                 <item.icon className="w-4 h-4 mr-2" />
