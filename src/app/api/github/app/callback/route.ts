@@ -2,26 +2,75 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth/nextauth";
 import { db } from "@/lib/db";
+import { EncryptionService } from "@/lib/encryption";
 
 export const runtime = "nodejs";
+
+async function getAccessToken(code: string, state: string) {
+  // console.log("getAccessToken", code, state);
+  // 2. Exchange the temporary code for an OAuth token
+  const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      client_id: process.env.GITHUB_APP_CLIENT_ID,
+      client_secret: process.env.GITHUB_APP_CLIENT_SECRET,
+      code,
+      state,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error(`HTTP error! status: ${tokenResponse.status}`);
+  }
+
+  const tokenData = await tokenResponse.json();
+  const userAccessToken = tokenData.access_token;
+  const userRefreshToken = tokenData.refresh_token;
+
+  return { userAccessToken, userRefreshToken };
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+
+    // GH app must have:
+    // Request user authorization (OAuth) during installation
+    // and a single callback URL only
+
+    // Log EVERYTHING GitHub sends you
+    // console.log("=== ALL SEARCH PARAMS ===");
+    // for (const [key, value] of searchParams.entries()) {
+    //   console.log(`${key}: ${value}`);
+    // }
+
     const state = searchParams.get("state");
     const installationId = searchParams.get("installation_id");
     const setupAction = searchParams.get("setup_action");
+    const code = searchParams.get("code");
+
+    console.log("installationId", installationId);
+    console.log("setupAction", setupAction);
+    console.log("code", code);
+
+    // Validate required parameters
+    if (!state) {
+      return NextResponse.redirect(new URL("/?error=missing_state", request.url));
+    }
+    if (!code) {
+      console.log("missing code!!!!");
+      return NextResponse.redirect(new URL("/?error=missing_code", request.url));
+    }
 
     // Check if user is authenticated
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       // Redirect to login if not authenticated
       return NextResponse.redirect(new URL("/auth", request.url));
-    }
-
-    // Validate required parameters
-    if (!state) {
-      return NextResponse.redirect(new URL("/?error=missing_state", request.url));
     }
 
     // Get the user's session to validate the GitHub state
@@ -35,6 +84,55 @@ export async function GET(request: NextRequest) {
     if (!userSession) {
       console.error("Invalid or expired GitHub state for user:", session.user.id);
       return NextResponse.redirect(new URL("/?error=invalid_state", request.url));
+    }
+
+    const { userAccessToken, userRefreshToken } = await getAccessToken(code, state);
+
+    if (!userAccessToken || !userRefreshToken) {
+      return NextResponse.redirect(new URL("/?error=invalid_code", request.url));
+    }
+
+    // console.log("userAccessToken", userAccessToken);
+    // console.log("userRefreshToken", userRefreshToken);
+
+    // Encrypt the tokens before storing
+    const encryptionService = EncryptionService.getInstance();
+    const encryptedAccessToken = JSON.stringify(encryptionService.encryptField("app_access_token", userAccessToken));
+    const encryptedRefreshToken = JSON.stringify(encryptionService.encryptField("app_refresh_token", userRefreshToken));
+
+    // Find existing GitHub account for this user
+    const existingAccount = await db.account.findFirst({
+      where: {
+        userId: session.user.id as string,
+        provider: "github",
+      },
+    });
+
+    if (existingAccount) {
+      // Update existing account with new app tokens
+      await db.account.update({
+        where: {
+          id: existingAccount.id,
+        },
+        data: {
+          app_access_token: encryptedAccessToken,
+          app_refresh_token: encryptedRefreshToken,
+          app_expires_at: Math.floor(Date.now() / 1000) + 8 * 60 * 60, // 8 hours from now
+        },
+      });
+    } else {
+      // Create new account with app tokens
+      await db.account.create({
+        data: {
+          userId: session.user.id as string,
+          type: "oauth",
+          provider: "github",
+          providerAccountId: session.user.id as string, // Use session user ID as fallback
+          app_access_token: encryptedAccessToken,
+          app_refresh_token: encryptedRefreshToken,
+          app_expires_at: Math.floor(Date.now() / 1000) + 8 * 60 * 60, // 8 hours from now
+        },
+      });
     }
 
     // Decode the state to get workspace information
