@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     const { userAccessToken, userRefreshToken } = await getAccessToken(code, state);
 
-    if (!userAccessToken || !userRefreshToken) {
+    if (!userAccessToken) {
       return NextResponse.redirect(new URL("/?error=invalid_code", request.url));
     }
 
@@ -99,7 +99,12 @@ export async function GET(request: NextRequest) {
     // Encrypt the tokens before storing
     const encryptionService = EncryptionService.getInstance();
     const encryptedAccessToken = JSON.stringify(encryptionService.encryptField("app_access_token", userAccessToken));
-    const encryptedRefreshToken = JSON.stringify(encryptionService.encryptField("app_refresh_token", userRefreshToken));
+    let encryptedRefreshToken;
+    let appExpiresAt;
+    if (userRefreshToken) {
+      encryptedRefreshToken = JSON.stringify(encryptionService.encryptField("app_refresh_token", userRefreshToken));
+      appExpiresAt = Math.floor(Date.now() / 1000) + 8 * 60 * 60; // 8 hours from now
+    }
 
     // Find existing GitHub account for this user
     const existingAccount = await db.account.findFirst({
@@ -118,7 +123,7 @@ export async function GET(request: NextRequest) {
         data: {
           app_access_token: encryptedAccessToken,
           app_refresh_token: encryptedRefreshToken,
-          app_expires_at: Math.floor(Date.now() / 1000) + 8 * 60 * 60, // 8 hours from now
+          app_expires_at: appExpiresAt,
         },
       });
     } else {
@@ -131,7 +136,7 @@ export async function GET(request: NextRequest) {
           providerAccountId: session.user.id as string, // Use session user ID as fallback
           app_access_token: encryptedAccessToken,
           app_refresh_token: encryptedRefreshToken,
-          app_expires_at: Math.floor(Date.now() / 1000) + 8 * 60 * 60, // 8 hours from now
+          app_expires_at: appExpiresAt,
         },
       });
     }
