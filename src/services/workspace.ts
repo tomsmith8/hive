@@ -31,6 +31,22 @@ import { WorkspaceRole } from "@prisma/client";
 
 const encryptionService: EncryptionService = EncryptionService.getInstance();
 
+/**
+ * Helper function to determine if workspace has a valid API key
+ */
+function hasValidApiKey(stakworkApiKey: string | null): boolean {
+  if (!stakworkApiKey) {
+    return false;
+  }
+  
+  try {
+    const decryptedKey = encryptionService.decryptField("stakworkApiKey", stakworkApiKey);
+    return !!decryptedKey && decryptedKey.trim().length > 0;
+  } catch {
+    return false;
+  }
+}
+
 // Type assertion to help IDE recognize Prisma client methods
 
 // Existing functions
@@ -150,10 +166,7 @@ export async function getWorkspaceById(
     return {
       id: workspace.id,
       name: workspace.name,
-      hasKey: !!encryptionService.decryptField(
-        "stakworkApiKey",
-        workspace.stakworkApiKey || "",
-      ),
+      hasKey: hasValidApiKey(workspace.stakworkApiKey),
       description: workspace.description,
       slug: workspace.slug,
       ownerId: workspace.ownerId,
@@ -194,10 +207,7 @@ export async function getWorkspaceById(
     updatedAt: workspace.updatedAt.toISOString(),
     userRole: membership.role as WorkspaceRole,
     owner: workspace.owner,
-    hasKey: !!encryptionService.decryptField(
-      "stakworkApiKey",
-      workspace.stakworkApiKey || "",
-    ),
+    hasKey: hasValidApiKey(workspace.stakworkApiKey),
     isCodeGraphSetup:
       workspace.swarm !== null && workspace.swarm.status === "ACTIVE",
     swarmStatus: workspace.swarm?.status || null,
@@ -250,10 +260,7 @@ export async function getWorkspaceBySlug(
     return {
       id: workspace.id,
       name: workspace.name,
-      hasKey: !!encryptionService.decryptField(
-        "stakworkApiKey",
-        workspace.stakworkApiKey || "",
-      ),
+      hasKey: hasValidApiKey(workspace.stakworkApiKey),
       description: workspace.description,
       slug: workspace.slug,
       ownerId: workspace.ownerId,
@@ -294,10 +301,7 @@ export async function getWorkspaceBySlug(
     updatedAt: workspace.updatedAt.toISOString(),
     userRole: membership.role as WorkspaceRole,
     owner: workspace.owner,
-    hasKey: !!encryptionService.decryptField(
-      "stakworkApiKey",
-      workspace.stakworkApiKey || "",
-    ),
+    hasKey: hasValidApiKey(workspace.stakworkApiKey),
     isCodeGraphSetup:
       workspace.swarm !== null && workspace.swarm.status === "ACTIVE",
     swarmStatus: workspace.swarm?.status || null,
