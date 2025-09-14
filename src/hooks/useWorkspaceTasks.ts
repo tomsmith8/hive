@@ -85,7 +85,8 @@ interface UseWorkspaceTasksResult {
 export function useWorkspaceTasks(
   workspaceId: string | null, 
   workspaceSlug?: string | null, 
-  includeNotifications: boolean = false
+  includeNotifications: boolean = false,
+  pageLimit: number = 5
 ): UseWorkspaceTasksResult {
   const { data: session } = useSession();
   const [tasks, setTasks] = useState<TaskData[]>([]);
@@ -127,7 +128,7 @@ export function useWorkspaceTasks(
     setError(null);
 
     try {
-      const url = `/api/tasks?workspaceId=${workspaceId}&page=${page}&limit=5${includeLatestMessage ? '&includeLatestMessage=true' : ''}`;
+      const url = `/api/tasks?workspaceId=${workspaceId}&page=${page}&limit=${pageLimit}${includeLatestMessage ? '&includeLatestMessage=true' : ''}`;
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -154,7 +155,7 @@ export function useWorkspaceTasks(
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, session?.user, includeNotifications]);
+  }, [workspaceId, session?.user, includeNotifications, pageLimit]);
 
   // Function to restore state from sessionStorage by fetching all pages up to stored page
   const restoreFromStorage = useCallback(async (includeLatestMessage: boolean = includeNotifications) => {
