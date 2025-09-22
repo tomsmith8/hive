@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
         workspace: {
           select: {
             id: true,
+            slug: true,
             ownerId: true,
             members: {
               where: { userId },
@@ -81,7 +82,8 @@ export async function POST(request: NextRequest) {
     // Get poolApiKey from swarm
     let poolApiKey = await getSwarmPoolApiKeyFor(swarm.id);
 
-    const github_pat = await getGithubUsernameAndPAT(session?.user.id);
+    // Use the workspace associated with this swarm for GitHub access
+    const github_pat = await getGithubUsernameAndPAT(userId, swarm.workspace.slug);
 
     if (!poolApiKey) {
       await updateSwarmPoolApiKeyFor(swarm.id);
@@ -186,7 +188,7 @@ export async function POST(request: NextRequest) {
         minimum_vms: 2,
         repo_name: repository?.repositoryUrl || "",
         branch_name: repository?.branch || "",
-        github_pat: github_pat?.appAccessToken || github_pat?.pat || "",
+        github_pat: github_pat?.token || "",
         github_username: github_pat?.username || "",
         env_vars: envVars,
         container_files: finalContainerFiles,
