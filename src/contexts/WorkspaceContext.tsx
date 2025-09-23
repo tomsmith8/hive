@@ -66,7 +66,7 @@ export function WorkspaceProvider({
   const [workspace, setWorkspace] = useState<WorkspaceWithAccess | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceWithRole[]>([]);
   // Always start with loading true to prevent error flash
-  const [loading, setLoading] = useState(true);
+  const [isWorkspaceLoading, setIsWorkspaceLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Don't persist the loaded slug - start fresh on each mount
   const [currentLoadedSlug, setCurrentLoadedSlug] = useState<string>("");
@@ -79,7 +79,9 @@ export function WorkspaceProvider({
   const fetchWorkspaces = useCallback(async (): Promise<
     WorkspaceWithRole[]
   > => {
-    if (status !== "authenticated") return [];
+    if (status !== "authenticated") {
+      return [];
+    }
 
     try {
       const response = await fetch("/api/workspaces");
@@ -98,9 +100,10 @@ export function WorkspaceProvider({
 
   // Refresh workspaces list
   const refreshWorkspaces = useCallback(async () => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated") {
+      return;
+    }
 
-    setLoading(true);
     setError(null);
 
     try {
@@ -110,8 +113,6 @@ export function WorkspaceProvider({
       setError(
         err instanceof Error ? err.message : "Failed to load workspaces",
       );
-    } finally {
-      setLoading(false);
     }
   }, [fetchWorkspaces, status]);
 
@@ -146,6 +147,7 @@ export function WorkspaceProvider({
 
   // Refresh current workspace - simplified to just re-trigger the effect
   const refreshCurrentWorkspace = useCallback(async () => {
+    setIsWorkspaceLoading(true);
     setCurrentLoadedSlug(""); // Clear the loaded slug to force refetch
   }, []);
 
@@ -179,6 +181,7 @@ export function WorkspaceProvider({
       setWorkspaces([]);
       setError(null);
       setCurrentLoadedSlug(""); // Reset loaded slug tracking
+      setIsWorkspaceLoading(false);
     }
   }, [status, refreshWorkspaces]);
 
@@ -192,7 +195,7 @@ export function WorkspaceProvider({
     if (!currentSlug && status === "authenticated") {
       setWorkspace(null);
       setCurrentLoadedSlug("");
-      setLoading(false);
+      setIsWorkspaceLoading(false);
       return;
     }
 
@@ -204,7 +207,7 @@ export function WorkspaceProvider({
     // Only fetch if we have a slug and haven't loaded it yet
     if (currentSlug && currentSlug !== currentLoadedSlug) {
       const fetchCurrentWorkspace = async () => {
-        setLoading(true);
+        setIsWorkspaceLoading(true);
         setError(null);
 
         try {
@@ -234,7 +237,7 @@ export function WorkspaceProvider({
           setWorkspace(null);
           setCurrentLoadedSlug(""); // Clear loaded slug on error
         } finally {
-          setLoading(false);
+          setIsWorkspaceLoading(false);
         }
       };
 
@@ -269,6 +272,8 @@ export function WorkspaceProvider({
   // Consider access granted if:
   // 1. Workspace is loaded, OR
   // 2. We're still loading (don't show error until load completes)
+  const loading = status === "loading" || isWorkspaceLoading;
+
   const hasAccess = !!workspace || loading;
 
   // Note: Permission checks have been moved to useWorkspaceAccess hook
