@@ -201,7 +201,7 @@ export function WorkspaceProvider({
     if (!currentSlug) {
       setWorkspace(null);
       setCurrentLoadedSlug("");
-      if (status === "authenticated" || status === "unauthenticated") {
+      if (status !== "loading") {
         setIsWorkspaceLoading(false);
       }
       return;
@@ -224,16 +224,22 @@ export function WorkspaceProvider({
     }
 
     // Only fetch if we have a slug and haven't loaded it yet
+    const abortController = new AbortController();
+    let isCurrentRequest = true;
+
     const fetchCurrentWorkspace = async () => {
       setIsWorkspaceLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`/api/workspaces/${currentSlug}`);
+        const response = await fetch(`/api/workspaces/${currentSlug}`, {
+          signal: abortController.signal,
+        });
         const data = await response.json();
 
         if (!response.ok) {
           if (response.status === 404 || response.status === 403) {
+            if (!isCurrentRequest) return;
             setWorkspace(null);
             setCurrentLoadedSlug(""); // Clear loaded slug on error
             setError("Workspace not found or access denied");
@@ -242,22 +248,46 @@ export function WorkspaceProvider({
           throw new Error(data.error || "Failed to fetch workspace");
         }
 
+        if (!isCurrentRequest) {
+          return;
+        }
+
         setWorkspace(data.workspace);
         setCurrentLoadedSlug(currentSlug); // Track the loaded slug
 
         // Fetch task notifications for this workspace
         await fetchTaskNotifications(currentSlug);
       } catch (err) {
+        if (!isCurrentRequest) {
+          return;
+        }
+
+        if (
+          typeof err === "object" &&
+          err !== null &&
+          "name" in err &&
+          (err as { name?: string }).name === "AbortError"
+        ) {
+          return;
+        }
+
         console.error(`Failed to fetch workspace ${currentSlug}:`, err);
         setError(err instanceof Error ? err.message : "Failed to load workspace");
         setWorkspace(null);
         setCurrentLoadedSlug(""); // Clear loaded slug on error
       } finally {
-        setIsWorkspaceLoading(false);
+        if (isCurrentRequest) {
+          setIsWorkspaceLoading(false);
+        }
       }
     };
 
     fetchCurrentWorkspace();
+
+    return () => {
+      isCurrentRequest = false;
+      abortController.abort();
+    };
   }, [
     pathname,
     status,
