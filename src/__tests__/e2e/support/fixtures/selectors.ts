@@ -46,6 +46,16 @@ export const selectors = {
     createButton: 'button:has-text("Create")',
   },
 
+  // Workspace Switcher
+  workspaceSwitcher: {
+    container: '[data-testid="workspace-switcher-container"]',
+    trigger: '[data-testid="workspace-switcher-trigger"]',
+    dropdown: '[data-testid="workspace-switcher-dropdown"]',
+    currentWorkspace: '[data-testid="workspace-switcher-current"]',
+    option: '[data-testid="workspace-switcher-option"]',
+    createButton: '[data-testid="workspace-switcher-create"]',
+  },
+
   workspaceMembers: {
     card: '[data-testid="workspace-members-card"]',
     addButton: '[data-testid="add-member-button"]',
@@ -175,4 +185,16 @@ export const dynamicSelectors = {
 
   workspaceMemberRoleBadgeByUsername: (username: string) =>
     `[data-testid="workspace-member-row"][data-member-username="${username}"] [data-testid="member-role-badge"]`,
+
+  /**
+   * Select workspace switcher option by workspace slug
+   */
+  workspaceSwitcherOptionBySlug: (slug: string) =>
+    `[data-testid="workspace-switcher-option"][data-workspace-slug="${slug}"]`,
+
+  /**
+   * Select workspace switcher option by workspace ID
+   */
+  workspaceSwitcherOptionById: (id: string) =>
+    `[data-testid="workspace-switcher-option"][data-workspace-id="${id}"]`,
 };

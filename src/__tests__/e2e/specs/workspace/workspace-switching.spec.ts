@@ -2,7 +2,7 @@ import { test } from '@/__tests__/e2e/support/fixtures/test-hooks';
 import { expect } from '@playwright/test';
 import { AuthPage, DashboardPage } from '@/__tests__/e2e/support/page-objects';
 import { createTestWorkspaceScenario, createTestWorkspace } from '@/__tests__/e2e/support/fixtures/database';
-import { selectors } from '@/__tests__/e2e/support/fixtures/selectors';
+import { selectors, dynamicSelectors } from '@/__tests__/e2e/support/fixtures/selectors';
 
 /**
  * Workspace Switching E2E Tests
@@ -58,11 +58,9 @@ test.describe('Workspace Switching', () => {
 
   test('should display workspace switcher with current workspace', async ({ page }) => {
     await test.step('verify workspace switcher is visible', async () => {
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(firstWorkspaceName, 'i') 
-      }).first();
-      
-      await expect(workspaceSwitcher).toBeVisible();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await expect(switcherTrigger).toBeVisible();
+      await expect(switcherTrigger).toContainText(firstWorkspaceName);
     });
   });
 
@@ -74,24 +72,19 @@ test.describe('Workspace Switching', () => {
     });
 
     await test.step('open workspace switcher dropdown', async () => {
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(firstWorkspaceName, 'i') 
-      }).first();
-      
-      await workspaceSwitcher.click();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await switcherTrigger.click();
       
       // Wait for dropdown to be visible
-      await page.waitForSelector('[role="menu"], .dropdown-menu', { 
-        state: 'visible',
-        timeout: 5000 
-      });
+      const dropdown = page.locator(selectors.workspaceSwitcher.dropdown);
+      await expect(dropdown).toBeVisible({ timeout: 5000 });
     });
 
     await test.step('select second workspace from dropdown', async () => {
-      // Click on the second workspace in the dropdown
-      const secondWorkspaceOption = page.locator('[role="menuitem"]').filter({
-        hasText: new RegExp(secondWorkspaceName, 'i')
-      }).first();
+      // Click on the second workspace option using slug selector
+      const secondWorkspaceOption = page.locator(
+        dynamicSelectors.workspaceSwitcherOptionBySlug(secondWorkspaceSlug)
+      );
       
       await expect(secondWorkspaceOption).toBeVisible();
       await secondWorkspaceOption.click();
@@ -107,11 +100,9 @@ test.describe('Workspace Switching', () => {
     });
 
     await test.step('verify workspace switcher shows new workspace', async () => {
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(secondWorkspaceName, 'i') 
-      }).first();
-      
-      await expect(workspaceSwitcher).toBeVisible();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await expect(switcherTrigger).toBeVisible();
+      await expect(switcherTrigger).toContainText(secondWorkspaceName);
     });
   });
 
@@ -121,16 +112,15 @@ test.describe('Workspace Switching', () => {
       await dashboardPage.waitForLoad();
 
       // Open dropdown and switch
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(firstWorkspaceName, 'i') 
-      }).first();
-      await workspaceSwitcher.click();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await switcherTrigger.click();
       
-      await page.waitForSelector('[role="menu"], .dropdown-menu', { state: 'visible' });
+      const dropdown = page.locator(selectors.workspaceSwitcher.dropdown);
+      await expect(dropdown).toBeVisible();
       
-      const secondWorkspaceOption = page.locator('[role="menuitem"]').filter({
-        hasText: new RegExp(secondWorkspaceName, 'i')
-      }).first();
+      const secondWorkspaceOption = page.locator(
+        dynamicSelectors.workspaceSwitcherOptionBySlug(secondWorkspaceSlug)
+      );
       await secondWorkspaceOption.click();
       
       await page.waitForURL(new RegExp(`/w/${secondWorkspaceSlug}`), { timeout: 10000 });
@@ -143,10 +133,8 @@ test.describe('Workspace Switching', () => {
       // Verify we're still on the second workspace
       expect(page.url()).toContain(`/w/${secondWorkspaceSlug}`);
       
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(secondWorkspaceName, 'i') 
-      }).first();
-      await expect(workspaceSwitcher).toBeVisible();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await expect(switcherTrigger).toContainText(secondWorkspaceName);
     });
   });
 
@@ -165,17 +153,16 @@ test.describe('Workspace Switching', () => {
 
     await test.step('switch to second workspace from tasks page', async () => {
       // Open workspace switcher
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(firstWorkspaceName, 'i') 
-      }).first();
-      await workspaceSwitcher.click();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await switcherTrigger.click();
       
-      await page.waitForSelector('[role="menu"], .dropdown-menu', { state: 'visible' });
+      const dropdown = page.locator(selectors.workspaceSwitcher.dropdown);
+      await expect(dropdown).toBeVisible();
       
       // Select second workspace
-      const secondWorkspaceOption = page.locator('[role="menuitem"]').filter({
-        hasText: new RegExp(secondWorkspaceName, 'i')
-      }).first();
+      const secondWorkspaceOption = page.locator(
+        dynamicSelectors.workspaceSwitcherOptionBySlug(secondWorkspaceSlug)
+      );
       await secondWorkspaceOption.click();
       
       // Should navigate to dashboard of second workspace
@@ -186,10 +173,8 @@ test.describe('Workspace Switching', () => {
       expect(page.url()).toContain(`/w/${secondWorkspaceSlug}`);
       await expect(page.locator(selectors.pageTitle.dashboard)).toBeVisible();
       
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(secondWorkspaceName, 'i') 
-      }).first();
-      await expect(workspaceSwitcher).toBeVisible();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await expect(switcherTrigger).toContainText(secondWorkspaceName);
     });
   });
 
@@ -200,24 +185,23 @@ test.describe('Workspace Switching', () => {
     });
 
     await test.step('open workspace switcher and verify both workspaces listed', async () => {
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(firstWorkspaceName, 'i') 
-      }).first();
-      await workspaceSwitcher.click();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await switcherTrigger.click();
       
-      await page.waitForSelector('[role="menu"], .dropdown-menu', { state: 'visible' });
+      const dropdown = page.locator(selectors.workspaceSwitcher.dropdown);
+      await expect(dropdown).toBeVisible();
       
-      // Verify first workspace is shown (current workspace)
-      const firstWorkspaceItem = page.locator('[role="menuitem"]').filter({
-        hasText: new RegExp(firstWorkspaceName, 'i')
-      }).first();
-      await expect(firstWorkspaceItem).toBeVisible();
+      // Verify current workspace is shown
+      const currentWorkspace = page.locator(selectors.workspaceSwitcher.currentWorkspace);
+      await expect(currentWorkspace).toBeVisible();
+      await expect(currentWorkspace).toContainText(firstWorkspaceName);
       
       // Verify second workspace is shown in the list
-      const secondWorkspaceItem = page.locator('[role="menuitem"]').filter({
-        hasText: new RegExp(secondWorkspaceName, 'i')
-      }).first();
-      await expect(secondWorkspaceItem).toBeVisible();
+      const secondWorkspaceOption = page.locator(
+        dynamicSelectors.workspaceSwitcherOptionBySlug(secondWorkspaceSlug)
+      );
+      await expect(secondWorkspaceOption).toBeVisible();
+      await expect(secondWorkspaceOption).toContainText(secondWorkspaceName);
     });
   });
 
@@ -226,16 +210,15 @@ test.describe('Workspace Switching', () => {
       await dashboardPage.goto(firstWorkspaceSlug);
       await dashboardPage.waitForLoad();
 
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(firstWorkspaceName, 'i') 
-      }).first();
-      await workspaceSwitcher.click();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await switcherTrigger.click();
       
-      await page.waitForSelector('[role="menu"], .dropdown-menu', { state: 'visible' });
+      const dropdown = page.locator(selectors.workspaceSwitcher.dropdown);
+      await expect(dropdown).toBeVisible();
       
-      const secondWorkspaceOption = page.locator('[role="menuitem"]').filter({
-        hasText: new RegExp(secondWorkspaceName, 'i')
-      }).first();
+      const secondWorkspaceOption = page.locator(
+        dynamicSelectors.workspaceSwitcherOptionBySlug(secondWorkspaceSlug)
+      );
       await secondWorkspaceOption.click();
       
       await page.waitForURL(new RegExp(`/w/${secondWorkspaceSlug}`), { timeout: 10000 });
@@ -254,10 +237,49 @@ test.describe('Workspace Switching', () => {
     });
 
     await test.step('verify still on second workspace', async () => {
-      const workspaceSwitcher = page.locator('button').filter({ 
-        hasText: new RegExp(secondWorkspaceName, 'i') 
-      }).first();
-      await expect(workspaceSwitcher).toBeVisible();
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await expect(switcherTrigger).toContainText(secondWorkspaceName);
+    });
+  });
+
+  test('should display create workspace option in dropdown', async ({ page }) => {
+    await test.step('navigate to workspace dashboard', async () => {
+      await dashboardPage.goto(firstWorkspaceSlug);
+      await dashboardPage.waitForLoad();
+    });
+
+    await test.step('open workspace switcher and verify create option', async () => {
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await switcherTrigger.click();
+      
+      const dropdown = page.locator(selectors.workspaceSwitcher.dropdown);
+      await expect(dropdown).toBeVisible();
+      
+      // Verify create workspace button is visible
+      const createButton = page.locator(selectors.workspaceSwitcher.createButton);
+      await expect(createButton).toBeVisible();
+      await expect(createButton).toContainText(/Create new workspace/i);
+    });
+  });
+
+  test('should close dropdown when clicking outside', async ({ page }) => {
+    await test.step('navigate to workspace dashboard', async () => {
+      await dashboardPage.goto(firstWorkspaceSlug);
+      await dashboardPage.waitForLoad();
+    });
+
+    await test.step('open and close workspace switcher dropdown', async () => {
+      const switcherTrigger = page.locator(selectors.workspaceSwitcher.trigger);
+      await switcherTrigger.click();
+      
+      const dropdown = page.locator(selectors.workspaceSwitcher.dropdown);
+      await expect(dropdown).toBeVisible();
+      
+      // Click outside the dropdown
+      await page.locator(selectors.pageTitle.dashboard).click();
+      
+      // Dropdown should be hidden
+      await expect(dropdown).not.toBeVisible({ timeout: 2000 });
     });
   });
 });
