@@ -236,7 +236,7 @@ Priority: `data-testid` > semantic selectors > text selectors
 - Scenarios: `createStandardWorkspaceScenario`, `createWorkspaceWithTasksScenario`, `createWorkspaceWithMembersScenario`
 
 **Anti-Patterns**:
-❌ Hardcoded selectors | ❌ Direct `page.locator()` in tests | ❌ Duplicate setup code | ❌ Real GitHub auth | ❌ Missing `waitForLoad()` | ❌ No `data-testid`
+Hardcoded selectors | Direct `page.locator()` in tests | Duplicate setup code | Real GitHub auth | Missing `waitForLoad()` | No `data-testid`
 
 ### Environment Setup
 Required environment variables (see `env.example` for complete list):
