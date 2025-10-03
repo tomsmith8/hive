@@ -103,10 +103,11 @@ export function WorkspaceSwitcher({
   }
 
   return (
-    <div className="p-4 border-b">
+    <div className="p-4 border-b" data-testid="workspace-switcher-container">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
+            data-testid="workspace-switcher-trigger"
             variant="outline"
             className="w-full justify-between h-auto p-3 hover:bg-accent transition-colors"
             disabled={loading}
@@ -134,13 +135,19 @@ export function WorkspaceSwitcher({
           side="bottom"
           sideOffset={8}
           forceMount
+          data-testid="workspace-switcher-dropdown"
         >
           <DropdownMenuLabel className="text-xs text-muted-foreground">
             Workspaces ({workspaces.length})
           </DropdownMenuLabel>
 
           {/* Current Workspace */}
-          <DropdownMenuItem className="flex items-center gap-2 p-2 bg-accent/50">
+          <DropdownMenuItem 
+            className="flex items-center gap-2 p-2 bg-accent/50"
+            data-testid="workspace-switcher-current"
+            data-workspace-id={activeWorkspace.id}
+            data-workspace-slug={activeWorkspace.slug}
+          >
             <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary text-primary-foreground">
               <Building2 className="w-3.5 h-3.5" />
             </div>
@@ -162,6 +169,9 @@ export function WorkspaceSwitcher({
                       key={workspace.id}
                       onClick={() => handleWorkspaceSelect(workspace)}
                       className="flex items-center gap-2 p-2"
+                      data-testid="workspace-switcher-option"
+                      data-workspace-id={workspace.id}
+                      data-workspace-slug={workspace.slug}
                     >
                       <div className="flex items-center justify-center w-6 h-6 rounded-md bg-muted">
                         <Building2 className="w-3.5 h-3.5" />
@@ -185,6 +195,7 @@ export function WorkspaceSwitcher({
             className={`flex items-center gap-2 p-2 ${
               isAtLimit ? 'opacity-60 cursor-not-allowed' : ''
             }`}
+            data-testid="workspace-switcher-create"
           >
             <div className={`flex items-center justify-center w-6 h-6 rounded-md ${
               isAtLimit ? 'border border-muted bg-muted' : 'border border-dashed'
