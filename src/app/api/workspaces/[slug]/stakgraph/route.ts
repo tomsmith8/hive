@@ -26,6 +26,7 @@ const encryptionService: EncryptionService = EncryptionService.getInstance();
 const stakgraphSettingsSchema = z.object({
   name: z.string().min(1, "Name is required"),
   repositoryUrl: z.string().url("Invalid repository URL"),
+  defaultBranch: z.string().optional(),
   swarmUrl: z.string().url("Invalid swarm URL"),
   swarmSecretAlias: z.string().min(1, "Swarm API key is required"),
   swarmApiKey: z.string().optional(),
@@ -140,6 +141,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         name: swarm.name || "",
         description: swarm.repositoryDescription || "",
         repositoryUrl: swarm.repositoryUrl || "",
+        defaultBranch: swarm.defaultBranch || "",
         swarmUrl: swarm.swarmUrl || "",
         swarmSecretAlias: swarm.swarmSecretAlias || "",
         poolName: swarm.id || "",
@@ -271,6 +273,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       repositoryName: settings.name,
       repositoryDescription: settings.description,
       repositoryUrl: settings.repositoryUrl,
+      defaultBranch: settings.defaultBranch,
       swarmUrl: settings.swarmUrl,
       status: SwarmStatus.ACTIVE, // auto active
       swarmSecretAlias: settings.swarmSecretAlias,
@@ -319,7 +322,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const callbackUrl = getGithubWebhookCallbackUrl(request);
       const webhookService = new WebhookService(getServiceConfig("github"));
 
-      const { defaultBranch } = await webhookService.setupRepositoryWithWebhook({
+      const { defaultBranch: detectedBranch } = await webhookService.setupRepositoryWithWebhook({
         userId,
         workspaceId: workspace.id,
         repositoryUrl: settings.repositoryUrl,
@@ -327,10 +330,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         repositoryName: settings.name,
       });
 
-      if (defaultBranch) {
+      // Only use detected branch if user didn't explicitly set one
+      if (detectedBranch && !settings.defaultBranch) {
         await db.swarm.update({
           where: { id: swarm.id },
-          data: { defaultBranch },
+          data: { defaultBranch: detectedBranch },
         });
       }
     } catch (err) {
