@@ -9,6 +9,8 @@ import { askTools } from "@/lib/ai/askTools";
 import { streamText, hasToolCall, ModelMessage } from "ai";
 import { getModel, getApiKeyForProvider } from "aieo";
 
+export const runtime = "nodejs";
+
 type Provider = "anthropic" | "google" | "openai" | "claude_code";
 
 export async function GET(request: NextRequest) {

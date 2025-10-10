@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth/nextauth";
 import { db } from "@/lib/db";
 import { TaskStatus, Priority, WorkflowStatus } from "@prisma/client";
 
+export const runtime = "nodejs";
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);

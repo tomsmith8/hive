@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth/nextauth";
 import { createWorkspace, getUserWorkspaces, softDeleteWorkspace } from "@/services/workspace";
 import { db } from "@/lib/db";
 
+export const runtime = "nodejs";
+
 // Prevent caching of user-specific data
 export const dynamic = "force-dynamic";
 
