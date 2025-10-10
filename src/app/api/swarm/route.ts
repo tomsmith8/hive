@@ -10,6 +10,8 @@ import { SwarmStatus } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   if (isFakeMode) {
     const { id, swarm_id } = await createFakeSwarm();
